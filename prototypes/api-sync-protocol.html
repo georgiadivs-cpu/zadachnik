@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ежедневник — API и sync-протокол (proposal)</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1e2b21;
+    background:
+      radial-gradient(1000px 600px at 10% 0%, #eef8ef 0%, transparent 60%),
+      radial-gradient(900px 700px at 100% 100%, #d8ebde 0%, transparent 65%),
+      linear-gradient(140deg, #e2f0e5, #f7fbf7);
+    min-height: 100vh;
+    padding: 28px clamp(16px, 4vw, 56px) 48px;
+  }
+  .page { max-width: 1200px; margin: 0 auto; }
+  .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .mark {
+    width: 48px; height: 48px; border-radius: 14px; background: #2e7d5b;
+    display: grid; place-items: center; color: #fff; font-size: 24px;
+    box-shadow: 0 10px 24px rgba(46, 125, 91, .25);
+  }
+  .eyebrow { margin: 0 0 4px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #5f7161; font-weight: 700; }
+  h1 { margin: 0; font-size: clamp(20px, 2.4vw, 28px); letter-spacing: -.02em; }
+  h1 span { color: #2e7d5b; font-weight: 600; }
+  .badge {
+    font-size: 11px; color: #5f7161; background: rgba(255,255,255,.65);
+    border: 1px solid rgba(46,61,47,.12); padding: 8px 12px; border-radius: 999px;
+    white-space: nowrap;
+  }
+  .layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 24px; align-items: start; }
+  .nav {
+    position: sticky; top: 20px; background: rgba(255,255,255,.75);
+    border: 1px solid rgba(46,61,47,.12); border-radius: 20px; padding: 12px;
+    backdrop-filter: blur(14px); box-shadow: 0 16px 40px rgba(34,73,48,.07);
+  }
+  .nav button {
+    width: 100%; border: 0; background: transparent; color: #1e2b21; font: inherit;
+    font-size: 13px; text-align: left; padding: 10px 12px; border-radius: 10px;
+    cursor: pointer; display: flex; align-items: center; gap: 8px;
+  }
+  .nav button:hover { background: rgba(46,125,91,.08); }
+  .nav button.active { background: #2e7d5b; color: #fff; font-weight: 650; }
+  .nav .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: .55; }
+  .main { min-width: 0; }
+  .panel {
+    display: none; background: rgba(255,255,255,.78); border: 1px solid rgba(46,61,47,.12);
+    border-radius: 24px; padding: clamp(18px, 3vw, 30px); backdrop-filter: blur(14px);
+    box-shadow: 0 18px 50px rgba(34,73,48,.08);
+  }
+  .panel.active { display: block; }
+  .panel h2 { margin: 0 0 8px; font-size: 24px; letter-spacing: -.02em; }
+  .panel h3 { margin: 26px 0 10px; font-size: 15px; letter-spacing: .02em; }
+  .lead { margin: 0 0 18px; color: #5f7161; line-height: 1.55; max-width: 820px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 18px; }
+  .chip { font-size: 10.5px; padding: 5px 9px; border-radius: 999px; background: #fff; border: 1px solid rgba(46,61,47,.14); color: #5f7161; }
+  .chip.accepted { background: #e5f4e9; color: #1f6b4b; border-color: #b9dfc5; }
+  .chip.proposed { background: #fff5df; color: #7a5a13; border-color: #ecd59b; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .card { background: #fff; border: 1px solid rgba(46,61,47,.1); border-radius: 15px; padding: 15px; }
+  .card h4 { margin: 0 0 6px; font-size: 13px; }
+  .card p { margin: 0; font-size: 12px; line-height: 1.5; color: #5f7161; }
+  .code {
+    background: #142019; color: #d8e8dc; border-radius: 14px; padding: 16px;
+    overflow-x: auto; font-family: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 11.5px; line-height: 1.55; white-space: pre; margin: 10px 0 4px;
+  }
+  .code .k { color: #9ed4b1; }
+  .code .s { color: #f0d49b; }
+  .code .n { color: #9ec5f0; }
+  .code .c { color: #789080; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 8px 0 4px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid #e4efe6; vertical-align: top; }
+  th { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: #5f7161; }
+  td code { background: #f0f7f1; color: #1f6b4b; padding: 2px 5px; border-radius: 5px; font-size: 11.5px; }
+  .diagram {
+    display: grid; grid-template-columns: 1fr 120px 1fr; gap: 10px; align-items: center;
+    margin: 16px 0 8px;
+  }
+  .node { background: #fff; border: 1px solid rgba(46,61,47,.14); border-radius: 14px; padding: 13px; }
+  .node strong { display: block; font-size: 12.5px; margin-bottom: 4px; }
+  .node span { display: block; font-size: 11px; color: #5f7161; line-height: 1.5; }
+  .arrow { color: #2e7d5b; font-size: 11px; text-align: center; line-height: 1.4; }
+  .arrow b { display: block; font-size: 18px; font-weight: 400; }
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
+  .step { background: #fff; border: 1px solid rgba(46,61,47,.13); border-radius: 10px; padding: 9px 11px; font-size: 11.5px; }
+  .step b { display: block; color: #2e7d5b; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 2px; }
+  .flow .arrow { flex: none; width: 18px; font-size: 14px; }
+  .decision {
+    border-left: 3px solid #d9a441; background: #fffaf0; padding: 13px 15px;
+    border-radius: 0 12px 12px 0; margin: 10px 0; font-size: 12.5px; line-height: 1.55;
+  }
+  .decision strong { color: #7a5a13; }
+  .ok { border-left-color: #2e7d5b; background: #f1faf3; }
+  .ok strong { color: #1f6b4b; }
+  .tag { display: inline-block; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; padding: 3px 6px; border-radius: 5px; background: #e5f4e9; color: #1f6b4b; font-weight: 800; }
+  .tag.warn { background: #fff0d9; color: #7a5a13; }
+  .footnote { font-size: 11px; color: #5f7161; line-height: 1.55; margin-top: 18px; }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    .nav { position: static; display: flex; flex-wrap: wrap; }
+    .nav button { width: auto; }
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+    .diagram { grid-template-columns: 1fr; }
+    .arrow b { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="head">
+    <div class="brand">
+      <div class="mark">↻</div>
+      <div>
+        <p class="eyebrow">Interactive design proposal</p>
+        <h1>API и sync-протокол <span>Ежедневник</span></h1>
+      </div>
+    </div>
+    <div class="badge">Статус: proposal · требуется ваше ОК</div>
+  </header>
+
+  <div class="layout">
+    <nav class="nav" id="nav">
+      <button class="active" data-tab="overview"><span class="dot"></span>Обзор</button>
+      <button data-tab="auth"><span class="dot"></span>Аутентификация</button>
+      <button data-tab="push"><span class="dot"></span>Push</button>
+      <button data-tab="pull"><span class="dot"></span>Pull</button>
+      <button data-tab="conflicts"><span class="dot"></span>Конфликты</button>
+      <button data-tab="data"><span class="dot"></span>Данные сервера</button>
+      <button data-tab="decisions"><span class="dot"></span>Решения</button>
+    </nav>
+
+    <main class="main">
+      <section class="panel active" id="tab-overview">
+        <h2>Один путь записи — синхронизация</h2>
+        <p class="lead">
+          Клиент всегда пишет в локальную БД и outbox. Сервер принимает только
+          операции синхронизации, проверяет версии и ведёт журнал изменений.
+          Клиенты читают данные из локальной БД и получают изменения через pull.
+        </p>
+        <div class="chips">
+          <span class="chip accepted">Flutter + Drift</span>
+          <span class="chip accepted">Kotlin + Spring Boot</span>
+          <span class="chip accepted">PostgreSQL + Flyway</span>
+          <span class="chip proposed">REST + cursor sync</span>
+        </div>
+
+        <div class="diagram">
+          <div class="node">
+            <strong>Клиент A · локально</strong>
+            <span>SQLite: notes, tasks, categories<br>sync_outbox: очередь операций</span>
+          </div>
+          <div class="arrow"><b>⇄</b>HTTPS<br>Bearer token</div>
+          <div class="node">
+            <strong>API · собственный сервер</strong>
+            <span>auth · sync push/pull<br>валидация · конфликты</span>
+          </div>
+          <div class="node">
+            <strong>PostgreSQL</strong>
+            <span>сущности · revision<br>change_log · devices</span>
+          </div>
+          <div class="arrow"><b>⇄</b></div>
+          <div class="node">
+            <strong>Клиент B · локально</strong>
+            <span>pull после cursor<br>применение в транзакции</span>
+          </div>
+        </div>
+
+        <h3>Базовый цикл</h3>
+        <div class="flow">
+          <div class="step"><b>01</b>Локальная правка + outbox</div>
+          <div class="arrow">→</div>
+          <div class="step"><b>02</b>Push пакета</div>
+          <div class="arrow">→</div>
+          <div class="step"><b>03</b>Сервер: revision + change_log</div>
+          <div class="arrow">→</div>
+          <div class="step"><b>04</b>Pull по cursor</div>
+          <div class="arrow">→</div>
+          <div class="step"><b>05</b>Транзакция + сдвиг cursor</div>
+        </div>
+
+        <div class="grid3">
+          <div class="card"><h4>Идемпотентность</h4><p>Каждая операция имеет UUID. Повтор не создаёт дубликат и возвращает прежний результат.</p></div>
+          <div class="card"><h4>Курсор</h4><p>Монотонный seq. Клиент сохраняет его только после успешного применения страницы.</p></div>
+          <div class="card"><h4>Tombstone</h4><p>Удаление — отдельная операция. Курсор не позволяет «воскресить» запись.</p></div>
+        </div>
+
+        <h3>Публичные endpoints</h3>
+        <table>
+          <thead><tr><th>Метод</th><th>Путь</th><th>Назначение</th></tr></thead>
+          <tbody>
+            <tr><td><code>POST</code></td><td><code>/api/v1/auth/setup</code></td><td>Первый владелец, только при пустой БД + setup token</td></tr>
+            <tr><td><code>POST</code></td><td><code>/api/v1/auth/login</code></td><td>Вход, регистрация устройства, access + refresh</td></tr>
+            <tr><td><code>POST</code></td><td><code>/api/v1/auth/refresh</code></td><td>Ротация refresh-токена</td></tr>
+            <tr><td><code>POST</code></td><td><code>/api/v1/auth/logout</code></td><td>Отзыв текущей сессии</td></tr>
+            <tr><td><code>GET</code></td><td><code>/api/v1/devices</code></td><td>Список устройств владельца</td></tr>
+            <tr><td><code>DELETE</code></td><td><code>/api/v1/devices/{id}</code></td><td>Отзыв устройства</td></tr>
+            <tr><td><code>POST</code></td><td><code>/api/v1/sync/push</code></td><td>Пакет локальных операций</td></tr>
+            <tr><td><code>GET</code></td><td><code>/api/v1/sync/pull</code></td><td>Изменения после курсора</td></tr>
+            <tr><td><code>GET</code></td><td><code>/api/v1/sync/state</code></td><td>Серверное время, latest seq, устройство</td></tr>
+          </tbody>
+        </table>
+        <p class="footnote">CRUD-эндпоинтов для заметок и задач нет: единственный путь записи — push. Это исключает расхождение локального и серверного состояния.</p>
+      </section>
+
+      <section class="panel" id="tab-auth">
+        <h2>Аутентификация устройства</h2>
+        <p class="lead">
+          Сервер персональный, поэтому открытая регистрация запрещена.
+          Первый аккаунт создаётся один раз через setup token из окружения сервера.
+          Каждое устройство получает собственную сессию.
+        </p>
+        <div class="chips"><span class="chip accepted">TLS</span><span class="chip proposed">setup token</span><span class="chip proposed">JWT 15 мин</span><span class="chip proposed">refresh 30 дней</span></div>
+
+        <div class="flow">
+          <div class="step"><b>01</b>Клиент генерирует deviceId (UUID)</div>
+          <div class="arrow">→</div>
+          <div class="step"><b>02</b>POST /auth/login</div>
+          <div class="arrow">→</div>
+          <div class="step"><b>03</b>Сервер проверяет пароль</div>
+          <div class="arrow">→</div>
+          <div class="step"><b>04</b>Access + refresh</div>
+        </div>
+
+        <h3>Login request</h3>
+        <div class="code">POST /api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "owner@example.com",
+  "password": "<secret>",
+  "device": {
+    "id": "5d0f...uuid",
+    "name": "MacBook Pro",
+    "platform": "MACOS"
+  }
+}</div>
+
+        <h3>Login response</h3>
+        <div class="code">200 OK
+{
+  "userId": "0b7e...uuid",
+  "accessToken": "<jwt>",
+  "accessExpiresAt": "2026-11-05T20:45:00Z",
+  "refreshToken": "<opaque>",
+  "refreshExpiresAt": "2026-12-05T20:30:00Z",
+  "deviceId": "5d0f...uuid"
+}</div>
+
+        <div class="grid2">
+          <div class="card"><h4>Access token</h4><p>JWT, 15 минут. Содержит userId и deviceId. Не хранится в логах.</p></div>
+          <div class="card"><h4>Refresh token</h4><p>Случайный opaque-токен, 30 дней. В БД только SHA-256 хэш. Ротация при refresh.</p></div>
+          <div class="card"><h4>Повтор refresh</h4><p>Повторное использование старого токена трактуется как компрометация: сессия устройства отзывается.</p></div>
+          <div class="card"><h4>Отзыв</h4><p>Logout или удаление устройства инвалидирует refresh и все access-токены устройства.</p></div>
+        </div>
+
+        <div class="decision"><strong>Нужно ваше решение:</strong> setup token вместо открытой регистрации. Токен задаётся на сервере и используется только при создании первого аккаунта.</div>
+      </section>
+
+      <section class="panel" id="tab-push">
+        <h2>Push: пакет операций</h2>
+        <p class="lead">
+          Клиент отправляет до 100 операций. Каждая операция обрабатывается
+          отдельно и транзакционно. Частичный успех допустим: клиент сохраняет
+          непринятые операции в outbox.
+        </p>
+        <div class="chips"><span class="chip accepted">operation UUID</span><span class="chip accepted">baseRevision</span><span class="chip proposed">до 100 операций</span><span class="chip proposed">1 MiB</span></div>
+
+        <h3>Request</h3>
+        <div class="code">POST /api/v1/sync/push
+Authorization: Bearer &lt;access&gt;
+
+{
+  "operations": [
+    {
+      "operationId": "a1...uuid",
+      "deviceId": "5d0f...uuid",
+      "entityType": "NOTE",
+      "entityId": "9c...uuid",
+      "operationType": "UPDATE",
+      "baseRevision": 3,
+      "clientTimestamp": "2026-11-05T20:30:00Z",
+      "payload": {
+        "title": "Заметка",
+        "contentMarkdown": "# Текст\n\nОбновлено",
+        "categoryId": "work",
+        "deletedAt": null
+      }
+    }
+  ]
+}</div>
+
+        <h3>Response · HTTP 200, даже при конфликте</h3>
+        <div class="code">{
+  "results": [
+    {
+      "operationId": "a1...uuid",
+      "status": "APPLIED",
+      "entityId": "9c...uuid",
+      "revision": 4,
+      "changeSeq": 128
+    },
+    {
+      "operationId": "b2...uuid",
+      "status": "CONFLICT",
+      "entityId": "7d...uuid",
+      "revision": 9,
+      "serverEntity": { "...": "полный снимок сервера" }
+    },
+    {
+      "operationId": "c3...uuid",
+      "status": "REJECTED",
+      "code": "VALIDATION_ERROR",
+      "message": "Заголовок обязателен"
+    }
+  ]
+}</div>
+
+        <h3>Статусы операции</h3>
+        <table>
+          <thead><tr><th>Статус</th><th>Значение</th><th>Что делает клиент</th></tr></thead>
+          <tbody>
+            <tr><td><code>APPLIED</code></td><td>Операция применена, revision и seq выданы</td><td>Удаляет операцию из outbox, сохраняет revision</td></tr>
+            <tr><td><code>DUPLICATE</code></td><td>operationId уже обрабатывался</td><td>Считает операцию успешной, удаляет из очереди</td></tr>
+            <tr><td><code>CONFLICT</code></td><td>baseRevision не совпала</td><td>Сохраняет обе версии, показывает разрешение</td></tr>
+            <tr><td><code>REJECTED</code></td><td>Ошибка валидации или прав</td><td>Помечает операцию, не теряет локальные данные</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Правила</h3>
+        <div class="grid2">
+          <div class="card"><h4>Полный снимок</h4><p>payload содержит полное состояние изменяемых полей. Частичные patch-операции не используются в MVP.</p></div>
+          <div class="card"><h4>Версия</h4><p>CREATE — baseRevision = null. UPDATE/DELETE — обязательна. Сервер увеличивает revision на 1.</p></div>
+          <div class="card"><h4>Повтор</h4><p>operationId уникален. Повтор с тем же телом — DUPLICATE; с другим телом — REJECTED.</p></div>
+          <div class="card"><h4>Ошибки</h4><p>400 — невалидный пакет; 401 — токен; 413 — размер; 429 — лимит. Доменные ошибки — в results.</p></div>
+        </div>
+      </section>
+
+      <section class="panel" id="tab-pull">
+        <h2>Pull: изменения после курсора</h2>
+        <p class="lead">
+          Сервер отдаёт изменения в порядке возрастания seq. Клиент применяет
+          страницу одной транзакцией и только затем сохраняет новый cursor.
+        </p>
+        <div class="chips"><span class="chip accepted">cursor = seq</span><span class="chip proposed">страница 200</span><span class="chip proposed">максимум 500</span><span class="chip proposed">tombstones включены</span></div>
+
+        <div class="code">GET /api/v1/sync/pull?cursor=127&amp;limit=200
+Authorization: Bearer &lt;access&gt;
+
+200 OK
+{
+  "changes": [
+    {
+      "seq": 128,
+      "entityType": "NOTE",
+      "entityId": "9c...uuid",
+      "operationId": "a1...uuid",
+      "operationType": "UPDATE",
+      "revision": 4,
+      "originDeviceId": "5d0f...uuid",
+      "changedAt": "2026-11-05T20:30:01Z",
+      "payload": { "...": "полный снимок" }
+    },
+    {
+      "seq": 129,
+      "entityType": "NOTE",
+      "entityId": "7d...uuid",
+      "operationType": "DELETE",
+      "revision": 3,
+      "payload": { "deletedAt": "2026-11-05T20:31:00Z" }
+    }
+  ],
+  "nextCursor": "129",
+  "hasMore": false
+}</div>
+
+        <h3>Порядок применения на клиенте</h3>
+        <div class="flow">
+          <div class="step"><b>01</b>Прочитать страницу</div>
+          <div class="arrow">→</div>
+          <div class="step"><b>02</b>Применить в транзакции</div>
+          <div class="arrow">→</div>
+          <div class="step"><b>03</b>Сохранить cursor</div>
+          <div class="arrow">→</div>
+          <div class="step"><b>04</b>Повторить, если hasMore</div>
+        </div>
+
+        <div class="grid2">
+          <div class="card"><h4>Локальные pending-операции</h4><p>Если по сущности есть неподтверждённая операция, входящее изменение не перезаписывает локальную версию молча — создаётся конфликт.</p></div>
+          <div class="card"><h4>Собственные изменения</h4><p>Pull возвращает и изменения текущего устройства. Повторное применение снимка идемпотентно.</p></div>
+          <div class="card"><h4>Пустая страница</h4><p>nextCursor равен текущему cursor, hasMore=false. Cursor не откатывается.</p></div>
+          <div class="card"><h4>Сбой</h4><p>При ошибке применения cursor не двигается; страница будет запрошена снова.</p></div>
+        </div>
+
+        <h3>Цикл синхронизации</h3>
+        <div class="decision ok"><strong>Рекомендуемый порядок:</strong> push → pull → повторять pull при hasMore. Если push вернул конфликт, pull всё равно выполняется: он приносит серверные версии и изменения других устройств.</div>
+      </section>
+
+      <section class="panel" id="tab-conflicts">
+        <h2>Конфликты: сохранить обе версии</h2>
+        <p class="lead">
+          Автоматический last-write-wins не используется. Конфликт обнаруживается
+          по baseRevision и возвращается клиенту с полным серверным снимком.
+        </p>
+        <div class="chips"><span class="chip proposed">no LWW</span><span class="chip proposed">обе версии</span><span class="chip proposed">решение пользователя</span></div>
+
+        <div class="flow">
+          <div class="step"><b>01</b>Локальная правка</div>
+          <div class="arrow">→</div>
+          <div class="step"><b>02</b>Push baseRevision=3</div>
+          <div class="arrow">→</div>
+          <div class="step"><b>03</b>Сервер уже revision=5</div>
+          <div class="arrow">→</div>
+          <div class="step"><b>04</b>CONFLICT + серверный снимок</div>
+          <div class="arrow">→</div>
+          <div class="step"><b>05</b>Выбор пользователя</div>
+        </div>
+
+        <h3>Варианты разрешения</h3>
+        <table>
+          <thead><tr><th>Выбор</th><th>Действие клиента</th><th>Сервер</th></tr></thead>
+          <tbody>
+            <tr><td>Оставить локальную</td><td>Повторный UPDATE с baseRevision = серверной revision</td><td>Применяет и увеличивает revision</td></tr>
+            <tr><td>Принять серверную</td><td>Перезаписывает локальную снимком сервера</td><td>Запрос не нужен</td></tr>
+            <tr><td>Сохранить обе</td><td>Создаёт новую сущность с новым UUID из локальной версии и принимает серверную</td><td>Получает CREATE новой сущности</td></tr>
+          </tbody>
+        </table>
+
+        <div class="grid2">
+          <div class="card"><h4>Markdown</h4><p>Обе версии текста сохраняются до решения. Автоматическое слияние не выполняется.</p></div>
+          <div class="card"><h4>Удаление против правки</h4><p>Если сервер удалил, а клиент изменил, возвращается tombstone. Пользователь может сохранить локальную как новую заметку.</p></div>
+          <div class="card"><h4>Задачи</h4><p>Конфликт по полям задачи. Ручное разрешение, без LWW.</p></div>
+          <div class="card"><h4>Чек-лист ↔ задача</h4><p>Один источник истины — задача. Политика одновременного изменения требует отдельного решения.</p></div>
+        </div>
+
+        <div class="decision"><strong>Нужно ваше решение:</strong> для задач и связи чек-лист↔задача предлагается ручное разрешение конфликта; источник истины для состояния — задача. Для Markdown — сохранять обе версии.</div>
+      </section>
+
+      <section class="panel" id="tab-data">
+        <h2>Серверная модель для sync</h2>
+        <p class="lead">
+          Доменные таблицы хранят текущее состояние и revision. Журнал изменений
+          неизменяем и используется для pull. Обработанные operationId обеспечивают
+          идемпотентность.
+        </p>
+
+        <div class="grid2">
+          <div class="card"><h4>users</h4><p>id, email, password_hash, status, created_at</p></div>
+          <div class="card"><h4>devices</h4><p>id, user_id, name, platform, created_at, last_seen_at, revoked_at</p></div>
+          <div class="card"><h4>refresh_tokens</h4><p>id, user_id, device_id, token_hash, expires_at, revoked_at, replaced_by</p></div>
+          <div class="card"><h4>processed_operations</h4><p>operation_id PK, user_id, result, processed_at</p></div>
+          <div class="card"><h4>change_log</h4><p>seq bigserial, user_id, entity_type, entity_id, operation_id, operation_type, revision, payload jsonb, device_id, changed_at</p></div>
+          <div class="card"><h4>Доменные таблицы</h4><p>notes, tasks, lanes, categories, links — текущее состояние + revision</p></div>
+        </div>
+
+        <h3>Инварианты</h3>
+        <div class="grid2">
+          <div class="card"><h4>seq</h4><p>Глобально возрастает. Pull фильтрует по user_id и seq &gt; cursor.</p></div>
+          <div class="card"><h4>revision</h4><p>Растёт у сущности при каждом изменении. Используется для conflict detection.</p></div>
+          <div class="card"><h4>transaction</h4><p>Изменение сущности, запись change_log и processed_operations — в одной транзакции.</p></div>
+          <div class="card"><h4>tombstone</h4><p>Удаление — запись с deleted_at и change_log DELETE. Запись не исчезает из журнала.</p></div>
+        </div>
+
+        <h3>Вложения</h3>
+        <div class="decision"><strong>Отложено:</strong> метаданные вложений пойдут через sync, но передача файлов требует отдельного решения P-005 и эндпоинтов init/complete. В текущем протоколе только резервируем entityType ATTACHMENT.</div>
+      </section>
+
+      <section class="panel" id="tab-decisions">
+        <h2>Что нужно утвердить</h2>
+        <p class="lead">После вашего «ОК» я зафиксирую это в документации. Пункты ниже — не код, а проектные решения.</p>
+
+        <div class="decision ok"><strong>1. API-стиль:</strong> REST + JSON, версия `/api/v1`, единственный путь записи — `sync/push`; CRUD-эндпоинтов для заметок и задач нет.</div>
+        <div class="decision ok"><strong>2. Синхронизация:</strong> outbox → push пакетами → server change_log → pull по cursor; operationId, baseRevision, revision, tombstone, идемпотентность.</div>
+        <div class="decision"><strong>3. Аутентификация:</strong> setup token для первого владельца, затем login устройства; JWT 15 минут + rotate refresh 30 дней; отзыв устройства.</div>
+        <div class="decision"><strong>4. Конфликты:</strong> без LWW; обе версии сохраняются; ручное разрешение. Для Markdown — обе версии текста.</div>
+        <div class="decision"><strong>5. Документы:</strong> создать `docs/API_CONTRACTS.md`, `docs/SYNC_PROTOCOL.md`, `packages/contracts/openapi.yaml`; обновить `DECISIONS.md`, `DATA_MODEL.md`, `ARCHITECTURE.md`, `docs/README.md`.</div>
+        <div class="decision"><strong>6. Отложено:</strong> передача файлов и presigned URL; политика конфликтов задач/чек-листов требует отдельного подтверждения.</div>
+
+        <h3>Минимальные проверки после реализации документов</h3>
+        <div class="grid2">
+          <div class="card"><h4>Согласованность</h4><p>Все endpoint-ы и поля из документов совпадают с OpenAPI; ссылки из docs/README работают.</p></div>
+          <div class="card"><h4>Инварианты</h4><p>Проверить: cursor не двигается при ошибке; повтор operationId не создаёт дубль; конфликт не перезаписывает данные.</p></div>
+          <div class="card"><h4>Безопасность</h4><p>Нет секретов и приватного содержимого в примерах и логах; auth требуется для всех sync-эндпоинтов.</p></div>
+          <div class="card"><h4>Стек</h4><p>Контракт не зависит от Kotlin/Spring деталей; клиент и сервер могут развиваться независимо.</p></div>
+        </div>
+
+        <p class="footnote">Это интерактивный прототип проектного решения. Код API и синхронизации ещё не написан.</p>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+(() => {
+  const buttons = [...document.querySelectorAll('#nav [data-tab]')];
+  const panels = [...document.querySelectorAll('.panel')];
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => {
+      buttons.forEach((item) => item.classList.toggle('active', item === button));
+      panels.forEach((panel) => panel.classList.toggle('active', panel.id === 'tab-' + button.dataset.tab));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+})();
+</script>
+</body>
+</html>

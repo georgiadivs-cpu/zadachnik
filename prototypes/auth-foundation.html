@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ежедневник — auth foundation (proposal)</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1e2b21;
+    background:
+      radial-gradient(1000px 600px at 12% 0%, #eef8ef 0%, transparent 60%),
+      radial-gradient(900px 700px at 100% 100%, #d8ebde 0%, transparent 65%),
+      linear-gradient(140deg, #e2f0e5, #f7fbf7);
+    min-height: 100vh;
+    padding: 28px clamp(16px, 4vw, 56px) 48px;
+  }
+  .page { max-width: 1160px; margin: 0 auto; }
+  .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .mark {
+    width: 48px; height: 48px; border-radius: 14px; background: #2e7d5b;
+    display: grid; place-items: center; color: #fff; font-size: 22px;
+    box-shadow: 0 10px 24px rgba(46, 125, 91, .25);
+  }
+  .eyebrow { margin: 0 0 4px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #5f7161; font-weight: 700; }
+  h1 { margin: 0; font-size: clamp(20px, 2.4vw, 28px); letter-spacing: -.02em; }
+  h1 span { color: #2e7d5b; font-weight: 600; }
+  .badge { font-size: 11px; color: #5f7161; background: rgba(255,255,255,.65); border: 1px solid rgba(46,61,47,.12); padding: 8px 12px; border-radius: 999px; white-space: nowrap; }
+  .layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 24px; align-items: start; }
+  .nav { position: sticky; top: 20px; background: rgba(255,255,255,.75); border: 1px solid rgba(46,61,47,.12); border-radius: 20px; padding: 12px; backdrop-filter: blur(14px); box-shadow: 0 16px 40px rgba(34,73,48,.07); }
+  .nav button { width: 100%; border: 0; background: transparent; color: #1e2b21; font: inherit; font-size: 13px; text-align: left; padding: 10px 12px; border-radius: 10px; cursor: pointer; }
+  .nav button:hover { background: rgba(46,125,91,.08); }
+  .nav button.active { background: #2e7d5b; color: #fff; font-weight: 650; }
+  .panel { display: none; background: rgba(255,255,255,.8); border: 1px solid rgba(46,61,47,.12); border-radius: 24px; padding: clamp(18px, 3vw, 30px); backdrop-filter: blur(14px); box-shadow: 0 18px 50px rgba(34,73,48,.08); }
+  .panel.active { display: block; }
+  .panel h2 { margin: 0 0 8px; font-size: 24px; letter-spacing: -.02em; }
+  .panel h3 { margin: 26px 0 10px; font-size: 15px; }
+  .lead { margin: 0 0 16px; color: #5f7161; line-height: 1.55; max-width: 820px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 18px; }
+  .chip { font-size: 10.5px; padding: 5px 9px; border-radius: 999px; background: #fff; border: 1px solid rgba(46,61,47,.14); color: #5f7161; }
+  .chip.ok { background: #e5f4e9; color: #1f6b4b; border-color: #b9dfc5; }
+  .chip.warn { background: #fff5df; color: #7a5a13; border-color: #ecd59b; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 8px 0 4px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid #e4efe6; vertical-align: top; }
+  th { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: #5f7161; }
+  td code { background: #f0f7f1; color: #1f6b4b; padding: 2px 5px; border-radius: 5px; font-size: 11.5px; }
+  .code { background: #142019; color: #d8e8dc; border-radius: 14px; padding: 16px; overflow-x: auto; font-family: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace; font-size: 11.5px; line-height: 1.55; white-space: pre; margin: 10px 0 4px; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .card { background: #fff; border: 1px solid rgba(46,61,47,.1); border-radius: 15px; padding: 15px; }
+  .card h4 { margin: 0 0 6px; font-size: 13px; }
+  .card p { margin: 0; font-size: 12px; line-height: 1.5; color: #5f7161; }
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
+  .step { background: #fff; border: 1px solid rgba(46,61,47,.13); border-radius: 10px; padding: 9px 11px; font-size: 11.5px; }
+  .step b { display: block; color: #2e7d5b; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 2px; }
+  .flow .arrow { flex: none; width: 18px; font-size: 14px; color: #2e7d5b; }
+  .decision { border-left: 3px solid #d9a441; background: #fffaf0; padding: 13px 15px; border-radius: 0 12px 12px 0; margin: 10px 0; font-size: 12.5px; line-height: 1.55; }
+  .decision strong { color: #7a5a13; }
+  .decision.ok { border-left-color: #2e7d5b; background: #f1faf3; }
+  .decision.ok strong { color: #1f6b4b; }
+  .tag { display: inline-block; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; padding: 3px 6px; border-radius: 5px; background: #e5f4e9; color: #1f6b4b; font-weight: 800; }
+  .footnote { font-size: 11px; color: #5f7161; line-height: 1.55; margin-top: 18px; }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    .nav { position: static; display: flex; flex-wrap: wrap; }
+    .nav button { width: auto; }
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="head">
+    <div class="brand">
+      <div class="mark">🔐</div>
+      <div>
+        <p class="eyebrow">Implementation proposal</p>
+        <h1>Auth foundation <span>backend</span></h1>
+      </div>
+    </div>
+    <div class="badge">Шаг 1 из sync-реализации · нужно ОК</div>
+  </header>
+
+  <div class="layout">
+    <nav class="nav" id="nav">
+      <button class="active" data-tab="scope">Объём</button>
+      <button data-tab="db">Схема БД</button>
+      <button data-tab="api">API</button>
+      <button data-tab="tokens">Токены</button>
+      <button data-tab="files">Файлы</button>
+      <button data-tab="tests">Проверки</button>
+      <button data-tab="next">Дальше</button>
+    </nav>
+
+    <main class="main">
+      <section class="panel active" id="tab-scope">
+        <h2>Фундамент аутентификации</h2>
+        <p class="lead">
+          Шаг добавляет только backend-аутентификацию: владельца, устройства,
+          access/refresh-токены и защиту API. Синхронизация заметок,
+          клиентский вход и UI — следующие шаги.
+        </p>
+        <div class="chips">
+          <span class="chip ok">Kotlin + Spring Boot</span>
+          <span class="chip ok">PostgreSQL + Flyway</span>
+          <span class="chip warn">без sync push/pull</span>
+          <span class="chip warn">без клиентского UI</span>
+        </div>
+
+        <div class="grid3">
+          <div class="card"><h4>Входит</h4><p>setup владельца, login, refresh, logout, devices, JWT-фильтр, BCrypt, миграция V2, интеграционные тесты.</p></div>
+          <div class="card"><h4>Не входит</h4><p>sync-операции, клиентский вход, secure storage на клиенте, rate limiting, VPN, вложения.</p></div>
+          <div class="card"><h4>Результат</h4><p>API защищён, владелец создаётся один раз, устройства получают сессии, чужие запросы получают 401.</p></div>
+        </div>
+
+        <h3>Поток первого запуска</h3>
+        <div class="flow">
+          <div class="step"><b>01</b>Пустая БД</div><div class="arrow">→</div>
+          <div class="step"><b>02</b>POST /auth/setup + setup token</div><div class="arrow">→</div>
+          <div class="step"><b>03</b>users + device</div><div class="arrow">→</div>
+          <div class="step"><b>04</b>access + refresh</div><div class="arrow">→</div>
+          <div class="step"><b>05</b>Дальнейший setup запрещён</div>
+        </div>
+
+        <div class="decision ok"><strong>Рекомендация:</strong> setup token из переменной окружения. Открытая регистрация на сервере, доступном из сети, небезопасна.</div>
+      </section>
+
+      <section class="panel" id="tab-db">
+        <h2>Миграция V2</h2>
+        <p class="lead">Три таблицы и индексы. Секреты в БД не хранятся в открытом виде.</p>
+
+        <h3>users</h3>
+        <div class="code">id uuid primary key
+email text not null unique
+password_hash text not null
+status text not null check (status in ('ACTIVE','DISABLED'))
+created_at timestamptz not null
+updated_at timestamptz not null</div>
+
+        <h3>devices</h3>
+        <div class="code">id uuid primary key
+user_id uuid not null references users(id)
+name text not null
+platform text not null check (platform in ('ANDROID','IOS','MACOS','WINDOWS'))
+created_at timestamptz not null
+last_seen_at timestamptz
+revoked_at timestamptz
+
+index devices_user_id_idx on devices(user_id)</div>
+
+        <h3>refresh_tokens</h3>
+        <div class="code">id uuid primary key
+user_id uuid not null references users(id)
+device_id uuid not null references devices(id)
+token_hash text not null unique
+expires_at timestamptz not null
+revoked_at timestamptz
+replaced_by uuid references refresh_tokens(id)
+created_at timestamptz not null
+
+index refresh_tokens_device_idx on refresh_tokens(device_id)</div>
+
+        <div class="decision"><strong>Правило:</strong> в БД хранится только SHA-256 refresh-токена. Пароль — BCrypt. Access JWT в БД не хранится.</div>
+        <p class="footnote">Существующие таблицы categories/notes из V1 не меняются.</p>
+      </section>
+
+      <section class="panel" id="tab-api">
+        <h2>Endpoints шага</h2>
+        <table>
+          <thead><tr><th>Метод</th><th>Путь</th><th>Доступ</th><th>Результат</th></tr></thead>
+          <tbody>
+            <tr><td><code>POST</code></td><td><code>/api/v1/auth/setup</code></td><td>setup token + пустая БД</td><td>201 AuthResponse</td></tr>
+            <tr><td><code>POST</code></td><td><code>/api/v1/auth/login</code></td><td>email + password</td><td>200 AuthResponse</td></tr>
+            <tr><td><code>POST</code></td><td><code>/api/v1/auth/refresh</code></td><td>refresh token</td><td>200 AuthResponse</td></tr>
+            <tr><td><code>POST</code></td><td><code>/api/v1/auth/logout</code></td><td>refresh token</td><td>204</td></tr>
+            <tr><td><code>GET</code></td><td><code>/api/v1/devices</code></td><td>Bearer</td><td>200 Device[]</td></tr>
+            <tr><td><code>DELETE</code></td><td><code>/api/v1/devices/{id}</code></td><td>Bearer</td><td>204</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Защита</h3>
+        <div class="code">permitAll:
+  /api/v1/auth/setup
+  /api/v1/auth/login
+  /api/v1/auth/refresh
+  /api/v1/auth/logout
+  /actuator/health
+
+authenticated:
+  /api/v1/devices/**
+  всё остальное</div>
+
+        <h3>Ошибки</h3>
+        <div class="grid2">
+          <div class="card"><h4>401</h4><p><code>INVALID_CREDENTIALS</code>, <code>UNAUTHENTICATED</code>, <code>REFRESH_TOKEN_INVALID</code>, <code>SETUP_TOKEN_INVALID</code></p></div>
+          <div class="card"><h4>409</h4><p><code>SETUP_ALREADY_COMPLETED</code> — владелец уже создан.</p></div>
+          <div class="card"><h4>400</h4><p><code>VALIDATION_ERROR</code> — email, пароль, платформа, deviceId.</p></div>
+          <div class="card"><h4>404</h4><p>Устройство не найдено или принадлежит другому владельцу.</p></div>
+        </div>
+      </section>
+
+      <section class="panel" id="tab-tokens">
+        <h2>Жизненный цикл токенов</h2>
+        <div class="flow">
+          <div class="step"><b>01</b>Login</div><div class="arrow">→</div>
+          <div class="step"><b>02</b>Access 15 мин</div><div class="arrow">→</div>
+          <div class="step"><b>03</b>Refresh 30 дней</div><div class="arrow">→</div>
+          <div class="step"><b>04</b>Ротация</div><div class="arrow">→</div>
+          <div class="step"><b>05</b>Старый отозван</div>
+        </div>
+
+        <div class="grid2">
+          <div class="card"><h4>Access JWT · HS256</h4><p>Claims: sub=userId, deviceId, iss, aud, iat, exp. Секрет ≥ 32 байт из окружения. TTL 15 минут.</p></div>
+          <div class="card"><h4>Refresh token</h4><p>32 случайных байта, base64url. В БД — SHA-256. TTL 30 дней. Не логируется.</p></div>
+          <div class="card"><h4>Ротация</h4><p>Refresh выдаёт новую пару. Старый токен помечается revoked и replaced_by.</p></div>
+          <div class="card"><h4>Повтор старого refresh</h4><p>Сессия устройства отзывается: все refresh и access устройства становятся недействительными.</p></div>
+        </div>
+
+        <h3>Проверка запроса</h3>
+        <div class="code">Authorization: Bearer &lt;access&gt;
+  → подпись JWT
+  → issuer / audience / exp
+  → user ACTIVE
+  → device не revoked и принадлежит user
+  → SecurityContext = userId, deviceId</div>
+
+        <div class="decision"><strong>Нужно решение:</strong> HS256 с серверным секретом. Для одного собственного сервера это проще, чем RSA; секрет хранится в environment/secret file.</div>
+      </section>
+
+      <section class="panel" id="tab-files">
+        <h2>Затрагиваемые файлы</h2>
+        <table>
+          <thead><tr><th>Файл</th><th>Действие</th></tr></thead>
+          <tbody>
+            <tr><td><code>services/api/build.gradle.kts</code></td><td>Spring Security + JWT (oauth2-jose)</td></tr>
+            <tr><td><code>services/api/src/main/resources/application.yml</code></td><td>JWT issuer/audience/secret, setup token, TTL</td></tr>
+            <tr><td><code>.../db/migration/V2__create_identity.sql</code></td><td>users, devices, refresh_tokens</td></tr>
+            <tr><td><code>.../identity/domain/*</code></td><td>User, Device, Token records</td></tr>
+            <tr><td><code>.../identity/application/*</code></td><td>AuthService, JwtService, TokenHasher</td></tr>
+            <tr><td><code>.../identity/infrastructure/*</code></td><td>JdbcUserRepository, DeviceRepository, RefreshTokenRepository</td></tr>
+            <tr><td><code>.../identity/web/*</code></td><td>AuthController, DeviceController, DTO</td></tr>
+            <tr><td><code>.../identity/config/SecurityConfiguration.kt</code></td><td>BCrypt, JWT filter, security chain</td></tr>
+            <tr><td><code>services/api/src/test/.../IdentityIntegrationTest.kt</code></td><td>setup/login/refresh/logout/devices</td></tr>
+          </tbody>
+        </table>
+        <p class="footnote">Синхронизация, клиентский UI и новые зависимости, кроме Spring Security/JWT, не затрагиваются.</p>
+      </section>
+
+      <section class="panel" id="tab-tests">
+        <h2>Проверки шага</h2>
+        <div class="grid2">
+          <div class="card"><h4>Setup</h4><p>Первый владелец создаётся; повторный setup — 409; неверный setup token — 401.</p></div>
+          <div class="card"><h4>Login</h4><p>Верный пароль — токены; неверный — 401; устройство сохраняется и обновляет last_seen.</p></div>
+          <div class="card"><h4>Refresh</h4><p>Ротация выдаёт новую пару; старый refresh недействителен; повтор старого отзывает устройство.</p></div>
+          <div class="card"><h4>Access</h4><p>Без токена — 401; истёкший/битый токен — 401; отозванное устройство — 401.</p></div>
+          <div class="card"><h4>Devices</h4><p>Список только своих устройств; удаление чужого — 404; после отзыва токены не работают.</p></div>
+          <div class="card"><h4>Данные</h4><p>Пароль не хранится открытым; refresh только хэшем; логи без токенов и паролей.</p></div>
+        </div>
+        <div class="decision ok"><strong>Команды:</strong> <code>./gradlew test</code>, <code>./gradlew bootJar</code>, запуск с PostgreSQL и проверка health/auth через curl.</div>
+      </section>
+
+      <section class="panel" id="tab-next">
+        <h2>Что после этого шага</h2>
+        <div class="grid2">
+          <div class="card"><h4>Шаг 2</h4><p>Sync push/pull для NOTE: change_log, operationId, baseRevision, cursor, tombstones.</p></div>
+          <div class="card"><h4>Шаг 3</h4><p>Клиентский auth: вход, secure storage, обновление access token.</p></div>
+          <div class="card"><h4>Шаг 4</h4><p>Клиентский sync engine: outbox flush, pull, конфликты заметок.</p></div>
+          <div class="card"><h4>Позже</h4><p>Rate limiting, VPN, вложения, TODO/чек-листы, календарь и Гант.</p></div>
+        </div>
+        <div class="decision"><strong>Нужно ваше ОК</strong> на объём шага: только backend auth, без sync и клиентского UI.</div>
+      </section>
+    </main>
+  </div>
+</div>
+<script>
+(() => {
+  const buttons = [...document.querySelectorAll('#nav [data-tab]')];
+  const panels = [...document.querySelectorAll('.panel')];
+  buttons.forEach((button) => button.addEventListener('click', () => {
+    buttons.forEach((item) => item.classList.toggle('active', item === button));
+    panels.forEach((panel) => panel.classList.toggle('active', panel.id === 'tab-' + button.dataset.tab));
+  }));
+})();
+</script>
+</body>
+</html>

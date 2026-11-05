@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ежедневник — sync notes (proposal)</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1e2b21;
+    background:
+      radial-gradient(1000px 600px at 12% 0%, #eef8ef 0%, transparent 60%),
+      radial-gradient(900px 700px at 100% 100%, #d8ebde 0%, transparent 65%),
+      linear-gradient(140deg, #e2f0e5, #f7fbf7);
+    min-height: 100vh;
+    padding: 28px clamp(16px, 4vw, 56px) 48px;
+  }
+  .page { max-width: 1160px; margin: 0 auto; }
+  .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .mark { width: 48px; height: 48px; border-radius: 14px; background: #2e7d5b; display: grid; place-items: center; color: #fff; font-size: 22px; box-shadow: 0 10px 24px rgba(46,125,91,.25); }
+  .eyebrow { margin: 0 0 4px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #5f7161; font-weight: 700; }
+  h1 { margin: 0; font-size: clamp(20px, 2.4vw, 28px); letter-spacing: -.02em; }
+  h1 span { color: #2e7d5b; font-weight: 600; }
+  .badge { font-size: 11px; color: #5f7161; background: rgba(255,255,255,.65); border: 1px solid rgba(46,61,47,.12); padding: 8px 12px; border-radius: 999px; white-space: nowrap; }
+  .layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 24px; align-items: start; }
+  .nav { position: sticky; top: 20px; background: rgba(255,255,255,.75); border: 1px solid rgba(46,61,47,.12); border-radius: 20px; padding: 12px; backdrop-filter: blur(14px); box-shadow: 0 16px 40px rgba(34,73,48,.07); }
+  .nav button { width: 100%; border: 0; background: transparent; color: #1e2b21; font: inherit; font-size: 13px; text-align: left; padding: 10px 12px; border-radius: 10px; cursor: pointer; }
+  .nav button:hover { background: rgba(46,125,91,.08); }
+  .nav button.active { background: #2e7d5b; color: #fff; font-weight: 650; }
+  .panel { display: none; background: rgba(255,255,255,.8); border: 1px solid rgba(46,61,47,.12); border-radius: 24px; padding: clamp(18px, 3vw, 30px); backdrop-filter: blur(14px); box-shadow: 0 18px 50px rgba(34,73,48,.08); }
+  .panel.active { display: block; }
+  .panel h2 { margin: 0 0 8px; font-size: 24px; letter-spacing: -.02em; }
+  .panel h3 { margin: 26px 0 10px; font-size: 15px; }
+  .lead { margin: 0 0 16px; color: #5f7161; line-height: 1.55; max-width: 820px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 18px; }
+  .chip { font-size: 10.5px; padding: 5px 9px; border-radius: 999px; background: #fff; border: 1px solid rgba(46,61,47,.14); color: #5f7161; }
+  .chip.ok { background: #e5f4e9; color: #1f6b4b; border-color: #b9dfc5; }
+  .chip.warn { background: #fff5df; color: #7a5a13; border-color: #ecd59b; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 8px 0 4px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid #e4efe6; vertical-align: top; }
+  th { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: #5f7161; }
+  td code { background: #f0f7f1; color: #1f6b4b; padding: 2px 5px; border-radius: 5px; font-size: 11.5px; }
+  .code { background: #142019; color: #d8e8dc; border-radius: 14px; padding: 16px; overflow-x: auto; font-family: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace; font-size: 11.5px; line-height: 1.55; white-space: pre; margin: 10px 0 4px; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .card { background: #fff; border: 1px solid rgba(46,61,47,.1); border-radius: 15px; padding: 15px; }
+  .card h4 { margin: 0 0 6px; font-size: 13px; }
+  .card p { margin: 0; font-size: 12px; line-height: 1.5; color: #5f7161; }
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
+  .step { background: #fff; border: 1px solid rgba(46,61,47,.13); border-radius: 10px; padding: 9px 11px; font-size: 11.5px; }
+  .step b { display: block; color: #2e7d5b; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 2px; }
+  .flow .arrow { flex: none; width: 18px; font-size: 14px; color: #2e7d5b; }
+  .decision { border-left: 3px solid #d9a441; background: #fffaf0; padding: 13px 15px; border-radius: 0 12px 12px 0; margin: 10px 0; font-size: 12.5px; line-height: 1.55; }
+  .decision strong { color: #7a5a13; }
+  .decision.ok { border-left-color: #2e7d5b; background: #f1faf3; }
+  .decision.ok strong { color: #1f6b4b; }
+  .footnote { font-size: 11px; color: #5f7161; line-height: 1.55; margin-top: 18px; }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    .nav { position: static; display: flex; flex-wrap: wrap; }
+    .nav button { width: auto; }
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="head">
+    <div class="brand">
+      <div class="mark">⇄</div>
+      <div>
+        <p class="eyebrow">Implementation proposal</p>
+        <h1>Sync notes <span>backend</span></h1>
+      </div>
+    </div>
+    <div class="badge">Шаг 2 · только NOTE · нужно ОК</div>
+  </header>
+
+  <div class="layout">
+    <nav class="nav" id="nav">
+      <button class="active" data-tab="scope">Объём</button>
+      <button data-tab="push">Push</button>
+      <button data-tab="pull">Pull</button>
+      <button data-tab="conflict">Конфликты</button>
+      <button data-tab="db">БД V3</button>
+      <button data-tab="tests">Проверки</button>
+      <button data-tab="next">Дальше</button>
+    </nav>
+
+    <main class="main">
+      <section class="panel active" id="tab-scope">
+        <h2>Первый sync-срез: заметки</h2>
+        <p class="lead">
+          Шаг добавляет серверную синхронизацию только для `NOTE`.
+          Клиентский sync engine, задачи, связи и вложения — следующими шагами.
+        </p>
+        <div class="chips">
+          <span class="chip ok">push / pull</span>
+          <span class="chip ok">idempotency</span>
+          <span class="chip ok">cursor</span>
+          <span class="chip ok">tombstone</span>
+          <span class="chip warn">только NOTE</span>
+          <span class="chip warn">без клиента</span>
+        </div>
+
+        <div class="grid3">
+          <div class="card"><h4>Входит</h4><p>change_log, processed_operations, push/pull/state, CREATE/UPDATE/DELETE, конфликты, тесты.</p></div>
+          <div class="card"><h4>Не входит</h4><p>клиентский sync, UI, tasks, lanes, links, attachments, rate limiting, VPN.</p></div>
+          <div class="card"><h4>Результат</h4><p>Два устройства могут создать и изменить заметку через сервер без дублей и молчаливой потери данных.</p></div>
+        </div>
+
+        <h3>Поток</h3>
+        <div class="flow">
+          <div class="step"><b>01</b>Локальная операция</div><div class="arrow">→</div>
+          <div class="step"><b>02</b>POST /sync/push</div><div class="arrow">→</div>
+          <div class="step"><b>03</b>revision + change_log</div><div class="arrow">→</div>
+          <div class="step"><b>04</b>GET /sync/pull</div><div class="arrow">→</div>
+          <div class="step"><b>05</b>cursor</div>
+        </div>
+
+        <div class="decision ok"><strong>Основа:</strong> протокол уже утверждён в D-019…D-022 и описан в `docs/API_CONTRACTS.md` и `docs/SYNC_PROTOCOL.md`.</div>
+      </section>
+
+      <section class="panel" id="tab-push">
+        <h2>POST /api/v1/sync/push</h2>
+        <p class="lead">До 100 операций. Каждая операция — отдельная транзакция; частичный успех допустим.</p>
+
+        <div class="code">{
+  "operations": [
+    {
+      "operationId": "a1...uuid",
+      "deviceId": "5d0f...uuid",
+      "entityType": "NOTE",
+      "entityId": "9c...uuid",
+      "operationType": "UPDATE",
+      "baseRevision": 3,
+      "clientTimestamp": "2026-11-05T20:30:00Z",
+      "payload": {
+        "title": "Заметка",
+        "contentMarkdown": "# Текст",
+        "categoryId": "work"
+      }
+    }
+  ]
+}</div>
+
+        <h3>Результат по операции</h3>
+        <div class="code">{
+  "results": [
+    {
+      "operationId": "a1...uuid",
+      "status": "APPLIED",
+      "entityId": "9c...uuid",
+      "revision": 4,
+      "changeSeq": 128
+    },
+    {
+      "operationId": "b2...uuid",
+      "status": "CONFLICT",
+      "entityId": "7d...uuid",
+      "revision": 9,
+      "serverEntity": {
+        "id": "7d...uuid",
+        "title": "Серверная",
+        "contentMarkdown": "...",
+        "categoryId": "personal",
+        "revision": 9,
+        "updatedAt": "2026-11-05T20:31:00Z",
+        "deletedAt": null
+      }
+    },
+    {
+      "operationId": "c3...uuid",
+      "status": "REJECTED",
+      "code": "VALIDATION_ERROR",
+      "message": "Заголовок обязателен"
+    }
+  ]
+}</div>
+
+        <h3>Порядок обработки</h3>
+        <div class="flow">
+          <div class="step"><b>01</b>Проверить operationId</div><div class="arrow">→</div>
+          <div class="step"><b>02</b>Проверить entityType</div><div class="arrow">→</div>
+          <div class="step"><b>03</b>Проверить baseRevision</div><div class="arrow">→</div>
+          <div class="step"><b>04</b>Применить в транзакции</div><div class="arrow">→</div>
+          <div class="step"><b>05</b>change_log</div>
+        </div>
+
+        <div class="grid2">
+          <div class="card"><h4>CREATE</h4><p>baseRevision = null. Новая заметка получает revision 1. Если entityId уже существует — REJECTED.</p></div>
+          <div class="card"><h4>UPDATE</h4><p>baseRevision обязательна. revision увеличивается на 1. Несовпадение — CONFLICT.</p></div>
+          <div class="card"><h4>DELETE</h4><p>baseRevision обязательна. Устанавливается deletedAt, revision +1, пишется tombstone.</p></div>
+          <div class="card"><h4>DUPLICATE</h4><p>Повтор operationId с тем же телом возвращает прежний результат, не создаёт изменение.</p></div>
+        </div>
+      </section>
+
+      <section class="panel" id="tab-pull">
+        <h2>GET /api/v1/sync/pull</h2>
+        <p class="lead">Изменения после cursor, по возрастанию seq. Tombstones включены. Cursor двигается только после применения.</p>
+
+        <div class="code">GET /api/v1/sync/pull?cursor=127&amp;limit=200
+Authorization: Bearer &lt;access&gt;
+
+200 OK
+{
+  "changes": [
+    {
+      "seq": 128,
+      "entityType": "NOTE",
+      "entityId": "9c...uuid",
+      "operationId": "a1...uuid",
+      "operationType": "UPDATE",
+      "revision": 4,
+      "originDeviceId": "5d0f...uuid",
+      "changedAt": "2026-11-05T20:30:01Z",
+      "payload": {
+        "id": "9c...uuid",
+        "title": "Заметка",
+        "contentMarkdown": "# Текст",
+        "categoryId": "work",
+        "revision": 4,
+        "updatedAt": "2026-11-05T20:30:01Z",
+        "deletedAt": null
+      }
+    }
+  ],
+  "nextCursor": "128",
+  "hasMore": false
+}</div>
+
+        <div class="grid2">
+          <div class="card"><h4>Cursor</h4><p>Непрозрачная строка. Начальное значение 0. При ошибке применения не сдвигается.</p></div>
+          <div class="card"><h4>Пагинация</h4><p>limit 1..500, по умолчанию 200. hasMore требует повторного запроса.</p></div>
+          <div class="card"><h4>Собственные изменения</h4><p>Возвращаются тоже. Повторное применение снимка идемпотентно.</p></div>
+          <div class="card"><h4>Пустая страница</h4><p>nextCursor = текущий cursor, hasMore = false.</p></div>
+        </div>
+      </section>
+
+      <section class="panel" id="tab-conflict">
+        <h2>Конфликт заметки</h2>
+        <p class="lead">baseRevision не совпала → сервер не перезаписывает данные и возвращает полный снимок.</p>
+
+        <div class="flow">
+          <div class="step"><b>01</b>Клиент: baseRevision 3</div><div class="arrow">→</div>
+          <div class="step"><b>02</b>Сервер: revision 5</div><div class="arrow">→</div>
+          <div class="step"><b>03</b>CONFLICT + serverEntity</div><div class="arrow">→</div>
+          <div class="step"><b>04</b>Выбор пользователя</div>
+        </div>
+
+        <div class="code">{
+  "operationId": "b2...uuid",
+  "status": "CONFLICT",
+  "entityId": "7d...uuid",
+  "revision": 5,
+  "serverEntity": {
+    "id": "7d...uuid",
+    "title": "Версия с другого устройства",
+    "contentMarkdown": "...",
+    "categoryId": "work",
+    "revision": 5,
+    "updatedAt": "2026-11-05T20:31:00Z",
+    "deletedAt": null
+  }
+}</div>
+
+        <div class="grid2">
+          <div class="card"><h4>Оставить локальную</h4><p>Новый UPDATE с baseRevision = 5 и локальным снимком.</p></div>
+          <div class="card"><h4>Принять серверную</h4><p>Локальная заметка перезаписывается serverEntity.</p></div>
+          <div class="card"><h4>Сохранить обе</h4><p>Локальная версия становится новой заметкой с новым UUID; серверная принимается.</p></div>
+          <div class="card"><h4>Удаление</h4><p>При конфликте с tombstone пользователь решает, восстановить ли локальную как новую.</p></div>
+        </div>
+
+        <div class="decision"><strong>В этом шаге:</strong> сервер только обнаруживает конфликт и возвращает снимок. Клиентский UI разрешения — следующий шаг.</div>
+      </section>
+
+      <section class="panel" id="tab-db">
+        <h2>Миграция V3</h2>
+
+        <h3>notes</h3>
+        <div class="code">alter table notes add column user_id uuid references users(id);
+create index notes_user_id_idx on notes(user_id);
+create index notes_user_updated_idx on notes(user_id, updated_at);</div>
+        <p class="footnote">user_id добавляется nullable, чтобы миграция не падала на существующих строках. Все новые заметки создаются с владельцем; операции без владельца не синхронизируются.</p>
+
+        <h3>change_log</h3>
+        <div class="code">seq bigserial primary key
+user_id uuid not null references users(id)
+entity_type text not null
+entity_id uuid not null
+operation_id uuid not null unique
+operation_type text not null
+revision bigint not null
+payload jsonb not null
+device_id uuid not null references devices(id)
+changed_at timestamptz not null
+
+index change_log_user_seq_idx on change_log(user_id, seq)</div>
+
+        <h3>processed_operations</h3>
+        <div class="code">operation_id uuid primary key
+user_id uuid not null references users(id)
+result text not null
+change_seq bigint
+processed_at timestamptz not null</div>
+
+        <div class="decision"><strong>Идемпотентность:</strong> применяется только APPLIED. Повтор возвращает DUPLICATE. Конфликты и REJECTED не сохраняются как финальный результат и пересчитываются при повторе.</div>
+      </section>
+
+      <section class="panel" id="tab-tests">
+        <h2>Проверки шага</h2>
+        <div class="grid2">
+          <div class="card"><h4>CREATE</h4><p>Заметка создаётся с revision 1, changeSeq, владельцем. Повтор operationId → DUPLICATE.</p></div>
+          <div class="card"><h4>UPDATE</h4><p>baseRevision совпала → revision +1, pull отдаёт изменение. Несовпадение → CONFLICT.</p></div>
+          <div class="card"><h4>DELETE</h4><p>deletedAt, revision +1, tombstone в pull. Повтор со старой версией → CONFLICT.</p></div>
+          <div class="card"><h4>Ownership</h4><p>Чужая заметка недоступна: NOT_FOUND/REJECTED, данные не меняются.</p></div>
+          <div class="card"><h4>Pull</h4><p>Курсор, limit, hasMore, порядок seq, пустая страница, tombstones.</p></div>
+          <div class="card"><h4>Batch</h4><p>Частичный успех: APPLIED + CONFLICT/REJECTED в одном пакете, ошибка одной операции не откатывает другие.</p></div>
+        </div>
+        <div class="decision ok"><strong>Команды:</strong> <code>./gradlew test</code>, <code>./gradlew bootJar</code>, локальный curl push/pull с PostgreSQL.</div>
+      </section>
+
+      <section class="panel" id="tab-next">
+        <h2>После шага</h2>
+        <div class="grid2">
+          <div class="card"><h4>Шаг 3</h4><p>Клиентский auth: вход, secure storage, обновление access token.</p></div>
+          <div class="card"><h4>Шаг 4</h4><p>Клиентский sync engine: outbox flush, pull, конфликты заметок.</p></div>
+          <div class="card"><h4>Шаг 5</h4><p>TODO, lanes, tasks, чек-листы и связи.</p></div>
+          <div class="card"><h4>Позже</h4><p>Вложения, календарь, Гант, rate limiting, VPN.</p></div>
+        </div>
+        <div class="decision"><strong>Нужно ваше ОК</strong> на объём: backend sync только для NOTE, без клиентского sync и UI.</div>
+      </section>
+    </main>
+  </div>
+</div>
+<script>
+(() => {
+  const buttons = [...document.querySelectorAll('#nav [data-tab]')];
+  const panels = [...document.querySelectorAll('.panel')];
+  buttons.forEach((button) => button.addEventListener('click', () => {
+    buttons.forEach((item) => item.classList.toggle('active', item === button));
+    panels.forEach((panel) => panel.classList.toggle('active', panel.id === 'tab-' + button.dataset.tab));
+  }));
+})();
+</script>
+</body>
+</html>

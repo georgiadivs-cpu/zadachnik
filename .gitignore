@@ -1,0 +1,51 @@
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.fleet/
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+apps/client/build/
+apps/client/.dart_tool/
+apps/client/**/build/
+apps/client/android/.gradle/
+apps/client/android/local.properties
+apps/client/ios/Pods/
+apps/client/ios/.symlinks/
+apps/client/macos/Pods/
+apps/client/macos/.symlinks/
+
+# Java / Kotlin / Gradle
+.gradle/
+services/api/build/
+services/api/.gradle/
+out/
+*.class
+*.jar
+!**/gradle/wrapper/gradle-wrapper.jar
+hs_err_pid*
+
+# Окружение и секреты
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.jks
+*.keystore
+
+# Логи и временные файлы
+logs/
+*.log
+tmp/
+temp/
