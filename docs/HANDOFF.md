@@ -1,46 +1,58 @@
 # HANDOFF — Ежедневник
 
-**Обновлено:** 2026-11-05  
-**Текущий этап:** фундамент клиента и синхронизации  
-**Текущий шаг:** клиентский вход и secure session — завершён  
-**Следующий шаг:** клиентский sync engine для `NOTE`  
-**Репозиторий:** `~/Projects/Zadachnik`, public GitHub `georgiadivs-cpu/zadachnik`, ветка `main`
+**Обновлено:** 2026-11-06
+**Текущий этап:** клиентский sync engine `NOTE` — завершён
+**Следующий шаг:** Markdown-редактор заметок (этап 6)
+**Репозиторий:** `~/Projects/Zadachnik`, GitHub `georgiadivs-cpu/zadachnik`, ветка `main`
 
 ## Что готово
 
 - документация продукта, архитектуры, API и sync-протокола;
 - Flutter-клиент для Android, iOS, macOS и Windows;
-- локальная SQLite + Drift, outbox заметок;
-- backend auth: setup/login/refresh/logout/devices;
-- backend sync: `push`/`pull`/`state` для `NOTE`;
+- локальная SQLite + Drift, outbox заметок, схема v2;
+- backend auth и backend sync `NOTE`;
 - клиентский вход, setup владельца, secure storage и logout;
-- HTML-прототипы API/sync, auth и клиентского входа.
+- клиентский sync engine `NOTE`: push, pull, cursor, конфликты;
+- индикатор синхронизации на экране заметок и в настройках;
+- миграция v1 → v2 с постановкой старых заметок в outbox;
+- HTML-прототип MVP `prototypes/mvp-complete.html`.
 
-## Проверки
+## Проверки этапа 5
 
-- backend: **18 тестов**, 0 падений;
-- client: **11 unit/widget тестов**, 0 падений;
-- macOS integration: secure storage запись/чтение/удаление — пройдено;
-- сборки: macOS debug, Android debug APK, iOS simulator;
-- локальный auth/sync через PostgreSQL и curl — пройдено.
+- `flutter analyze` — чисто.
+- `flutter test` — **24 теста**, 0 падений; e2e-тест по умолчанию пропущен.
+- `flutter test test/integration/sync_backend_test.dart` с реальным backend
+  и PostgreSQL — create → pull на втором клиенте → update → delete: пройдено.
+- backend `./gradlew cleanTest test` — **18 тестов**, 0 падений.
+- сборки: macOS debug, Android debug APK, iOS simulator.
 
-## Ключевые решения
+## Ключевое в sync
 
-- D-015…D-018 — Flutter/Drift и Kotlin/Spring/PostgreSQL.
-- D-019…D-022 — REST + sync-only, auth, cursor, конфликты без LWW.
-- D-023 — клиентская сессия в secure storage, logout не удаляет локальные данные.
-- D-024 — macOS MVP использует legacy Keychain без sandbox; для App Store нужен отдельный signing/sandbox шаг.
-- D-025 — setup token вводится вручную только при первичной настройке.
+- `SyncService`: push батчами, APPLIED/DUPLICATE/CONFLICT/REJECTED,
+  pull страницами, cursor после успешной транзакции.
+- Офлайн: операции остаются в outbox, повтор после восстановления сети.
+- Правка во время push не теряется: операция становится `UPDATE`
+  с новой `baseRevision`.
+- Конфликт: outbox-операция снимается, локальная и серверная версии
+  сохраняются; UI ручного разрешения ещё нет.
+- Tombstone применяется через pull, удалённая заметка исчезает из списка.
+- При 401 сессия обновляется один раз и цикл повторяется.
 
 ## Известные ограничения
 
 - синхронизируется только `NOTE`;
-- клиентский sync engine и UI разрешения конфликтов не реализованы;
+- нет UI разрешения конфликтов;
 - Windows-сборка не проверена: нужна Windows-машина или CI;
-- macOS sandbox отключён для локального debug; App Store-подпись не настроена;
+- macOS signing/notarization и App Store-подготовка не настроены;
 - rate limiting, VPN и файловое хранилище вложений не реализованы;
-- Markdown-редактор пока не реализован: заметка хранит Markdown, но UI —
-  простое текстовое поле.
+- Markdown хранится и синхронизируется, но редактора Markdown ещё нет;
+- e2e-тест требует запущенного backend и `--dart-define`.
+
+## Следующий шаг
+
+Этап 6 — Markdown-редактор заметок: редактирование, предпросмотр,
+сохранение без потери содержимого и связь с задачами/чек-листами.
+Перед реализацией нужны план и HTML-прототип, затем подтверждение.
 
 ## Документация
 

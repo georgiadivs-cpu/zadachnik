@@ -22,10 +22,14 @@ class AuthState {
   const AuthState.loading() : this(status: AuthStatus.loading);
 
   const AuthState.unauthenticated({String? error})
-      : this(status: AuthStatus.unauthenticated, error: error);
+    : this(status: AuthStatus.unauthenticated, error: error);
 
   const AuthState.authenticated(Session session, {bool offline = false})
-      : this(status: AuthStatus.authenticated, session: session, offline: offline);
+    : this(
+        status: AuthStatus.authenticated,
+        session: session,
+        offline: offline,
+      );
 
   final AuthStatus status;
   final Session? session;
@@ -41,8 +45,9 @@ final authApiProvider = Provider<AuthApi>((ref) {
   return DioAuthApi(baseUrl: apiBaseUrl);
 });
 
-final authControllerProvider =
-    NotifierProvider<SessionController, AuthState>(SessionController.new);
+final authControllerProvider = NotifierProvider<SessionController, AuthState>(
+  SessionController.new,
+);
 
 class SessionController extends Notifier<AuthState> {
   bool _bootstrapped = false;
@@ -71,7 +76,9 @@ class SessionController extends Notifier<AuthState> {
     }
 
     try {
-      final response = await ref.read(authApiProvider).refresh(session.refreshToken);
+      final response = await ref
+          .read(authApiProvider)
+          .refresh(session.refreshToken);
       final refreshed = response.toSession(session.email);
       await store.write(refreshed);
       if (ref.mounted) {
@@ -96,9 +103,43 @@ class SessionController extends Notifier<AuthState> {
     }
   }
 
+  /// Возвращает актуальную сессию, обновляя access token при необходимости.
+  Future<Session?> ensureFreshSession({bool force = false}) async {
+    final current = state.session;
+    if (current == null) {
+      return null;
+    }
+    if (!force && !current.isAccessExpired) {
+      return current;
+    }
+
+    try {
+      final response = await ref
+          .read(authApiProvider)
+          .refresh(current.refreshToken);
+      final refreshed = response.toSession(current.email);
+      await ref.read(sessionStoreProvider).write(refreshed);
+      if (ref.mounted) {
+        state = AuthState.authenticated(refreshed);
+      }
+      return refreshed;
+    } on AuthFailure catch (failure) {
+      if (failure.network) {
+        return current;
+      }
+      await ref.read(sessionStoreProvider).clear();
+      if (ref.mounted) {
+        state = AuthState.unauthenticated(error: failure.message);
+      }
+      return null;
+    }
+  }
+
   Future<void> login({required String email, required String password}) async {
     try {
-      final response = await ref.read(authApiProvider).login(
+      final response = await ref
+          .read(authApiProvider)
+          .login(
             email: email.trim(),
             password: password,
             device: await _device(),
@@ -118,7 +159,9 @@ class SessionController extends Notifier<AuthState> {
     required String password,
   }) async {
     try {
-      final response = await ref.read(authApiProvider).setup(
+      final response = await ref
+          .read(authApiProvider)
+          .setup(
             setupToken: setupToken.trim(),
             email: email.trim(),
             password: password,
@@ -148,7 +191,9 @@ class SessionController extends Notifier<AuthState> {
   }
 
   Future<DeviceInfo> _device() async {
-    final deviceId = await ref.read(sessionStoreProvider).readOrCreateDeviceId();
+    final deviceId = await ref
+        .read(sessionStoreProvider)
+        .readOrCreateDeviceId();
     return DeviceInfo(
       id: deviceId,
       name: _deviceName(),

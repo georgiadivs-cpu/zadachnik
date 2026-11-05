@@ -55,3 +55,14 @@
 - **Результат:** https://github.com/georgiadivs-cpu/zadachnik, `main`, public; коммит `ad020dd`.
 - **Ошибки:** нет.
 - **Следующий шаг:** клиентский sync engine `NOTE`.
+
+## 2026-11-06 — Клиентский sync engine `NOTE`
+
+- **Цель:** push outbox, pull по cursor, конфликты, tombstone, offline → online.
+- **Изменённые файлы:** `core/database/*`, `features/notes/*`, `features/sync/*`, `features/settings/*`, `app/home_shell.dart`, тесты sync и миграции.
+- **Результат:** схема v2 и миграция v1 → v2; `SyncApi`, `SyncRepository`, `SyncService`, `SyncController`; APPLIED/DUPLICATE/CONFLICT/REJECTED; pull страницами; защита правки во время push; индикатор sync; e2e create/pull/update/delete.
+- **Команды:** `flutter analyze`; `flutter test`; `./gradlew cleanTest test`; e2e с временным PostgreSQL и backend; `flutter build macos/apk/ios`.
+- **Проверки:** 24 client-теста, 18 backend-тестов, e2e пройден; сборки macOS/Android/iOS.
+- **Ошибки:** при первой версии миграции отсутствовал `onUpgrade`, старые заметки не попадали в outbox — исправлено и покрыто тестом; правка во время push могла потеряться — добавлена переотправка как `UPDATE`.
+- **Ограничения:** нет UI разрешения конфликтов; только `NOTE`; Windows не проверен.
+- **Следующий шаг:** Markdown-редактор заметок.

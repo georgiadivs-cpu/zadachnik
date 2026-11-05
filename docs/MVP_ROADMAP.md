@@ -33,15 +33,17 @@
 - login/setup, secure storage, bootstrap и refresh.
 - logout без удаления локальных данных.
 
-### 5. Клиентский sync engine `NOTE` — ⏳
+### 5. Клиентский sync engine `NOTE` — ✅
 
 - отправка outbox;
 - pull и применение изменений;
 - обновление cursor;
 - запись конфликтов;
-- offline → online тест.
+- offline → online тест;
+- tombstone и повторная отправка;
+- миграция локальной схемы v1 → v2.
 
-### 6. Markdown-редактор заметок — ⬜
+### 6. Markdown-редактор заметок — ⏳
 
 - редактирование и предпросмотр Markdown;
 - сохранение без потери содержимого;

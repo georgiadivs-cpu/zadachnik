@@ -1,20 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/calendar/presentation/calendar_page.dart';
 import '../features/gantt/presentation/gantt_page.dart';
 import '../features/notes/presentation/notes_page.dart';
 import '../features/settings/presentation/settings_page.dart';
+import '../features/sync/application/sync_controller.dart';
 import '../features/tasks/presentation/tasks_page.dart';
 
-class HomeShell extends StatefulWidget {
+class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
 
   @override
-  State<HomeShell> createState() => _HomeShellState();
+  ConsumerState<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends ConsumerState<HomeShell> {
   int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => ref.read(syncControllerProvider.notifier).sync());
+  }
 
   static const _pages = <Widget>[
     NotesPage(),

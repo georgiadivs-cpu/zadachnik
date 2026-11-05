@@ -1,5 +1,6 @@
 import 'package:zadachnik_client/features/auth/data/auth_api.dart';
 import 'package:zadachnik_client/features/auth/data/auth_models.dart';
+import 'package:zadachnik_client/features/sync/application/sync_controller.dart';
 
 class FakeAuthApi implements AuthApi {
   FakeAuthApi({this.loginResponse, this.setupResponse, this.refreshResponse});
@@ -69,4 +70,12 @@ class FakeAuthApi implements AuthApi {
       refreshExpiresAt: refreshExpiresAt ?? now.add(const Duration(days: 30)),
     );
   }
+}
+
+class NoopSyncController extends SyncController {
+  @override
+  SyncViewState build() => const SyncViewState.idle();
+
+  @override
+  Future<void> sync() async {}
 }

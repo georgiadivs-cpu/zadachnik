@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../sync/application/sync_controller.dart';
 import '../application/notes_providers.dart';
 import '../domain/note.dart';
 
@@ -12,11 +13,28 @@ class NotesPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notes = ref.watch(notesProvider);
+    final sync = ref.watch(syncControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Заметки'),
         actions: [
+          IconButton(
+            tooltip: 'Синхронизировать',
+            onPressed: sync.isRunning ? null : () => _sync(context, ref),
+            icon: sync.isRunning
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(
+                    sync.phase == SyncPhase.offline ||
+                            sync.phase == SyncPhase.error
+                        ? Icons.cloud_off
+                        : Icons.cloud_done_outlined,
+                  ),
+          ),
           IconButton(
             tooltip: 'Поиск',
             onPressed: () {
@@ -54,6 +72,22 @@ class NotesPage extends ConsumerWidget {
     );
   }
 
+  Future<void> _sync(BuildContext context, WidgetRef ref) async {
+    await ref.read(syncControllerProvider.notifier).sync();
+    if (!context.mounted) {
+      return;
+    }
+    final state = ref.read(syncControllerProvider);
+    final message = switch (state.phase) {
+      SyncPhase.success => 'Синхронизировано',
+      SyncPhase.offline => 'Сервер недоступен, данные сохранены локально',
+      SyncPhase.error => state.message ?? 'Ошибка синхронизации',
+      _ => 'Синхронизация',
+    };
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
   Future<void> _createNote(BuildContext context, WidgetRef ref) async {
     final draft = await showDialog<NoteDraft>(
       context: context,
@@ -76,6 +110,7 @@ class NotesPage extends ConsumerWidget {
           const SnackBar(content: Text('Заметка сохранена локально')),
         );
       }
+      await ref.read(syncControllerProvider.notifier).sync();
     } on ArgumentError catch (error) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

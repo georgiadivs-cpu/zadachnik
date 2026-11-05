@@ -7,6 +7,7 @@ import 'package:zadachnik_client/features/auth/application/auth_controller.dart'
 import 'package:zadachnik_client/features/auth/data/auth_models.dart';
 import 'package:zadachnik_client/features/notes/application/notes_providers.dart';
 import 'package:zadachnik_client/features/notes/domain/note.dart';
+import 'package:zadachnik_client/features/sync/application/sync_controller.dart';
 
 import 'fakes.dart';
 
@@ -18,7 +19,9 @@ void main() {
         userId: 'user-1',
         deviceId: 'device-1',
         accessToken: 'access',
-        accessExpiresAt: DateTime.now().toUtc().add(const Duration(minutes: 15)),
+        accessExpiresAt: DateTime.now().toUtc().add(
+          const Duration(minutes: 15),
+        ),
         refreshToken: 'refresh',
         refreshExpiresAt: DateTime.now().toUtc().add(const Duration(days: 30)),
       ),
@@ -29,7 +32,10 @@ void main() {
         overrides: [
           sessionStoreProvider.overrideWithValue(store),
           authApiProvider.overrideWithValue(api),
-          notesProvider.overrideWith((ref) => Stream<List<Note>>.value(const [])),
+          notesProvider.overrideWith(
+            (ref) => Stream<List<Note>>.value(const []),
+          ),
+          syncControllerProvider.overrideWith(NoopSyncController.new),
         ],
         child: const ZadachnikApp(),
       ),
@@ -37,8 +43,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('authEmail')), findsOneWidget);
-    await tester.enterText(find.byKey(const Key('authEmail')), 'owner@example.com');
-    await tester.enterText(find.byKey(const Key('authPassword')), 'password-1234');
+    await tester.enterText(
+      find.byKey(const Key('authEmail')),
+      'owner@example.com',
+    );
+    await tester.enterText(
+      find.byKey(const Key('authPassword')),
+      'password-1234',
+    );
     await tester.tap(find.byKey(const Key('loginButton')));
     await tester.pumpAndSettle();
 

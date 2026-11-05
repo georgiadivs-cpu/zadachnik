@@ -4,6 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:zadachnik_client/app/home_shell.dart';
 import 'package:zadachnik_client/features/notes/application/notes_providers.dart';
 import 'package:zadachnik_client/features/notes/domain/note.dart';
+import 'package:zadachnik_client/features/sync/application/sync_controller.dart';
+
+import '../auth/fakes.dart';
 
 void main() {
   testWidgets('показывает разделы и переключает вкладки', (tester) async {
@@ -13,6 +16,7 @@ void main() {
           notesProvider.overrideWith(
             (ref) => Stream<List<Note>>.value(const []),
           ),
+          syncControllerProvider.overrideWith(NoopSyncController.new),
         ],
         child: const MaterialApp(home: HomeShell()),
       ),

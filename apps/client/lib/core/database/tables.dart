@@ -13,12 +13,14 @@ class Categories extends Table {
 }
 
 /// Markdown-заметка. Удаление представлено через [deletedAt].
+@DataClassName('NoteRow')
 class Notes extends Table {
   TextColumn get id => text()();
   TextColumn get title => text().withLength(min: 1, max: 200)();
   TextColumn get contentMarkdown => text().withDefault(const Constant(''))();
   TextColumn get categoryId => text().nullable().references(Categories, #id)();
   IntColumn get revision => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('PENDING'))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -34,10 +36,37 @@ class SyncOutbox extends Table {
   TextColumn get entityId => text()();
   TextColumn get operationType => text()();
   TextColumn get payload => text()();
+  IntColumn get baseRevision => integer().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   IntColumn get attempts => integer().withDefault(const Constant(0))();
   TextColumn get lastError => text().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {operationId};
+}
+
+/// Курсор синхронизации по пользователю.
+class SyncStates extends Table {
+  TextColumn get userId => text()();
+  TextColumn get cursor => text()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {userId};
+}
+
+/// Серверная версия сущности при конфликте.
+class Conflicts extends Table {
+  TextColumn get id => text()();
+  TextColumn get userId => text()();
+  TextColumn get entityType => text()();
+  TextColumn get entityId => text()();
+
+  TextColumn get serverPayload => text()();
+  IntColumn get serverVersion => integer()();
+
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
 }

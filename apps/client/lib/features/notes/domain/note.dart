@@ -7,6 +7,7 @@ class Note {
     required this.categoryId,
     required this.categoryName,
     required this.revision,
+    required this.syncStatus,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -17,6 +18,7 @@ class Note {
   final String? categoryId;
   final String? categoryName;
   final int revision;
+  final String syncStatus;
   final DateTime createdAt;
   final DateTime updatedAt;
 }
