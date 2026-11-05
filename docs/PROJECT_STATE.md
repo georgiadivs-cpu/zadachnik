@@ -1,8 +1,8 @@
 # PROJECT_STATE — Ежедневник
 
 **Обновлено:** 2026-11-06
-**Текущий шаг:** клиентский sync engine `NOTE` — завершён
-**Следующий шаг:** Markdown-редактор заметок (этап 6)
+**Текущий шаг:** Markdown-редактор заметок — завершён
+**Следующий шаг:** TODO-доска (этап 7)
 
 ## 1. Статус
 
@@ -17,16 +17,17 @@
 | Клиентский вход | ✅ |
 | Secure storage | ✅ на macOS проверен |
 | Клиентский sync `NOTE` | ✅ push/pull/cursor/tombstone/конфликты |
-| Индикатор sync в UI | ✅ заметки и настройки |
+| Markdown-редактор заметок | ✅ создание, редактирование, автосохранение |
+| Предпросмотр Markdown | ✅ заголовки, списки, чек-листы, код, ссылки |
 | UI разрешения конфликтов | ⏳ следующий уровень |
-| Markdown-редактор | ⏳ этап 6 |
+| Связь заметок с задачами | ⏳ после TODO-доски |
 | TODO / календарь / Гант | ⏳ каркас экранов |
 | Вложения / AI / backup | ⏳ не начаты |
 
 ## 2. Проверки
 
 - Backend: `./gradlew cleanTest test` — **18 тестов**.
-- Client: `flutter test` — **24 теста**, 1 e2e пропущен без backend.
+- Client: `flutter test` — **35 тестов**, 1 e2e пропущен без backend.
 - Client + реальный backend/PostgreSQL: e2e create/pull/update/delete — пройден.
 - macOS: `integration_test/secure_storage_test.dart` — пройден.
 - Сборки: macOS debug, Android debug APK, iOS simulator.
@@ -35,6 +36,7 @@
 ## 3. Техническое состояние
 
 - клиент: Flutter 3.47.7, Riverpod, Drift, Dio, flutter_secure_storage;
+- Markdown: `flutter_markdown_plus 1.0.12`;
 - backend: Kotlin 2.2.21, Spring Boot 3.5.16, PostgreSQL 16, Flyway;
 - миграции backend: V1 notes, V2 identity, V3 note sync, V4 request hash;
 - локальная схема: v2 (`syncStatus`, `baseRevision`, `syncStates`, `conflicts`);
@@ -43,24 +45,24 @@
 - macOS app sandbox отключён для локального debug;
 - Windows-сборка требует отдельной платформы/CI.
 
-## 4. Ключевые файлы sync
+## 4. Ключевые файлы заметок
 
-- `apps/client/lib/core/database/app_database.dart` — схема v2 и миграция;
-- `apps/client/lib/features/notes/data/notes_repository.dart` — outbox и применение;
-- `apps/client/lib/features/sync/data/sync_api.dart` — HTTP push/pull;
-- `apps/client/lib/features/sync/data/sync_repository.dart` — cursor и конфликты;
-- `apps/client/lib/features/sync/application/sync_service.dart` — цикл sync;
-- `apps/client/lib/features/sync/application/sync_controller.dart` — состояние UI;
-- `apps/client/test/sync/sync_service_test.dart` — 12 тестов sync;
-- `apps/client/test/integration/sync_backend_test.dart` — e2e-сценарий.
+- `apps/client/lib/features/notes/presentation/notes_page.dart` — список и переход в редактор;
+- `apps/client/lib/features/notes/presentation/note_editor_page.dart` — редактор и предпросмотр;
+- `apps/client/lib/features/notes/data/notes_repository.dart` — outbox и локальные операции;
+- `apps/client/lib/features/notes/application/notes_providers.dart` — Riverpod-провайдеры;
+- `apps/client/test/features/notes/note_editor_test.dart` — 8 тестов редактора;
+- `apps/client/test/core/database/notes_repository_test.dart` — 5 тестов репозитория.
 
 ## 5. Известные проблемы
 
 - нет UI разрешения конфликтов, конфликты хранятся в БД;
+- чек-листы в предпросмотре не интерактивны;
+- связь заметки с задачей появится после реализации TODO-доски;
+- внешние изображения в Markdown намеренно не загружаются;
 - `notes.user_id` nullable для старых строк;
 - лимит push 1 MiB проверяется по Content-Length;
 - нет rate limiting;
 - macOS secure storage использует legacy Keychain;
 - macOS signing/notarization не настроены;
-- Markdown отображается как обычный текст;
 - e2e-тест не входит в обычный `flutter test` без backend.

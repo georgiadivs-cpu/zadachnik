@@ -4,8 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../sync/application/sync_controller.dart';
 import '../application/notes_providers.dart';
 import '../domain/note.dart';
-
-typedef NoteDraft = ({String title, String content, String categoryId});
+import 'note_editor_page.dart';
 
 class NotesPage extends ConsumerWidget {
   const NotesPage({super.key});
@@ -56,8 +55,10 @@ class NotesPage extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
                   itemCount: items.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) =>
-                      _NoteCard(note: items[index]),
+                  itemBuilder: (context, index) => _NoteCard(
+                    note: items[index],
+                    onTap: () => _openEditor(context, ref, items[index]),
+                  ),
                 ),
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stackTrace) =>
@@ -65,7 +66,7 @@ class NotesPage extends ConsumerWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _createNote(context, ref),
+        onPressed: () => _openEditor(context, ref, null),
         icon: const Icon(Icons.add),
         label: const Text('Заметка'),
       ),
@@ -88,37 +89,16 @@ class NotesPage extends ConsumerWidget {
         .showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _createNote(BuildContext context, WidgetRef ref) async {
-    final draft = await showDialog<NoteDraft>(
-      context: context,
-      builder: (context) => const _NewNoteDialog(),
+  Future<void> _openEditor(
+    BuildContext context,
+    WidgetRef ref,
+    Note? note,
+  ) async {
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (context) => NoteEditorPage(note: note)),
     );
-    if (draft == null) {
-      return;
-    }
-
-    try {
-      await ref
-          .read(notesRepositoryProvider)
-          .create(
-            title: draft.title,
-            contentMarkdown: draft.content,
-            categoryId: draft.categoryId,
-          );
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Заметка сохранена локально')),
-        );
-      }
+    if (saved == true && context.mounted) {
       await ref.read(syncControllerProvider.notifier).sync();
-    } on ArgumentError catch (error) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error.message?.toString() ?? 'Некорректная заметка'),
-          ),
-        );
-      }
     }
   }
 }
@@ -159,49 +139,71 @@ class _EmptyNotes extends StatelessWidget {
 }
 
 class _NoteCard extends StatelessWidget {
-  const _NoteCard({required this.note});
+  const _NoteCard({required this.note, required this.onTap});
 
   final Note note;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final statusIcon = switch (note.syncStatus) {
+      'CONFLICT' => Icons.warning_amber_rounded,
+      'ERROR' => Icons.error_outline,
+      'PENDING' => Icons.cloud_upload_outlined,
+      _ => Icons.cloud_done_outlined,
+    };
+    final statusColor = switch (note.syncStatus) {
+      'CONFLICT' || 'ERROR' => theme.colorScheme.error,
+      'PENDING' => theme.colorScheme.tertiary,
+      _ => theme.colorScheme.primary,
+    };
+
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(note.title, style: Theme.of(context).textTheme.titleMedium),
-            if (note.contentMarkdown.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Text(
-                note.contentMarkdown,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Icon(
-                  Icons.circle,
-                  size: 8,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 6),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(note.title, style: theme.textTheme.titleMedium),
+              if (note.contentMarkdown.isNotEmpty) ...[
+                const SizedBox(height: 6),
                 Text(
-                  note.categoryName ?? 'Без категории',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const Spacer(),
-                Text(
-                  _formatDate(note.updatedAt),
-                  style: Theme.of(context).textTheme.bodySmall,
+                  note.contentMarkdown,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium,
                 ),
               ],
-            ),
-          ],
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Icon(Icons.circle, size: 8, color: theme.colorScheme.primary),
+                  const SizedBox(width: 6),
+                  Text(
+                    note.categoryName ?? 'Без категории',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  const Spacer(),
+                  Icon(statusIcon, size: 15, color: statusColor),
+                  const SizedBox(width: 6),
+                  Text(
+                    _formatDate(note.updatedAt),
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 17,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -214,102 +216,5 @@ class _NoteCard extends StatelessWidget {
     final hour = local.hour.toString().padLeft(2, '0');
     final minute = local.minute.toString().padLeft(2, '0');
     return '$day.$month $hour:$minute';
-  }
-}
-
-class _NewNoteDialog extends StatefulWidget {
-  const _NewNoteDialog();
-
-  @override
-  State<_NewNoteDialog> createState() => _NewNoteDialogState();
-}
-
-class _NewNoteDialogState extends State<_NewNoteDialog> {
-  final _title = TextEditingController();
-  final _content = TextEditingController();
-  String _categoryId = 'personal';
-  String? _error;
-
-  @override
-  void dispose() {
-    _title.dispose();
-    _content.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    final title = _title.text.trim();
-    if (title.isEmpty) {
-      setState(() => _error = 'Введите заголовок');
-      return;
-    }
-
-    Navigator.of(context).pop<NoteDraft>((
-      title: title,
-      content: _content.text,
-      categoryId: _categoryId,
-    ));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Новая заметка'),
-      content: SizedBox(
-        width: 420,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              key: const Key('noteTitle'),
-              controller: _title,
-              autofocus: true,
-              decoration: const InputDecoration(labelText: 'Заголовок'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              key: const Key('noteContent'),
-              controller: _content,
-              minLines: 3,
-              maxLines: 6,
-              decoration: const InputDecoration(
-                labelText: 'Markdown',
-                alignLabelWithHint: true,
-              ),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: _categoryId,
-              decoration: const InputDecoration(labelText: 'Категория'),
-              items: const [
-                DropdownMenuItem(value: 'work', child: Text('Работа')),
-                DropdownMenuItem(value: 'personal', child: Text('Личное')),
-                DropdownMenuItem(value: 'family', child: Text('Семья')),
-              ],
-              onChanged: (value) =>
-                  setState(() => _categoryId = value ?? _categoryId),
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: 10),
-              Text(
-                _error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ],
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Отмена'),
-        ),
-        FilledButton(
-          key: const Key('saveNote'),
-          onPressed: _submit,
-          child: const Text('Сохранить'),
-        ),
-      ],
-    );
   }
 }

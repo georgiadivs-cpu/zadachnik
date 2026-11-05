@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ежедневник — Markdown-редактор заметок</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1c2a20;
+    background:
+      radial-gradient(1000px 600px at 8% 0%, #eef8ef 0%, transparent 60%),
+      radial-gradient(900px 700px at 100% 100%, #d7ebde 0%, transparent 65%),
+      linear-gradient(140deg, #e3f1e6, #f8fbf8);
+    min-height: 100vh;
+    padding: 22px clamp(14px, 3vw, 40px) 34px;
+  }
+  .page-head {
+    max-width: 1180px; margin: 0 auto 14px; display: flex; align-items: center;
+    justify-content: space-between; gap: 20px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark {
+    width: 42px; height: 42px; border-radius: 12px; background: #2e7d5b; color: #fff;
+    display: grid; place-items: center; font-size: 22px; box-shadow: 0 10px 22px rgba(46,125,91,.25);
+  }
+  .eyebrow { margin: 0 0 2px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #5f7161; font-weight: 800; }
+  h1.page-title { margin: 0; font-size: clamp(18px, 2.2vw, 25px); letter-spacing: -.02em; }
+  h1.page-title span { color: #2e7d5b; font-weight: 600; }
+  .legend { font-size: 11px; color: #5f7161; background: rgba(255,255,255,.65); border: 1px solid rgba(46,61,47,.12); padding: 8px 11px; border-radius: 999px; }
+
+  .window {
+    --bg: #f5faf6; --panel: #fff; --panel-2: #edf6ef; --line: #dfece2;
+    --text: #1c2a20; --muted: #637367; --primary: #2e7d5b; --primary-soft: #e0f1e5;
+    --blue: #4a6d8c; --blue-soft: #e5eef6; --amber: #c98a2e; --amber-soft: #fdf3df;
+    --red: #b8433c; --red-soft: #fbe9e7;
+    width: min(1180px, 100%); height: min(780px, calc(100vh - 120px)); min-height: 620px;
+    margin: 0 auto; border-radius: 18px; overflow: hidden; border: 1px solid #cbd8ce;
+    background: var(--bg); color: var(--text);
+    box-shadow: 0 30px 70px rgba(24,52,34,.18), 0 8px 20px rgba(24,52,34,.12);
+    display: flex; flex-direction: column;
+  }
+  .titlebar {
+    height: 42px; flex: none; display: flex; align-items: center; gap: 10px;
+    padding: 0 16px; background: var(--panel-2); border-bottom: 1px solid var(--line);
+  }
+  .traffic { display: flex; gap: 6px; }
+  .traffic i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+  .traffic i:nth-child(1) { background: #ff5f57; }
+  .traffic i:nth-child(2) { background: #febc2e; }
+  .traffic i:nth-child(3) { background: #28c840; }
+  .window-title { font-size: 12px; font-weight: 650; color: var(--muted); margin-left: 6px; }
+  .titlebar .spacer { flex: 1; }
+  .sync-pill {
+    display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--muted);
+    background: var(--panel); border: 1px solid var(--line); padding: 5px 9px; border-radius: 999px;
+  }
+  .sync-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: #35a36b; }
+
+  .shell { flex: 1; display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: 0; }
+  .note-list { background: var(--panel-2); border-right: 1px solid var(--line); padding: 16px 12px; min-height: 0; overflow-y: auto; }
+  .list-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .list-head h3 { margin: 0; font-size: 15px; }
+  .list-head .count { margin-left: auto; font-size: 10px; color: var(--muted); }
+  .new-note { width: 100%; border: 0; background: var(--primary); color: #fff; border-radius: 9px; height: 34px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; margin-bottom: 12px; }
+  .note-item { width: 100%; border: 1px solid transparent; background: transparent; text-align: left; padding: 10px 10px; border-radius: 10px; color: var(--text); font: inherit; cursor: pointer; display: block; margin-bottom: 3px; }
+  .note-item:hover { background: var(--panel); }
+  .note-item.active { background: var(--panel); border-color: var(--line); box-shadow: 0 2px 8px rgba(24,52,34,.06); }
+  .note-item b { display: block; font-size: 12px; margin-bottom: 4px; }
+  .note-item small { color: var(--muted); font-size: 9.5px; }
+  .note-item .saving { color: var(--amber); }
+
+  .editor { min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--bg); }
+  .editor-top { flex: none; display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-bottom: 1px solid var(--line); }
+  .back-btn { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; height: 30px; padding: 0 10px; font: inherit; font-size: 11px; cursor: pointer; }
+  .save-state { font-size: 10.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .save-state .dot { width: 7px; height: 7px; border-radius: 50%; background: #35a36b; }
+  .save-state.dirty .dot { background: var(--amber); }
+  .editor-top .spacer { flex: 1; }
+  .segmented { display: flex; background: var(--panel-2); border: 1px solid var(--line); border-radius: 9px; padding: 2px; }
+  .segmented button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 10.5px; padding: 5px 10px; border-radius: 7px; cursor: pointer; }
+  .segmented button.active { background: var(--panel); color: var(--text); box-shadow: 0 1px 3px rgba(24,52,34,.1); }
+  .primary-btn { border: 0; background: var(--primary); color: #fff; border-radius: 8px; height: 31px; padding: 0 12px; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
+  .primary-btn:disabled { opacity: .45; cursor: default; }
+
+  .editor-scroll { flex: 1; overflow-y: auto; padding: 22px clamp(16px, 4vw, 42px) 34px; }
+  .meta-line { display: flex; gap: 10px; align-items: center; color: var(--muted); font-size: 10.5px; margin-bottom: 10px; }
+  .tag { display: inline-flex; align-items: center; font-size: 9.5px; padding: 3px 7px; border-radius: 999px; background: var(--panel-2); color: var(--muted); }
+  .tag.green { background: var(--primary-soft); color: var(--primary); }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 800; margin-bottom: 6px; }
+  .title-input { width: 100%; border: 0; background: transparent; color: var(--text); font: inherit; font-size: clamp(22px, 3vw, 31px); font-weight: 700; letter-spacing: -.025em; padding: 4px 0; outline: none; border-bottom: 1px solid transparent; }
+  .title-input:focus { border-bottom-color: var(--primary); }
+  .meta-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  select, .category { border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 8px; height: 31px; padding: 0 9px; font: inherit; font-size: 11px; }
+  .editor-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .markdown-input {
+    width: 100%; min-height: 330px; resize: vertical; border: 1px solid var(--line); border-radius: 12px;
+    background: var(--panel); color: var(--text); padding: 16px 18px; font: 12.5px/1.65 "SF Mono", Menlo, Consolas, monospace;
+    outline: none; tab-size: 2;
+  }
+  .markdown-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(46,125,91,.1); }
+  .preview { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 22px; min-height: 330px; }
+  .preview h1, .preview h2, .preview h3 { letter-spacing: -.02em; margin: 18px 0 8px; line-height: 1.2; }
+  .preview h1:first-child, .preview h2:first-child, .preview h3:first-child { margin-top: 0; }
+  .preview h1 { font-size: 25px; }
+  .preview h2 { font-size: 19px; }
+  .preview h3 { font-size: 15px; }
+  .preview p { font-size: 12.5px; line-height: 1.65; color: #34443a; margin: 0 0 11px; }
+  .preview ul, .preview ol { margin: 0 0 12px; padding-left: 21px; }
+  .preview li { font-size: 12.5px; line-height: 1.7; color: #34443a; }
+  .preview blockquote { margin: 14px 0; padding: 9px 13px; border-left: 3px solid var(--primary); background: var(--primary-soft); border-radius: 0 8px 8px 0; color: #34443a; font-size: 12px; }
+  .preview code { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 11.5px; background: var(--panel-2); padding: 2px 5px; border-radius: 4px; }
+  .preview pre { background: var(--panel-2); border: 1px solid var(--line); border-radius: 9px; padding: 12px; overflow-x: auto; }
+  .preview pre code { background: transparent; padding: 0; }
+  .preview .task { display: flex; gap: 8px; align-items: flex-start; padding: 3px 0; font-size: 12.5px; }
+  .preview .task input { margin-top: 2px; accent-color: var(--primary); }
+  .preview .task.done span { color: var(--muted); text-decoration: line-through; }
+  .empty-preview { color: var(--muted); font-size: 12px; }
+  .hint { font-size: 10.5px; color: var(--muted); margin-top: 8px; }
+  .key { border: 1px solid var(--line); border-bottom-width: 2px; background: var(--panel); border-radius: 4px; padding: 1px 5px; font-size: 9.5px; color: var(--muted); }
+
+  .unsaved-bar {
+    display: none; align-items: center; gap: 10px; background: var(--amber-soft);
+    border-top: 1px solid #edd8ab; padding: 8px 20px; font-size: 10.5px; color: #7b551e;
+  }
+  .unsaved-bar.show { display: flex; }
+  .unsaved-bar .spacer { flex: 1; }
+
+  .dialog-backdrop { position: absolute; inset: 0; background: rgba(20,34,25,.3); display: none; place-items: center; z-index: 10; }
+  .window { position: relative; }
+  .dialog-backdrop.show { display: grid; }
+  .dialog { width: min(380px, calc(100% - 32px)); background: var(--panel); border-radius: 14px; padding: 18px; box-shadow: 0 24px 50px rgba(20,34,25,.24); }
+  .dialog h3 { margin: 0 0 7px; font-size: 15px; }
+  .dialog p { margin: 0 0 16px; font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+  .dialog-actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .ghost { border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 8px; height: 31px; padding: 0 10px; font: inherit; font-size: 11px; cursor: pointer; }
+  .danger { border: 0; background: var(--red); color: #fff; border-radius: 8px; height: 31px; padding: 0 10px; font: inherit; font-size: 11px; font-weight: 650; cursor: pointer; }
+  .toast { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%) translateY(12px); background: #1c2a20; color: #fff; font-size: 11px; padding: 8px 13px; border-radius: 9px; opacity: 0; pointer-events: none; transition: .18s ease; z-index: 20; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 760px) {
+    body { padding: 10px 8px 18px; }
+    .page-head { margin-bottom: 8px; }
+    .legend { display: none; }
+    .window { height: calc(100vh - 70px); min-height: 560px; border-radius: 14px; }
+    .shell { grid-template-columns: 1fr; }
+    .note-list { display: none; }
+    .editor-top { padding: 10px 12px; }
+    .editor-scroll { padding: 18px 14px 28px; }
+    .back-btn .label { display: none; }
+    .title-input { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+<header class="page-head">
+  <div class="brand">
+    <div class="brand-mark">✎</div>
+    <div>
+      <p class="eyebrow">Ежедневник · этап 6</p>
+      <h1 class="page-title">Markdown-редактор <span>заметок</span></h1>
+    </div>
+  </div>
+  <div class="legend">Прототип · редактирование · предпросмотр · автосохранение</div>
+</header>
+
+<main class="window">
+  <div class="titlebar">
+    <div class="traffic"><i></i><i></i><i></i></div>
+    <div class="window-title">Заметки — Ежедневник</div>
+    <div class="spacer"></div>
+    <div class="sync-pill"><span class="dot"></span> Синхронизировано · 12:40</div>
+  </div>
+
+  <div class="shell">
+    <aside class="note-list">
+      <div class="list-head">
+        <h3>Заметки</h3>
+        <span class="count">4</span>
+      </div>
+      <button class="new-note" id="newNote">+ Новая заметка</button>
+      <button class="note-item active">
+        <b>Планы на неделю</b>
+        <small>Сегодня · Работа</small>
+      </button>
+      <button class="note-item">
+        <b>Идеи для проекта</b>
+        <small>Вчера · Работа</small>
+      </button>
+      <button class="note-item">
+        <b>Список покупок</b>
+        <small>3 ноября · Личное</small>
+      </button>
+      <button class="note-item">
+        <b>Книги</b>
+        <small>1 ноября · Личное</small>
+      </button>
+    </aside>
+
+    <section class="editor">
+      <div class="editor-top">
+        <button class="back-btn" id="backBtn">← <span class="label">К заметкам</span></button>
+        <div class="save-state" id="saveState"><span class="dot"></span><span id="saveText">Все изменения сохранены</span></div>
+        <div class="spacer"></div>
+        <div class="segmented" role="tablist">
+          <button class="active" id="editTab" role="tab">Редактор</button>
+          <button id="previewTab" role="tab">Предпросмотр</button>
+        </div>
+        <button class="primary-btn" id="saveBtn">Сохранить</button>
+      </div>
+
+      <div class="editor-scroll">
+        <div class="meta-line">
+          <span class="tag green" id="categoryTag">Работа</span>
+          <span>Обновлено сегодня, 12:40</span>
+          <span>·</span>
+          <span id="chars">0 символов</span>
+        </div>
+
+        <div class="field">
+          <label for="titleInput">Заголовок</label>
+          <input class="title-input" id="titleInput" value="Планы на неделю" maxlength="200" autocomplete="off">
+        </div>
+
+        <div class="field">
+          <div class="meta-row">
+            <label style="margin:0">Категория</label>
+            <select class="category" id="categorySelect">
+              <option>Работа</option>
+              <option>Личное</option>
+              <option>Семья</option>
+            </select>
+            <span class="hint">Категория — классификация, не статус.</span>
+          </div>
+        </div>
+
+        <div class="editor-grid" id="editPane">
+          <div class="field" style="margin-bottom:0">
+            <label for="markdownInput">Markdown</label>
+            <textarea class="markdown-input" id="markdownInput" spellcheck="false"># Планы на неделю
+
+Собрать план на неделю и сверить с командой.
+
+## Главное
+
+- Подготовить план встречи
+- Согласовать сроки с поставщиком
+- Проверить бюджет
+
+## Чек-лист
+
+- [x] Собрать вводные
+- [ ] Согласовать с командой
+- [ ] Зафиксировать итоги
+
+> Связано с задачей «Подготовить план встречи».
+
+`Markdown` сохраняется в локальной БД и синхронизируется через outbox.</textarea>
+            <div class="hint">Поддерживаются заголовки, списки, чек-листы, цитаты, код и ссылки. <span class="key">⌘S</span> — сохранить.</div>
+          </div>
+        </div>
+
+        <div id="previewPane" hidden>
+          <div class="preview" id="preview"></div>
+        </div>
+      </div>
+
+      <div class="unsaved-bar" id="unsavedBar">
+        <span>Есть несохранённые изменения</span>
+        <span class="spacer"></span>
+        <button class="ghost" id="discardBtn">Отменить</button>
+        <button class="primary-btn" id="saveBarBtn">Сохранить</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="dialog-backdrop" id="dialogBackdrop">
+    <div class="dialog">
+      <h3>Выйти без сохранения?</h3>
+      <p>В заметке есть несохранённые изменения. Они будут потеряны, если выйти сейчас.</p>
+      <div class="dialog-actions">
+        <button class="ghost" id="dialogCancel">Остаться</button>
+        <button class="danger" id="dialogDiscard">Выйти без сохранения</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</main>
+
+<script>
+(() => {
+  const titleInput = document.getElementById('titleInput');
+  const markdownInput = document.getElementById('markdownInput');
+  const preview = document.getElementById('preview');
+  const editPane = document.getElementById('editPane');
+  const previewPane = document.getElementById('previewPane');
+  const editTab = document.getElementById('editTab');
+  const previewTab = document.getElementById('previewTab');
+  const saveState = document.getElementById('saveState');
+  const saveText = document.getElementById('saveText');
+  const unsavedBar = document.getElementById('unsavedBar');
+  const toast = document.getElementById('toast');
+  const categorySelect = document.getElementById('categorySelect');
+  const categoryTag = document.getElementById('categoryTag');
+  const chars = document.getElementById('chars');
+
+  let dirty = false;
+  let timer = null;
+  let saved = false;
+
+  function escapeHtml(value) {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function inline(value) {
+    return escapeHtml(value)
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+  }
+
+  function renderMarkdown(source) {
+    const lines = source.replace(/\r\n/g, '\n').split('\n');
+    let html = '';
+    let inCode = false;
+    let inList = false;
+    let inQuote = false;
+
+    const closeList = () => { if (inList) { html += '</ul>'; inList = false; } };
+    const closeQuote = () => { if (inQuote) { html += '</blockquote>'; inQuote = false; } };
+
+    for (const line of lines) {
+      if (line.trim().startsWith('```')) {
+        closeList(); closeQuote();
+        if (!inCode) { html += '<pre><code>'; inCode = true; }
+        else { html += '</code></pre>'; inCode = false; }
+        continue;
+      }
+      if (inCode) { html += escapeHtml(line) + '\n'; continue; }
+
+      if (!line.trim()) { closeList(); closeQuote(); continue; }
+
+      const heading = line.match(/^(#{1,6})\s+(.*)$/);
+      if (heading) {
+        closeList(); closeQuote();
+        const level = Math.min(heading[1].length, 3);
+        html += `<h${level}>${inline(heading[2])}</h${level}>`;
+        continue;
+      }
+
+      const task = line.match(/^\s*-\s+\[([ xX])\]\s+(.*)$/);
+      if (task) {
+        if (!inList) { html += '<ul style="list-style:none;padding-left:0">'; inList = true; }
+        const done = task[1].toLowerCase() === 'x';
+        html += `<li class="task ${done ? 'done' : ''}"><input type="checkbox" ${done ? 'checked' : ''} disabled><span>${inline(task[2])}</span></li>`;
+        continue;
+      }
+
+      const bullet = line.match(/^\s*[-*+]\s+(.*)$/);
+      if (bullet) {
+        if (!inList) { html += '<ul>'; inList = true; }
+        html += `<li>${inline(bullet[1])}</li>`;
+        continue;
+      }
+
+      if (line.trim().startsWith('>')) {
+        closeList();
+        if (!inQuote) { html += '<blockquote>'; inQuote = true; }
+        html += inline(line.replace(/^\s*>\s?/, '')) + '<br>';
+        continue;
+      }
+
+      closeList(); closeQuote();
+      html += `<p>${inline(line)}</p>`;
+    }
+    closeList(); closeQuote();
+    if (inCode) html += '</code></pre>';
+    return html || '<p class="empty-preview">Начните вводить Markdown — предпросмотр появится здесь.</p>';
+  }
+
+  function setDirty(value) {
+    dirty = value;
+    saveState.classList.toggle('dirty', value);
+    unsavedBar.classList.toggle('show', value);
+    saveText.textContent = value ? 'Есть несохранённые изменения' : 'Все изменения сохранены';
+    document.getElementById('saveBtn').disabled = !value;
+  }
+
+  function updatePreview() {
+    preview.innerHTML = renderMarkdown(markdownInput.value);
+    chars.textContent = `${markdownInput.value.length} символов`;
+  }
+
+  function notify(message) {
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(notify.timer);
+    notify.timer = setTimeout(() => toast.classList.remove('show'), 1800);
+  }
+
+  function save() {
+    setDirty(false);
+    saved = true;
+    updatePreview();
+    notify('Заметка сохранена локально · поставлена в очередь синхронизации');
+  }
+
+  function scheduleAutosave() {
+    setDirty(true);
+    clearTimeout(timer);
+    timer = setTimeout(save, 900);
+  }
+
+  titleInput.addEventListener('input', scheduleAutosave);
+  markdownInput.addEventListener('input', () => { updatePreview(); scheduleAutosave(); });
+  categorySelect.addEventListener('change', () => {
+    categoryTag.textContent = categorySelect.value;
+    scheduleAutosave();
+  });
+
+  function showPreview(show) {
+    editPane.hidden = show;
+    previewPane.hidden = !show;
+    editTab.classList.toggle('active', !show);
+    previewTab.classList.toggle('active', show);
+    if (show) updatePreview();
+  }
+
+  editTab.addEventListener('click', () => showPreview(false));
+  previewTab.addEventListener('click', () => showPreview(true));
+
+  document.getElementById('saveBtn').addEventListener('click', save);
+  document.getElementById('saveBarBtn').addEventListener('click', save);
+  document.getElementById('discardBtn').addEventListener('click', () => {
+    setDirty(false);
+    notify('Изменения отменены');
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
+      event.preventDefault();
+      save();
+    }
+  });
+
+  document.getElementById('backBtn').addEventListener('click', () => {
+    if (dirty) {
+      document.getElementById('dialogBackdrop').classList.add('show');
+    } else {
+      notify('Возврат к списку заметок');
+    }
+  });
+  document.getElementById('dialogCancel').addEventListener('click', () => {
+    document.getElementById('dialogBackdrop').classList.remove('show');
+  });
+  document.getElementById('dialogDiscard').addEventListener('click', () => {
+    document.getElementById('dialogBackdrop').classList.remove('show');
+    setDirty(false);
+    notify('Выход без сохранения');
+  });
+
+  document.getElementById('newNote').addEventListener('click', () => {
+    titleInput.value = 'Новая заметка';
+    markdownInput.value = '';
+    categorySelect.value = 'Личное';
+    categoryTag.textContent = 'Личное';
+    setDirty(true);
+    updatePreview();
+    titleInput.focus();
+    notify('Новая заметка · сохранение создаст запись');
+  });
+
+  updatePreview();
+  setDirty(false);
+})();
+</script>
+</body>
+</html>
