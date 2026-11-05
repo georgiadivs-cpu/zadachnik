@@ -4,7 +4,7 @@
 **Текущий этап:** фундамент клиента и синхронизации  
 **Текущий шаг:** клиентский вход и secure session — завершён  
 **Следующий шаг:** клиентский sync engine для `NOTE`  
-**Репозиторий:** локальный `~/Projects/Zadachnik`, ветка `main`
+**Репозиторий:** `~/Projects/Zadachnik`, public GitHub `georgiadivs-cpu/zadachnik`, ветка `main`
 
 ## Что готово
 

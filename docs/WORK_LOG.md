@@ -46,3 +46,12 @@
 - **Результат:** 11 client-тестов, secure storage integration на macOS, сборки macOS/Android/iOS.
 - **Ошибки:** macOS Keychain требовал entitlement; для локального MVP включён legacy Keychain без sandbox; App Store signing отложен.
 - **Следующий шаг:** клиентский sync engine `NOTE`.
+
+## 2026-11-05 23:30 — Публикация репозитория
+
+- **Цель:** создать публичный GitHub-репозиторий и зафиксировать исходное состояние.
+- **Изменённые файлы:** `docs/HANDOFF.md`, `docs/PROJECT_STATE.md`, `docs/WORK_LOG.md`.
+- **Команды:** `git commit`; `gh repo create zadachnik --public --source=. --remote=origin --push`; `gh repo view`.
+- **Результат:** https://github.com/georgiadivs-cpu/zadachnik, `main`, public; коммит `ad020dd`.
+- **Ошибки:** нет.
+- **Следующий шаг:** клиентский sync engine `NOTE`.

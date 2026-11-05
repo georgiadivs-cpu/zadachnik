@@ -16,6 +16,7 @@
 | Локальная БД и outbox | ✅ |
 | Клиентский вход | ✅ |
 | Secure storage | ✅ на macOS проверен |
+| Git-репозиторий | ✅ public `georgiadivs-cpu/zadachnik`, `main` |
 | Клиентский sync | ⏳ следующий шаг |
 | Markdown-редактор | ⏳ не реализован |
 | TODO / календарь / Гант | ⏳ каркас экранов |
