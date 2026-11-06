@@ -103,8 +103,7 @@
 
 ### 14. Релиз — ⏳
 
-- подпись и notarization macOS, sandbox/Keychain;
-- Windows CI и проверка на отдельной машине;
-- проверка на физических Android/iOS устройствах;
-- инструкция развёртывания сервера и восстановления;
-- финальные лимиты и тексты.
+- 14a: имя, версия, Android release, macOS ad-hoc DMG, Windows installer, iOS-инструкция — ✅;
+- 14b: notarization macOS и TestFlight — ⏳ нужен платный Apple-аккаунт;
+- проверка на iPhone 11 Pro, Samsung A30s, Mac M1 и Windows-ноутбуке — ⏳;
+- финальные лимиты, тексты и серверная инструкция — ⏳.

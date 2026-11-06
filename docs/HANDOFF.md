@@ -1,8 +1,8 @@
 # HANDOFF — Ежедневник
 
 **Обновлено:** 2026-11-06
-**Текущий этап:** Backup/restore — завершён
-**Следующий шаг:** подготовка релиза (этап 14)
+**Текущий этап:** настройка релиза 14a — завершена
+**Следующий шаг:** проверка на устройствах; 14b после платного Apple-аккаунта
 **Репозиторий:** `~/Projects/Zadachnik`, GitHub `georgiadivs-cpu/zadachnik`, ветка `main`
 
 ## Что готово
@@ -20,65 +20,61 @@
 - вложения к заметкам и задачам;
 - AI Approval с локальным rule-based ассистентом;
 - резервное копирование и безопасная проверка восстановления;
-- HTML-прототипы MVP и всех завершённых шагов.
+- release-конфигурация Android и macOS;
+- Windows Inno Setup и iOS-инструкция;
+- HTML-прототипы MVP и завершённых шагов.
 
-## Проверки этапа 13
+## Проверки этапа 14a
 
 - `flutter analyze` — чисто.
-- `flutter test` — **118 тестов**, 0 падений; 1 e2e пропущен без backend.
+- `flutter test` — **118 тестов**, 0 падений.
 - backend `./gradlew cleanTest test` — **38 тестов**, 0 падений.
-- e2e с Docker PostgreSQL и реальным backend:
-  - `age` шифрование и проверка архива;
-  - CLI `run-backup.sh` — копия создана и проверена;
-  - `restore-verify.sh` — восстановление в новую БД, сверка количества
-    записей;
-  - интеграционный тест также проверяет вложения и восстановление.
-- сборки: macOS debug, Android debug APK, iOS simulator.
+- Android release APK собран, подпись v2 проверена, label «Ежедневник».
+- macOS release собран, ad-hoc подпись проверена, DMG создан.
+- iOS release собран с `--no-codesign`; установка на устройство ожидает.
+- Windows-сборка на macOS не выполнялась; скрипт и Inno Setup готовы.
+- Устройства iPhone 11 Pro, Samsung A30s и Windows-ноутбук ещё не проверены.
 
-## Ключевое в Backup/restore
+## Артефакты
 
-- `BACKUP_DIR` на отдельном диске, вне `ATTACHMENTS_DIR`;
-- архивы `.zip.age` шифруются `age` ключевым файлом;
-- ключ на сервере с правами `0600`, офлайн-копия хранится отдельно;
-- ручной запуск из приложения и CLI;
-- политика: 7 последних + 4 недельных + 6 месячных копий;
-- снимки SQLite и журнала AI: последние 3 на устройство;
-- архив содержит `pg_dump`, вложения, manifest и последние снимки;
-- перед успехом проверяются SHA-256, manifest и `pg_restore --list`;
-- состояние и история — JSON рядом с архивами, доступны при сбое БД;
-- глобальная полоса статуса в верхней левой части всех рабочих экранов;
-- экран «Резервные копии»: создать, проверить, отправить снимок,
-  история, диск, политика, инструкция восстановления;
-- приложение не перезаписывает рабочую БД;
-- CLI восстанавливает только в новую БД и папку.
+- `dist/macos/zadachnik-0.1.0.dmg` — ad-hoc macOS;
+- `dist/android/zadachnik-0.1.0.apk` и `.sha256` — подписанный Android;
+- `apps/client/build/ios/iphoneos/Runner.app` — iOS без подписи;
+- Windows-установщик собирается на Windows:
+  `powershell -ExecutionPolicy Bypass -File .\scripts\release\build-windows.ps1`.
 
-## Зависимости и настройка
+## Ключевое в релизе
 
-- `age` 1.3.2 установлен через Homebrew;
-- клиент PostgreSQL 16 установлен для `pg_dump`/`pg_restore`;
-- сервер должен использовать клиент, совместимый с версией PostgreSQL;
-- пример переменных: `BACKUP_DIR`, `BACKUP_AGE_IDENTITY`,
-  `BACKUP_AGE_RECIPIENT`, `BACKUP_PG_DUMP`, `BACKUP_PG_RESTORE`;
-- инструкция: `scripts/backup/README.md`.
+- версия `0.1.0+1`, имя «Ежедневник»;
+- bundle/application ID не менялись;
+- macOS без notarization: Gatekeeper предупреждает, нужен обход;
+- iPhone — бесплатный профиль на 7 дней, без TestFlight;
+- Android release keystore: `~/.zadachnik/keys/zadachnik-release.jks`;
+- пароль и alias: `~/.zadachnik/keys/android.properties` и
+  `apps/client/android/key.properties`, права `600`, Git игнорирует;
+- Windows-установщик без подписи, SmartScreen может предупредить;
+- CI отсутствует, проверки ручные.
 
 ## Известные ограничения
 
-- один диск не заменяет схему 3-2-1; нужна вторая офлайн-копия;
-- при потере ключа age копии не расшифровать;
-- расписания нет, запуск только вручную;
-- восстановление на чистом сервере вручную ещё не проверялось;
-- Windows-сценарий backup/restore не проверялся;
-- macOS signing/notarization не настроены;
-- вложения не проверены вручную на всех устройствах;
-- связи задач с заметками и чек-листами отложены;
-- журнал AI локален и не синхронизируется.
+- macOS notarization и TestFlight недоступны без платного Apple Developer Program;
+- iPhone-сборка требует переустановки каждые 7 дней;
+- при установке Android release поверх debug нужно удалить debug-приложение; локальные данные пропадут без backup;
+- Windows-сборка и установка ещё не проверены;
+- iPhone 11 Pro и Samsung A30s ещё не проверены;
+- один диск backup не заменяет 3-2-1;
+- потеря ключа age означает потерю копий;
+- macOS signing/notarization не настроены.
 
 ## Следующий шаг
 
-Этап 14 — подготовка релиза: подпись и notarization macOS, sandbox
-и Keychain, Windows CI/сборка, проверка на физических устройствах,
-финальные лимиты и инструкция развёртывания сервера. Перед
-реализацией нужны план и решения по распространению macOS и Windows.
+1. Установить и проверить macOS DMG на Mac M1.
+2. Установить iOS-сборку через Xcode на iPhone 11 Pro.
+3. Установить Android APK на Samsung A30s (сначала backup).
+4. Собрать Windows-установщик на ноутбуке и проверить.
+5. Пройти `docs/RELEASE_CHECKLIST.md`.
+6. При необходимости оформить Apple Developer Program и выполнить 14b:
+   Developer ID, notarization, TestFlight.
 
 ## Документация
 
@@ -86,4 +82,4 @@
 - `API_CONTRACTS.md`, `SYNC_PROTOCOL.md`;
 - `ACCEPTANCE_CRITERIA.md`, `DEVELOPMENT_WORKFLOW.md`, `DECISIONS.md`;
 - `PROJECT_STATE.md`, `WORK_LOG.md`, `MVP_ROADMAP.md`, `NEXT_STEPS.md`;
-- `scripts/backup/README.md`.
+- `RELEASE.md`, `RELEASE_CHECKLIST.md`, `scripts/backup/README.md`.

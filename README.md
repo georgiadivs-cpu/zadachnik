@@ -77,3 +77,4 @@ cd apps/client && flutter pub get && \
 ```
 
 Резервные копии и восстановление: `scripts/backup/README.md`.
+Сборка и установка релиза: `docs/RELEASE.md`, `docs/RELEASE_CHECKLIST.md`.

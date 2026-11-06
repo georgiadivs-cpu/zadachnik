@@ -49,3 +49,22 @@ logs/
 *.log
 tmp/
 temp/
+
+# Release signing secrets
+*.p12
+*.pfx
+*.p8
+*.mobileprovision
+*.provisionprofile
+*.cer
+*.jks
+*.keystore
+key.properties
+apps/client/android/key.properties
+
+# Release artifacts
+dist/
+*.dmg
+*.apk
+*.aab
+*.msix

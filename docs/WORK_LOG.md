@@ -157,3 +157,15 @@
 - **Ошибки:** `@Value("spring.datasource.url")` не видел URL Testcontainers — заменено на `JdbcConnectionDetails`; `pg_dump` 18 создавал дамп, несовместимый с `pg_restore` 16 (`transaction_timeout`) — используется клиент PostgreSQL 16; тест удалял `attachments/tmp` — каталог пересоздаётся; `return` внутри `withUserLock` заменён на возврат значения; в скрипте восстановления `$TARGET_DB` перед многоточием ломал разбор — добавлены фигурные скобки.
 - **Ограничения:** один диск не заменяет 3-2-1; потеря ключа age = потеря копий; расписания нет; восстановление на чистом сервере вручную не проверялось; Windows не проверен.
 - **Следующий шаг:** подготовка релиза (macOS signing/notarization, Windows CI, физические устройства).
+
+## 2026-11-06 — Настройка релиза 14a
+
+- **Цель:** подготовить release-сборки и установку на личные устройства без CI и платных сервисов.
+- **Решения пользователя:** macOS вне App Store; iPhone 11 Pro; Samsung Galaxy A30s; Windows-ноутбук; установщик Windows; CI нет; бесплатный Apple personal team; Windows без сертификата; версия 0.1.0+1; имя «Ежедневник» (D-034).
+- **Изменённые файлы:** `AndroidManifest.xml`, `strings.xml`, Android `build.gradle.kts`, iOS/macOS Info.plist, Windows `main.cpp`/`Runner.rc`, `.gitignore`, `scripts/release/*`, `installer/windows/*`, `docs/RELEASE.md`, `docs/RELEASE_CHECKLIST.md`, документация.
+- **Результат:** имя «Ежедневник»; Android release подписан release keystore и проверен `apksigner`; macOS release ad-hoc + DMG; iOS release с `--no-codesign`; Windows Inno Setup и PowerShell-скрипт; инструкции по секретам и установке.
+- **Команды:** `flutter analyze`; `flutter test`; `./gradlew cleanTest test`; `flutter build apk --release`; `flutter build macos --release`; `scripts/release/build-macos-dmg.sh`; `flutter build ios --release --no-codesign`.
+- **Проверки:** 118 client-тестов, 38 backend-тестов; Android APK подпись v2 и label; macOS ad-hoc подпись и монтирование DMG; iOS bundle/display name; Windows не собран.
+- **Ошибки:** `key.properties` не создался из-за относительного пути — скопирован в `apps/client/android`; keystore получил 644 из-за `set -e` до `chmod` — права исправлены на 600; ad-hoc macOS ожидаемо отклоняется `spctl`, добавлена инструкция снятия quarantine.
+- **Ограничения:** notarization и TestFlight недоступны без платного Apple-аккаунта; iPhone-профиль 7 дней; Windows, iPhone и Samsung не проверены; Android release требует удаления debug-приложения.
+- **Следующий шаг:** проверка на устройствах по `docs/RELEASE_CHECKLIST.md`; при необходимости 14b с платным Apple-аккаунтом.

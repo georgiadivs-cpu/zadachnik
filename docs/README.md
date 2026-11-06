@@ -12,6 +12,7 @@
 8. UI_UX.md — поведение интерфейса.
 9. ACCEPTANCE_CRITERIA.md — проверяемые критерии готовности.
 10. DEVELOPMENT_WORKFLOW.md — порядок выполнения задач.
+11. RELEASE.md и RELEASE_CHECKLIST.md — сборка, подпись и проверка устройств.
 
 ## История проекта
 
