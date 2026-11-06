@@ -87,6 +87,11 @@ board_lanes:
 Поле is_terminal использовать только после утверждения
 модели завершающей дорожки.
 
+В реализации этапа 7 используется одна неявная доска без таблицы
+`boards`: дорожки принадлежат пользователю (`board_lanes.user_id`).
+Дорожки по умолчанию имеют стабильные UUID, чтобы клиент и сервер
+не создавали дубликаты.
+
 ## 5. Задачи
 
 tasks:
@@ -118,6 +123,13 @@ system_state предварительно может содержать:
 
 Завершение через дорожку требует отдельного решения
 о terminal lane.
+
+В реализации этапа 7 используются поля `id`, `title`, `description`,
+`lane_id`, `system_state` (`ACTIVE`/`CANCELLED`), `category_id`,
+`priority`, `planned_start_at`, `planned_end_at`, `actual_start_at`,
+`actual_end_at`, `revision`, `created_at`, `updated_at`, `deleted_at`.
+История перемещений хранится на клиенте в `task_status_history`
+и восстанавливается из change log по `operationId`.
 
 Связанные таблицы:
 

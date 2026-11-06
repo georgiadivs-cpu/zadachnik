@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ежедневник — TODO-доска</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1c2a20;
+    background:
+      radial-gradient(1000px 600px at 8% 0%, #eef8ef 0%, transparent 60%),
+      radial-gradient(900px 700px at 100% 100%, #d7ebde 0%, transparent 65%),
+      linear-gradient(140deg, #e3f1e6, #f8fbf8);
+    min-height: 100vh;
+    padding: 22px clamp(14px, 3vw, 40px) 34px;
+  }
+  .page-head { max-width: 1280px; margin: 0 auto 14px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark { width: 42px; height: 42px; border-radius: 12px; background: #2e7d5b; color: #fff; display: grid; place-items: center; font-size: 22px; box-shadow: 0 10px 22px rgba(46,125,91,.25); }
+  .eyebrow { margin: 0 0 2px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #5f7161; font-weight: 800; }
+  h1.page-title { margin: 0; font-size: clamp(18px, 2.2vw, 25px); letter-spacing: -.02em; }
+  h1.page-title span { color: #2e7d5b; font-weight: 600; }
+  .legend { font-size: 11px; color: #5f7161; background: rgba(255,255,255,.65); border: 1px solid rgba(46,61,47,.12); padding: 8px 11px; border-radius: 999px; }
+
+  .window {
+    --bg: #f5faf6; --panel: #fff; --panel-2: #edf6ef; --line: #dfece2;
+    --text: #1c2a20; --muted: #637367; --primary: #2e7d5b; --primary-soft: #e0f1e5;
+    --blue: #4a6d8c; --blue-soft: #e5eef6; --amber: #c98a2e; --amber-soft: #fdf3df;
+    --red: #b8433c; --red-soft: #fbe9e7; --family: #c9656e;
+    width: min(1280px, 100%); height: min(820px, calc(100vh - 120px)); min-height: 660px;
+    margin: 0 auto; border-radius: 18px; overflow: hidden; border: 1px solid #cbd8ce;
+    background: var(--bg); color: var(--text);
+    box-shadow: 0 30px 70px rgba(24,52,34,.18), 0 8px 20px rgba(24,52,34,.12);
+    display: flex; flex-direction: column; position: relative;
+  }
+  .titlebar { height: 42px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 16px; background: var(--panel-2); border-bottom: 1px solid var(--line); }
+  .traffic { display: flex; gap: 6px; }
+  .traffic i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+  .traffic i:nth-child(1) { background: #ff5f57; }
+  .traffic i:nth-child(2) { background: #febc2e; }
+  .traffic i:nth-child(3) { background: #28c840; }
+  .window-title { font-size: 12px; font-weight: 650; color: var(--muted); margin-left: 6px; }
+  .titlebar .spacer { flex: 1; }
+  .sync-pill { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--muted); background: var(--panel); border: 1px solid var(--line); padding: 5px 9px; border-radius: 999px; }
+  .sync-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: #35a36b; }
+
+  .board-head { flex: none; padding: 16px 20px 12px; border-bottom: 1px solid var(--line); background: var(--bg); }
+  .board-head-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .board-head h2 { margin: 0; font-size: 20px; letter-spacing: -.02em; }
+  .board-head .sub { font-size: 11px; color: var(--muted); }
+  .board-head .spacer { flex: 1; }
+  .primary-btn { border: 0; background: var(--primary); color: #fff; border-radius: 9px; height: 33px; padding: 0 13px; font: inherit; font-size: 11.5px; font-weight: 650; cursor: pointer; }
+  .ghost-btn { border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 8px; height: 31px; padding: 0 10px; font: inherit; font-size: 10.5px; cursor: pointer; }
+  .ghost-btn:hover { background: var(--panel-2); }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 11px; align-items: center; }
+  .filter { border: 1px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 999px; height: 27px; padding: 0 10px; font: inherit; font-size: 10px; cursor: pointer; }
+  .filter.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .filter.warn.active { background: var(--red); border-color: var(--red); }
+
+  .board-scroll { flex: 1; min-height: 0; overflow: auto; padding: 16px 20px 22px; }
+  .board { display: flex; gap: 12px; align-items: flex-start; min-height: 430px; }
+  .lane { width: 270px; flex: none; background: var(--panel-2); border: 1px solid var(--line); border-radius: 13px; padding: 10px; min-height: 410px; display: flex; flex-direction: column; }
+  .lane-head { display: flex; align-items: center; gap: 7px; padding: 4px 4px 10px; }
+  .lane-head b { font-size: 12.5px; }
+  .lane-head .count { font-size: 9.5px; background: var(--panel); border: 1px solid var(--line); color: var(--muted); padding: 2px 6px; border-radius: 999px; }
+  .lane-head .menu { margin-left: auto; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 16px; }
+  .lane-body { display: grid; gap: 8px; min-height: 70px; flex: 1; align-content: start; }
+  .lane.drag-over { outline: 2px dashed var(--primary); outline-offset: -3px; }
+  .task-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 11px; cursor: grab; box-shadow: 0 1px 3px rgba(24,52,34,.05); }
+  .task-card:active { cursor: grabbing; }
+  .task-card.dragging { opacity: .45; }
+  .task-card h4 { margin: 0 0 5px; font-size: 11.8px; line-height: 1.35; }
+  .task-card .desc { margin: 0 0 7px; font-size: 10px; line-height: 1.45; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-meta { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; font-size: 9.5px; color: var(--muted); }
+  .tag { display: inline-flex; align-items: center; font-size: 9.5px; padding: 3px 7px; border-radius: 999px; background: var(--panel-2); color: var(--muted); white-space: nowrap; }
+  .tag.green { background: var(--primary-soft); color: var(--primary); }
+  .tag.amber { background: var(--amber-soft); color: var(--amber); }
+  .tag.red { background: var(--red-soft); color: var(--red); }
+  .tag.blue { background: var(--blue-soft); color: var(--blue); }
+  .tag.family { background: #fbe9ec; color: var(--family); }
+  .dates { display: flex; gap: 8px; margin-top: 6px; font-size: 9.5px; color: var(--muted); }
+  .dates .actual { color: var(--blue); }
+  .lane-add { border: 1px dashed var(--line); background: transparent; color: var(--muted); border-radius: 9px; height: 31px; font: inherit; font-size: 10.5px; cursor: pointer; margin-top: 8px; }
+  .lane-add:hover { border-color: var(--primary); color: var(--primary); }
+  .lane.is-cancelled { background: #fbf1f0; border-color: #ecd2d0; }
+  .lane.is-cancelled .lane-head b { color: var(--red); }
+  .empty-lane { font-size: 10px; color: var(--muted); text-align: center; padding: 16px 6px; }
+
+  .drawer-backdrop { position: absolute; inset: 0; background: rgba(20,34,25,.28); display: none; z-index: 8; }
+  .drawer-backdrop.show { display: block; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: min(440px, 100%); background: var(--panel); border-left: 1px solid var(--line); z-index: 9; transform: translateX(100%); transition: transform .2s ease; display: flex; flex-direction: column; }
+  .drawer.show { transform: translateX(0); }
+  .drawer-head { padding: 16px 18px 12px; border-bottom: 1px solid var(--line); display: flex; align-items: flex-start; gap: 10px; }
+  .drawer-head h3 { margin: 0; font-size: 16px; }
+  .drawer-head small { display: block; color: var(--muted); font-size: 10px; margin-top: 3px; }
+  .drawer-head .spacer { flex: 1; }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 16px 18px 24px; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 9.5px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 800; margin-bottom: 5px; }
+  .field input, .field textarea, .field select { width: 100%; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--text); padding: 8px 9px; font: inherit; font-size: 11.5px; outline: none; }
+  .field textarea { min-height: 76px; resize: vertical; }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--primary); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .history { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 12px; }
+  .history h4 { margin: 0 0 8px; font-size: 11.5px; }
+  .history-item { display: flex; gap: 8px; padding: 6px 0; font-size: 10px; color: var(--muted); border-bottom: 1px dashed var(--line); }
+  .history-item:last-child { border-bottom: 0; }
+  .history-item i { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); margin-top: 4px; flex: none; }
+  .drawer-actions { display: flex; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--line); background: var(--panel); }
+  .drawer-actions .spacer { flex: 1; }
+  .danger { border: 0; background: var(--red); color: #fff; border-radius: 8px; height: 31px; padding: 0 10px; font: inherit; font-size: 10.5px; font-weight: 650; cursor: pointer; }
+  .ghost-danger { border: 1px solid #e4c2bf; background: var(--red-soft); color: var(--red); border-radius: 8px; height: 31px; padding: 0 10px; font: inherit; font-size: 10.5px; cursor: pointer; }
+
+  .modal-backdrop { position: absolute; inset: 0; background: rgba(20,34,25,.32); display: none; place-items: center; z-index: 10; }
+  .modal-backdrop.show { display: grid; }
+  .modal { width: min(520px, calc(100% - 28px)); max-height: calc(100% - 40px); overflow-y: auto; background: var(--panel); border-radius: 14px; padding: 18px; box-shadow: 0 24px 50px rgba(20,34,25,.24); }
+  .modal h3 { margin: 0 0 5px; font-size: 16px; }
+  .modal .lead { margin: 0 0 14px; color: var(--muted); font-size: 11px; line-height: 1.45; }
+  .lane-setting { display: flex; gap: 6px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--line); }
+  .lane-setting input { flex: 1; border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; font: inherit; font-size: 11px; background: var(--panel); color: var(--text); }
+  .lane-setting .mini { width: 27px; height: 27px; border: 1px solid var(--line); background: var(--panel); border-radius: 7px; cursor: pointer; color: var(--muted); }
+  .lane-setting .mini:disabled { opacity: .35; cursor: default; }
+  .lane-setting .del { color: var(--red); border-color: #e4c2bf; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+  .toast { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%) translateY(12px); background: #1c2a20; color: #fff; font-size: 11px; padding: 8px 13px; border-radius: 9px; opacity: 0; pointer-events: none; transition: .18s ease; z-index: 20; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .note { font-size: 10px; color: var(--muted); margin-top: 10px; line-height: 1.5; }
+
+  @media (max-width: 720px) {
+    body { padding: 10px 8px 18px; }
+    .legend { display: none; }
+    .window { height: calc(100vh - 70px); min-height: 560px; border-radius: 14px; }
+    .board-head { padding: 12px 14px 10px; }
+    .board-scroll { padding: 12px 14px 18px; }
+    .lane { width: 82vw; }
+    .drawer { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<header class="page-head">
+  <div class="brand">
+    <div class="brand-mark">▦</div>
+    <div>
+      <p class="eyebrow">Ежедневник · этап 7</p>
+      <h1 class="page-title">TODO-доска <span>и дорожки</span></h1>
+    </div>
+  </div>
+  <div class="legend">Прототип · дорожки · перемещение · отмена · история</div>
+</header>
+
+<main class="window">
+  <div class="titlebar">
+    <div class="traffic"><i></i><i></i><i></i></div>
+    <div class="window-title">Задачи — Ежедневник</div>
+    <div class="spacer"></div>
+    <div class="sync-pill"><span class="dot"></span> Локальные изменения сохранены</div>
+  </div>
+
+  <section class="board-head">
+    <div class="board-head-top">
+      <h2>Задачи</h2>
+      <span class="sub">Одна доска · рабочие статусы</span>
+      <span class="spacer"></span>
+      <button class="ghost-btn" id="laneSettingsBtn">Настроить дорожки</button>
+      <button class="primary-btn" id="addTaskBtn">+ Задача</button>
+    </div>
+    <div class="filters">
+      <button class="filter active" data-filter="all">Все</button>
+      <button class="filter" data-filter="work">Работа</button>
+      <button class="filter" data-filter="personal">Личное</button>
+      <button class="filter" data-filter="family">Семья</button>
+      <button class="filter" data-filter="high">Высокий приоритет</button>
+      <button class="filter warn" id="cancelledToggle">Показать отменённые</button>
+      <span class="note" style="margin:0 0 0 auto">Перетащите карточку в другую дорожку или откройте её меню.</span>
+    </div>
+  </section>
+
+  <div class="board-scroll">
+    <div class="board" id="board"></div>
+    <p class="note">Отмена — системное состояние, не дорожка. Отменённые задачи показываются отдельным блоком. Удалить дорожку можно только после переноса её задач.</p>
+  </div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="drawer" id="taskDrawer">
+    <div class="drawer-head">
+      <div>
+        <h3 id="drawerTitle">Задача</h3>
+        <small id="drawerSub">Редактирование</small>
+      </div>
+      <div class="spacer"></div>
+      <button class="ghost-btn" id="closeDrawer">Закрыть</button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+    <div class="drawer-actions" id="drawerActions"></div>
+  </aside>
+
+  <div class="modal-backdrop" id="laneModal">
+    <div class="modal">
+      <h3>Дорожки</h3>
+      <p class="lead">От 3 до 10 дорожек. Название и порядок можно менять. Дорожка с задачами не удаляется, пока задачи не перенесены.</p>
+      <div id="laneList"></div>
+      <button class="ghost-btn" id="addLaneBtn" style="margin-top:12px">+ Добавить дорожку</button>
+      <div class="modal-actions">
+        <button class="ghost-btn" id="closeLaneModal">Отмена</button>
+        <button class="primary-btn" id="saveLaneModal">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</main>
+
+<script>
+(() => {
+  const categories = {
+    work: { label: 'Работа', cls: 'green' },
+    personal: { label: 'Личное', cls: 'blue' },
+    family: { label: 'Семья', cls: 'family' },
+  };
+  const priorities = { low: 'Низкий', normal: 'Обычный', high: 'Высокий' };
+
+  let lanes = [
+    { id: 'new', name: 'Новые' },
+    { id: 'progress', name: 'В работе' },
+    { id: 'review', name: 'Проверка' },
+    { id: 'done', name: 'Готово' },
+  ];
+  let tasks = [
+    { id: 't1', title: 'Позвонить поставщику', desc: 'Уточнить сроки и стоимость доставки.', lane: 'new', category: 'personal', priority: 'high', state: 'active', plannedStart: '2026-11-06', plannedEnd: '2026-11-06', actualStart: '2026-11-06', actualEnd: '', history: [{ from: null, to: 'new', at: 'Сегодня, 09:10' }] },
+    { id: 't2', title: 'Собрать требования', desc: 'Согласовать список требований с командой.', lane: 'new', category: 'work', priority: 'normal', state: 'active', plannedStart: '2026-11-06', plannedEnd: '2026-11-08', actualStart: '', actualEnd: '', history: [{ from: null, to: 'new', at: 'Сегодня, 08:40' }] },
+    { id: 't3', title: 'Подготовить план встречи', desc: 'План, участники и вопросы.', lane: 'progress', category: 'work', priority: 'high', state: 'active', plannedStart: '2026-11-05', plannedEnd: '2026-11-06', actualStart: '2026-11-05', actualEnd: '', history: [{ from: 'new', to: 'progress', at: 'Сегодня, 10:05' }] },
+    { id: 't4', title: 'Согласовать бюджет', desc: 'Проверить лимиты и подписать.', lane: 'progress', category: 'work', priority: 'normal', state: 'active', plannedStart: '2026-11-07', plannedEnd: '2026-11-09', actualStart: '', actualEnd: '', history: [{ from: 'new', to: 'progress', at: 'Вчера, 18:20' }] },
+    { id: 't5', title: 'Проверить договор', desc: 'Юридические и финансовые условия.', lane: 'review', category: 'personal', priority: 'normal', state: 'active', plannedStart: '2026-11-06', plannedEnd: '2026-11-06', actualStart: '2026-11-06', actualEnd: '', history: [{ from: 'progress', to: 'review', at: 'Сегодня, 12:10' }] },
+    { id: 't6', title: 'Проверить почту', desc: '', lane: 'done', category: 'work', priority: 'low', state: 'active', plannedStart: '2026-11-05', plannedEnd: '2026-11-05', actualStart: '2026-11-05', actualEnd: '2026-11-05', history: [{ from: 'review', to: 'done', at: 'Вчера, 17:00' }] },
+    { id: 't7', title: 'Купить подарок', desc: 'День рождения в субботу.', lane: 'done', category: 'family', priority: 'normal', state: 'active', plannedStart: '2026-11-04', plannedEnd: '2026-11-05', actualStart: '2026-11-04', actualEnd: '2026-11-05', history: [{ from: 'progress', to: 'done', at: 'Вчера, 19:30' }] },
+    { id: 't8', title: 'Старый черновик', desc: 'Больше не актуально.', lane: 'new', category: 'personal', priority: 'low', state: 'cancelled', plannedStart: '', plannedEnd: '', actualStart: '', actualEnd: '', history: [{ from: 'new', to: 'new', at: '3 ноября, 11:20' }] },
+  ];
+  let filter = 'all';
+  let showCancelled = false;
+  let draggingId = null;
+  let editingId = null;
+  let laneDraft = null;
+
+  const board = document.getElementById('board');
+  const drawer = document.getElementById('taskDrawer');
+  const backdrop = document.getElementById('drawerBackdrop');
+  const laneModal = document.getElementById('laneModal');
+  const laneList = document.getElementById('laneList');
+  const toast = document.getElementById('toast');
+
+  function notify(message) {
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(notify.timer);
+    notify.timer = setTimeout(() => toast.classList.remove('show'), 1900);
+  }
+
+  function categoryTag(id) {
+    const category = categories[id] || categories.personal;
+    return `<span class="tag ${category.cls}">${category.label}</span>`;
+  }
+
+  function filtered(task) {
+    if (task.state === 'cancelled') return false;
+    if (filter === 'high') return task.priority === 'high';
+    if (filter !== 'all') return task.category === filter;
+    return true;
+  }
+
+  function renderBoard() {
+    board.innerHTML = '';
+    lanes.forEach((lane) => {
+      const laneTasks = tasks.filter((task) => task.lane === lane.id && filtered(task));
+      const el = document.createElement('div');
+      el.className = 'lane';
+      el.dataset.lane = lane.id;
+      el.innerHTML = `<div class="lane-head"><b>${lane.name}</b><span class="count">${laneTasks.length}</span><button class="menu" data-lane-menu="${lane.id}" title="Настроить">⋯</button></div><div class="lane-body" data-drop="${lane.id}"></div><button class="lane-add" data-add-lane="${lane.id}">+ Задача в дорожку</button>`;
+      const body = el.querySelector('.lane-body');
+      if (!laneTasks.length) {
+        body.innerHTML = '<div class="empty-lane">Перетащите задачу сюда</div>';
+      }
+      laneTasks.forEach((task) => body.appendChild(taskCard(task)));
+      el.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        el.classList.add('drag-over');
+      });
+      el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+      el.addEventListener('drop', (event) => {
+        event.preventDefault();
+        el.classList.remove('drag-over');
+        if (draggingId) moveTask(draggingId, lane.id);
+      });
+      board.appendChild(el);
+    });
+
+    if (showCancelled) {
+      const cancelled = tasks.filter((task) => task.state === 'cancelled');
+      const el = document.createElement('div');
+      el.className = 'lane is-cancelled';
+      el.innerHTML = `<div class="lane-head"><b>Отменённые</b><span class="count">${cancelled.length}</span></div><div class="lane-body"></div>`;
+      const body = el.querySelector('.lane-body');
+      if (!cancelled.length) body.innerHTML = '<div class="empty-lane">Нет отменённых задач</div>';
+      cancelled.forEach((task) => body.appendChild(taskCard(task)));
+      board.appendChild(el);
+    }
+  }
+
+  function taskCard(task) {
+    const el = document.createElement('div');
+    el.className = 'task-card';
+    el.draggable = task.state === 'active';
+    el.dataset.task = task.id;
+    el.innerHTML = `
+      <h4>${task.title}</h4>
+      ${task.desc ? `<p class="desc">${task.desc}</p>` : ''}
+      <div class="card-meta">${categoryTag(task.category)}${task.priority === 'high' ? '<span class="tag red">Высокий</span>' : ''}</div>
+      <div class="dates"><span>план: ${shortDate(task.plannedStart)}${task.plannedEnd ? ' — ' + shortDate(task.plannedEnd) : ''}</span>${task.actualStart ? `<span class="actual">факт: ${shortDate(task.actualStart)}</span>` : ''}</div>
+    `;
+    el.addEventListener('dragstart', () => {
+      draggingId = task.id;
+      el.classList.add('dragging');
+    });
+    el.addEventListener('dragend', () => {
+      draggingId = null;
+      el.classList.remove('dragging');
+    });
+    el.addEventListener('click', (event) => {
+      if (event.target.closest('[data-lane-menu]')) return;
+      openTask(task.id);
+    });
+    return el;
+  }
+
+  function shortDate(value) {
+    if (!value) return '—';
+    const parts = value.split('-');
+    return parts.length === 3 ? `${parts[2]}.${parts[1]}` : value;
+  }
+
+  function moveTask(id, laneId) {
+    const task = tasks.find((item) => item.id === id);
+    if (!task || task.lane === laneId || task.state !== 'active') return;
+    const fromId = task.lane;
+    const from = laneName(fromId);
+    const to = laneName(laneId);
+    task.lane = laneId;
+    task.history.unshift({ from: fromId, to: laneId, at: 'Только что' });
+    renderBoard();
+    if (editingId === id) openTask(id);
+    notify(`Задача перемещена: ${from} → ${to}`);
+  }
+
+  function openTask(id) {
+    const task = tasks.find((item) => item.id === id);
+    if (!task) return;
+    editingId = id;
+    document.getElementById('drawerTitle').textContent = task.title;
+    document.getElementById('drawerSub').textContent = task.state === 'cancelled' ? 'Отменена' : 'Активная задача';
+    const body = document.getElementById('drawerBody');
+    body.innerHTML = `
+      <div class="field"><label>Название</label><input id="taskTitle" value="${escapeAttr(task.title)}"></div>
+      <div class="field"><label>Описание</label><textarea id="taskDesc">${escapeHtml(task.desc)}</textarea></div>
+      <div class="grid-2">
+        <div class="field"><label>Дорожка</label><select id="taskLane">${lanes.map((lane) => `<option value="${lane.id}" ${lane.id === task.lane ? 'selected' : ''}>${lane.name}</option>`).join('')}</select></div>
+        <div class="field"><label>Категория</label><select id="taskCategory">${Object.entries(categories).map(([id, value]) => `<option value="${id}" ${id === task.category ? 'selected' : ''}>${value.label}</option>`).join('')}</select></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>Приоритет</label><select id="taskPriority">${Object.entries(priorities).map(([id, label]) => `<option value="${id}" ${id === task.priority ? 'selected' : ''}>${label}</option>`).join('')}</select></div>
+        <div class="field"><label>Системное состояние</label><input value="${task.state === 'cancelled' ? 'Отменена' : 'Активна'}" disabled></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>План: начало</label><input type="date" id="taskPlanStart" value="${task.plannedStart}"></div>
+        <div class="field"><label>План: завершение</label><input type="date" id="taskPlanEnd" value="${task.plannedEnd}"></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>Факт: начало</label><input type="date" id="taskActualStart" value="${task.actualStart}"></div>
+        <div class="field"><label>Факт: завершение</label><input type="date" id="taskActualEnd" value="${task.actualEnd}"></div>
+      </div>
+      <div class="history"><h4>История перемещений</h4>${task.history.map((item) => `<div class="history-item"><i></i><span>${item.at} · ${item.from ? laneName(item.from) + ' → ' : 'Создана в '}${laneName(item.to)}</span></div>`).join('')}</div>
+    `;
+    const actions = document.getElementById('drawerActions');
+    actions.innerHTML = task.state === 'cancelled'
+      ? `<button class="ghost-btn" id="restoreTask">Вернуть в работу</button><span class="spacer"></span><button class="ghost-btn" id="closeDrawer2">Закрыть</button><button class="primary-btn" id="saveTask">Сохранить</button>`
+      : `<button class="ghost-danger" id="cancelTask">Отменить задачу</button><span class="spacer"></span><button class="ghost-btn" id="closeDrawer2">Закрыть</button><button class="primary-btn" id="saveTask">Сохранить</button>`;
+    document.getElementById('closeDrawer2').addEventListener('click', closeDrawer);
+    document.getElementById('saveTask').addEventListener('click', saveTask);
+    const cancel = document.getElementById('cancelTask');
+    if (cancel) cancel.addEventListener('click', () => setCancelled(id, true));
+    const restore = document.getElementById('restoreTask');
+    if (restore) restore.addEventListener('click', () => setCancelled(id, false));
+    drawer.classList.add('show');
+    backdrop.classList.add('show');
+  }
+
+  function saveTask() {
+    const task = tasks.find((item) => item.id === editingId);
+    if (!task) return;
+    const oldLane = task.lane;
+    task.title = document.getElementById('taskTitle').value.trim() || 'Без названия';
+    task.desc = document.getElementById('taskDesc').value.trim();
+    task.lane = document.getElementById('taskLane').value;
+    task.category = document.getElementById('taskCategory').value;
+    task.priority = document.getElementById('taskPriority').value;
+    task.plannedStart = document.getElementById('taskPlanStart').value;
+    task.plannedEnd = document.getElementById('taskPlanEnd').value;
+    task.actualStart = document.getElementById('taskActualStart').value;
+    task.actualEnd = document.getElementById('taskActualEnd').value;
+    if (oldLane !== task.lane) task.history.unshift({ from: oldLane, to: task.lane, at: 'Только что' });
+    renderBoard();
+    openTask(task.id);
+    notify('Задача сохранена · локально');
+  }
+
+  function setCancelled(id, value) {
+    const task = tasks.find((item) => item.id === id);
+    if (!task) return;
+    task.state = value ? 'cancelled' : 'active';
+    if (!value) task.history.unshift({ from: task.lane, to: task.lane, at: 'Возвращена в работу' });
+    closeDrawer();
+    renderBoard();
+    notify(value ? 'Задача отменена' : 'Задача возвращена в работу');
+  }
+
+  function closeDrawer() {
+    editingId = null;
+    drawer.classList.remove('show');
+    backdrop.classList.remove('show');
+  }
+
+  function laneName(id) {
+    return lanes.find((lane) => lane.id === id)?.name || '—';
+  }
+
+  function openLaneModal() {
+    laneDraft = lanes.map((lane) => ({ ...lane }));
+    renderLaneDraft();
+    laneModal.classList.add('show');
+  }
+
+  function renderLaneDraft() {
+    laneList.innerHTML = laneDraft.map((lane, index) => {
+      const count = tasks.filter((task) => task.lane === lane.id).length;
+      return `<div class="lane-setting">
+        <span class="tag">${index + 1}</span>
+        <input value="${escapeAttr(lane.name)}" data-lane-name="${lane.id}">
+        <span class="tag ${count ? 'amber' : ''}">${count} задач</span>
+        <button class="mini" data-lane-up="${lane.id}" ${index === 0 ? 'disabled' : ''} title="Выше">↑</button>
+        <button class="mini" data-lane-down="${lane.id}" ${index === laneDraft.length - 1 ? 'disabled' : ''} title="Ниже">↓</button>
+        <button class="mini del" data-lane-del="${lane.id}" ${count > 0 || laneDraft.length <= 3 ? 'disabled' : ''} title="Удалить">×</button>
+      </div>`;
+    }).join('');
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function escapeAttr(value) { return escapeHtml(value); }
+
+  function showNewTask(laneId) {
+    const id = `t${Date.now()}`;
+    tasks.push({ id, title: 'Новая задача', desc: '', lane: laneId || lanes[0].id, category: 'personal', priority: 'normal', state: 'active', plannedStart: '', plannedEnd: '', actualStart: '', actualEnd: '', history: [{ from: null, to: laneId || lanes[0].id, at: 'Только что' }] });
+    renderBoard();
+    openTask(id);
+    setTimeout(() => document.getElementById('taskTitle')?.select(), 50);
+  }
+
+  document.addEventListener('dragstart', (event) => {
+    const card = event.target.closest('[data-task]');
+    if (card) draggingId = card.dataset.task;
+  });
+
+  document.addEventListener('click', (event) => {
+    const addLaneTask = event.target.closest('[data-add-lane]');
+    if (addLaneTask) { showNewTask(addLaneTask.dataset.addLane); return; }
+    const menu = event.target.closest('[data-lane-menu]');
+    if (menu) { openLaneModal(); return; }
+    if (event.target === backdrop) closeDrawer();
+  });
+
+  document.getElementById('addTaskBtn').addEventListener('click', () => showNewTask());
+  document.getElementById('closeDrawer').addEventListener('click', closeDrawer);
+  document.getElementById('laneSettingsBtn').addEventListener('click', openLaneModal);
+  document.getElementById('closeLaneModal').addEventListener('click', () => laneModal.classList.remove('show'));
+  document.getElementById('addLaneBtn').addEventListener('click', () => {
+    if (laneDraft.length >= 10) { notify('Максимум 10 дорожек'); return; }
+    laneDraft.push({ id: `lane${Date.now()}`, name: 'Новая дорожка' });
+    renderLaneDraft();
+  });
+
+  laneList.addEventListener('input', (event) => {
+    const input = event.target.closest('[data-lane-name]');
+    if (!input) return;
+    const lane = laneDraft.find((item) => item.id === input.dataset.laneName);
+    if (lane) lane.name = input.value;
+  });
+
+  laneList.addEventListener('click', (event) => {
+    const up = event.target.closest('[data-lane-up]');
+    const down = event.target.closest('[data-lane-down]');
+    const del = event.target.closest('[data-lane-del]');
+    if (up) {
+      const index = laneDraft.findIndex((lane) => lane.id === up.dataset.laneUp);
+      if (index > 0) { [laneDraft[index - 1], laneDraft[index]] = [laneDraft[index], laneDraft[index - 1]]; renderLaneDraft(); }
+    } else if (down) {
+      const index = laneDraft.findIndex((lane) => lane.id === down.dataset.laneDown);
+      if (index >= 0 && index < laneDraft.length - 1) { [laneDraft[index + 1], laneDraft[index]] = [laneDraft[index], laneDraft[index + 1]]; renderLaneDraft(); }
+    } else if (del) {
+      const index = laneDraft.findIndex((lane) => lane.id === del.dataset.laneDel);
+      const count = tasks.filter((task) => task.lane === del.dataset.laneDel).length;
+      if (laneDraft.length <= 3) notify('Минимум 3 дорожки');
+      else if (count > 0) notify('Сначала перенесите задачи из дорожки');
+      else { laneDraft.splice(index, 1); renderLaneDraft(); }
+    }
+  });
+
+  document.getElementById('saveLaneModal').addEventListener('click', () => {
+    if (laneDraft.some((lane) => !lane.name.trim())) { notify('Название дорожки не может быть пустым'); return; }
+    if (laneDraft.length < 3 || laneDraft.length > 10) { notify('Нужно от 3 до 10 дорожек'); return; }
+    lanes = laneDraft.map((lane) => ({ ...lane, name: lane.name.trim() }));
+    laneModal.classList.remove('show');
+    renderBoard();
+    notify('Дорожки сохранены');
+  });
+
+  document.querySelectorAll('[data-filter]').forEach((button) => {
+    button.addEventListener('click', () => {
+      filter = button.dataset.filter;
+      document.querySelectorAll('[data-filter]').forEach((item) => item.classList.toggle('active', item === button));
+      renderBoard();
+    });
+  });
+
+  document.getElementById('cancelledToggle').addEventListener('click', (event) => {
+    showCancelled = !showCancelled;
+    event.currentTarget.classList.toggle('active', showCancelled);
+    renderBoard();
+  });
+
+  renderBoard();
+})();
+</script>
+</body>
+</html>

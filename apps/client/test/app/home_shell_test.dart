@@ -5,6 +5,9 @@ import 'package:zadachnik_client/app/home_shell.dart';
 import 'package:zadachnik_client/features/notes/application/notes_providers.dart';
 import 'package:zadachnik_client/features/notes/domain/note.dart';
 import 'package:zadachnik_client/features/sync/application/sync_controller.dart';
+import 'package:zadachnik_client/features/tasks/application/tasks_providers.dart';
+import 'package:zadachnik_client/features/tasks/domain/lane.dart';
+import 'package:zadachnik_client/features/tasks/domain/task.dart';
 
 import '../auth/fakes.dart';
 
@@ -15,6 +18,12 @@ void main() {
         overrides: [
           notesProvider.overrideWith(
             (ref) => Stream<List<Note>>.value(const []),
+          ),
+          lanesProvider.overrideWith(
+            (ref) => Stream<List<Lane>>.value(const []),
+          ),
+          tasksProvider.overrideWith(
+            (ref) => Stream<List<Task>>.value(const []),
           ),
           syncControllerProvider.overrideWith(NoopSyncController.new),
         ],
@@ -31,6 +40,6 @@ void main() {
     await tester.tap(find.text('Задачи'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Одна доска'), findsOneWidget);
+    expect(find.text('Высокий приоритет'), findsOneWidget);
   });
 }

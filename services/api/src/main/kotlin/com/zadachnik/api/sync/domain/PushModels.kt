@@ -10,7 +10,7 @@ data class PushResult(
     val entityId: UUID? = null,
     val revision: Long? = null,
     val changeSeq: Long? = null,
-    val serverEntity: NoteSnapshot? = null,
+    val serverEntity: Map<String, Any?>? = null,
     val code: String? = null,
     val message: String? = null,
 )

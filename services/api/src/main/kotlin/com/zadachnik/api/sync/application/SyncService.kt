@@ -28,7 +28,9 @@ data class SyncState(
 
 @Service
 class SyncService(
-    private val processor: NoteSyncProcessor,
+    private val notes: NoteSyncProcessor,
+    private val tasks: TaskSyncProcessor,
+    private val lanes: LaneSyncProcessor,
     private val changeLog: ChangeLogRepository,
     private val objectMapper: ObjectMapper,
 ) {
@@ -36,10 +38,10 @@ class SyncService(
     fun push(userId: UUID, deviceId: UUID, operations: List<SyncOperationCommand>): List<PushResult> =
         operations.map { operation ->
             when {
-                operation.entityType != "NOTE" -> rejected(
+                operation.entityType !in SUPPORTED_ENTITIES -> rejected(
                     operation,
                     "UNSUPPORTED_ENTITY",
-                    "В этом шаге поддерживаются только NOTE",
+                    "Поддерживаются NOTE, TASK и LANE",
                 )
                 operation.deviceId != deviceId -> rejected(
                     operation,
@@ -47,14 +49,19 @@ class SyncService(
                     "Операция принадлежит другому устройству",
                 )
                 else -> try {
-                    processor.process(userId, deviceId, operation)
+                    when (operation.entityType) {
+                        "NOTE" -> notes.process(userId, deviceId, operation)
+                        "TASK" -> tasks.process(userId, deviceId, operation)
+                        "LANE" -> lanes.process(userId, deviceId, operation)
+                        else -> error("Unsupported entity")
+                    }
                 } catch (conflict: OperationConflict) {
                     PushResult(
                         operationId = operation.operationId,
                         status = PushStatus.CONFLICT,
                         entityId = conflict.server.id,
                         revision = conflict.server.revision,
-                        serverEntity = conflict.server,
+                        serverEntity = conflict.server.toPayload(),
                     )
                 } catch (rejected: OperationRejected) {
                     rejected(operation, rejected.code, rejected.message)
@@ -105,6 +112,7 @@ class SyncService(
         )
 
     companion object {
+        private val SUPPORTED_ENTITIES = setOf("NOTE", "TASK", "LANE")
         const val PROTOCOL_VERSION = 1
         const val DEFAULT_LIMIT = 200
         const val MAX_LIMIT = 500

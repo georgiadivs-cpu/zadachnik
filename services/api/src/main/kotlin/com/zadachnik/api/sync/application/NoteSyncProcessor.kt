@@ -1,14 +1,10 @@
 package com.zadachnik.api.sync.application
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.zadachnik.api.sync.domain.NoteSnapshot
 import com.zadachnik.api.sync.domain.OperationType
 import com.zadachnik.api.sync.domain.PushResult
-import com.zadachnik.api.sync.domain.PushStatus
 import com.zadachnik.api.sync.domain.SyncOperationCommand
-import com.zadachnik.api.sync.infrastructure.ChangeLogRepository
 import com.zadachnik.api.sync.infrastructure.NoteRepository
-import com.zadachnik.api.sync.infrastructure.ProcessedOperationRepository
 import java.time.Instant
 import java.util.UUID
 import org.springframework.stereotype.Service
@@ -17,26 +13,12 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class NoteSyncProcessor(
     private val notes: NoteRepository,
-    private val changeLog: ChangeLogRepository,
-    private val processed: ProcessedOperationRepository,
-    private val objectMapper: ObjectMapper,
+    private val support: SyncOperationSupport,
 ) {
 
     @Transactional
     fun process(userId: UUID, deviceId: UUID, operation: SyncOperationCommand): PushResult {
-        val requestHash = operationHash(operation)
-        processed.find(operation.operationId, userId)?.let { stored ->
-            if (stored.requestHash != null && stored.requestHash != requestHash) {
-                throw OperationRejected("OPERATION_ID_CONFLICT", "operationId уже использован с другим телом")
-            }
-            return PushResult(
-                operationId = operation.operationId,
-                status = PushStatus.DUPLICATE,
-                entityId = operation.entityId,
-                revision = stored.revision,
-                changeSeq = stored.changeSeq,
-            )
-        }
+        support.duplicate(operation, userId)?.let { return it }
 
         val now = Instant.now()
         return when (operation.operationType) {
@@ -68,7 +50,7 @@ class NoteSyncProcessor(
             categoryId = payload.categoryId,
             now = now,
         )
-        return appendApplied(userId, deviceId, operation, note, now)
+        return applied(userId, deviceId, operation, note, now)
     }
 
     private fun update(
@@ -81,10 +63,7 @@ class NoteSyncProcessor(
             ?: throw OperationRejected("VALIDATION_ERROR", "baseRevision обязательна для UPDATE")
         val current = notes.findForUpdate(userId, operation.entityId)
             ?: throw OperationRejected("NOT_FOUND", "Заметка не найдена")
-        if (current.deletedAt != null) {
-            throw OperationConflict(current)
-        }
-        if (current.revision != baseRevision) {
+        if (current.deletedAt != null || current.revision != baseRevision) {
             throw OperationConflict(current)
         }
 
@@ -99,7 +78,7 @@ class NoteSyncProcessor(
             now = now,
         ) ?: throw OperationConflict(notes.find(userId, operation.entityId) ?: current)
 
-        return appendApplied(userId, deviceId, operation, updated, now)
+        return applied(userId, deviceId, operation, updated, now)
     }
 
     private fun delete(
@@ -123,63 +102,25 @@ class NoteSyncProcessor(
             now = now,
         ) ?: throw OperationConflict(notes.find(userId, operation.entityId) ?: current)
 
-        return appendApplied(userId, deviceId, operation, deleted, now)
+        return applied(userId, deviceId, operation, deleted, now)
     }
 
-    private fun appendApplied(
+    private fun applied(
         userId: UUID,
         deviceId: UUID,
         operation: SyncOperationCommand,
         note: NoteSnapshot,
         now: Instant,
-    ): PushResult {
-        val payload = objectMapper.writeValueAsString(
-            mapOf(
-                "id" to note.id.toString(),
-                "title" to note.title,
-                "contentMarkdown" to note.contentMarkdown,
-                "categoryId" to note.categoryId,
-                "revision" to note.revision,
-                "createdAt" to note.createdAt,
-                "updatedAt" to note.updatedAt,
-                "deletedAt" to note.deletedAt,
-            ),
-        )
-
-        val seq = changeLog.append(
-            userId = userId,
-            entityType = "NOTE",
-            entityId = note.id,
-            operationId = operation.operationId,
-            operationType = operation.operationType,
-            revision = note.revision,
-            payload = payload,
-            deviceId = deviceId,
-            now = now,
-        )
-        processed.insert(
-            operationId = operation.operationId,
-            userId = userId,
-            result = PushStatus.APPLIED.name,
-            revision = note.revision,
-            changeSeq = seq,
-            requestHash = operationHash(operation),
-            now = now,
-        )
-
-        return PushResult(
-            operationId = operation.operationId,
-            status = PushStatus.APPLIED,
-            entityId = note.id,
-            revision = note.revision,
-            changeSeq = seq,
-        )
-    }
-
-    private fun operationHash(operation: SyncOperationCommand): String =
-        java.security.MessageDigest.getInstance("SHA-256")
-            .digest(objectMapper.writeValueAsBytes(operation))
-            .joinToString("") { byte -> "%02x".format(byte) }
+    ): PushResult = support.applied(
+        userId = userId,
+        deviceId = deviceId,
+        operation = operation,
+        entityType = "NOTE",
+        entityId = note.id,
+        revision = note.revision,
+        payload = note.toPayload(),
+        now = now,
+    )
 
     private fun readPayload(payload: Map<String, Any?>?): NotePayload {
         if (payload == null) {

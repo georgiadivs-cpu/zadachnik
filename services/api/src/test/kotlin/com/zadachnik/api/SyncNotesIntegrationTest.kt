@@ -140,7 +140,7 @@ class SyncNotesIntegrationTest {
             updateOperation(owner.deviceId, noteId, baseRevision = 1, title = "Устаревшая"),
         )
         assertThat(stale.results.single().status).isEqualTo(PushStatus.CONFLICT)
-        assertThat(stale.results.single().serverEntity?.title).isEqualTo("Обновлённая")
+        assertThat(stale.results.single().serverEntity?.get("title")).isEqualTo("Обновлённая")
         assertThat(stale.results.single().revision).isEqualTo(2)
     }
 
@@ -161,7 +161,7 @@ class SyncNotesIntegrationTest {
 
         val stale = push(owner.accessToken, deleteOperation(owner.deviceId, noteId, baseRevision = 1))
         assertThat(stale.results.single().status).isEqualTo(PushStatus.CONFLICT)
-        assertThat(stale.results.single().serverEntity?.deletedAt).isNotNull()
+        assertThat(stale.results.single().serverEntity?.get("deletedAt")).isNotNull()
     }
 
     @Test
@@ -216,7 +216,7 @@ class SyncNotesIntegrationTest {
         val owner = setup()
         val noteId = UUID.randomUUID()
         val unsupported = createOperation(owner.deviceId, noteId).toMutableMap().apply {
-            this["entityType"] = "TASK"
+            this["entityType"] = "ATTACHMENT"
         }
         val foreign = createOperation(UUID.randomUUID(), UUID.randomUUID())
 

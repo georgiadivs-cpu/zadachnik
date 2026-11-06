@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/database_provider.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../notes/application/notes_providers.dart';
+import '../../tasks/application/tasks_providers.dart';
 import '../data/sync_api.dart';
 import '../data/sync_repository.dart';
 import 'sync_service.dart';
@@ -43,6 +44,8 @@ final syncServiceProvider = Provider<SyncService>((ref) {
   return SyncService(
     database: ref.watch(appDatabaseProvider),
     notes: ref.watch(notesRepositoryProvider),
+    tasks: ref.watch(tasksRepositoryProvider),
+    lanes: ref.watch(lanesRepositoryProvider),
     syncRepository: ref.watch(syncRepositoryProvider),
     api: ref.watch(syncApiProvider),
     sessionResolver: ({bool force = false}) => ref

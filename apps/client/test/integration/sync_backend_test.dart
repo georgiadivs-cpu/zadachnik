@@ -3,12 +3,17 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zadachnik_client/core/auth/session.dart';
 import 'package:zadachnik_client/core/database/app_database.dart';
+import 'package:zadachnik_client/core/database/default_lanes.dart';
 import 'package:zadachnik_client/features/auth/data/auth_api.dart';
 import 'package:zadachnik_client/features/auth/data/auth_models.dart';
 import 'package:zadachnik_client/features/notes/data/notes_repository.dart';
 import 'package:zadachnik_client/features/sync/application/sync_service.dart';
 import 'package:zadachnik_client/features/sync/data/sync_api.dart';
 import 'package:zadachnik_client/features/sync/data/sync_repository.dart';
+import 'package:zadachnik_client/features/tasks/data/lanes_repository.dart';
+import 'package:zadachnik_client/features/tasks/data/tasks_repository.dart';
+import 'package:zadachnik_client/features/tasks/domain/lane.dart';
+import 'package:zadachnik_client/features/tasks/domain/task.dart';
 
 const _baseUrl = String.fromEnvironment('SYNC_E2E_BASE_URL');
 const _setupToken = String.fromEnvironment('SYNC_E2E_SETUP_TOKEN');
@@ -19,7 +24,7 @@ void main() {
   final enabled = _baseUrl.isNotEmpty && _setupToken.isNotEmpty;
 
   test(
-    'NOTE: create → pull на втором клиенте → update → delete',
+    'NOTE + LANE + TASK: create → pull → update → delete',
     () async {
       final auth = DioAuthApi(baseUrl: _baseUrl);
       final email = 'e2e-${DateTime.now().microsecondsSinceEpoch}@example.com';
@@ -39,6 +44,10 @@ void main() {
       final databaseB = AppDatabase.forTesting(NativeDatabase.memory());
       final notesA = NotesRepository(databaseA);
       final notesB = NotesRepository(databaseB);
+      final tasksA = TasksRepository(databaseA);
+      final tasksB = TasksRepository(databaseB);
+      final lanesA = LanesRepository(databaseA);
+      final lanesB = LanesRepository(databaseB);
       final serviceA = _service(databaseA, notesA, session);
       final serviceB = _service(databaseB, notesB, session);
 
@@ -85,6 +94,55 @@ void main() {
           databaseB.notes,
         )..where((table) => table.id.equals(id))).getSingle();
         expect(tombstone.deletedAt, isNotNull);
+
+        final lanesBefore = await lanesA.watchAll().first;
+        await lanesA.saveConfiguration([
+          for (final lane in lanesBefore)
+            LaneDraft(id: lane.id, name: lane.name),
+          const LaneDraft(name: 'E2E дорожка'),
+        ]);
+        final laneSync = await serviceA.sync();
+        expect(laneSync.pushed, 1);
+        await serviceB.sync();
+        final lanesOnB = await lanesB.watchAll().first;
+        expect(lanesOnB, hasLength(5));
+        final e2eLane = lanesOnB.firstWhere(
+          (lane) => lane.name == 'E2E дорожка',
+        );
+
+        final taskId = await tasksA.create(
+          TaskDraft(
+            title: 'E2E задача',
+            description: 'Создана клиентом',
+            laneId: e2eLane.id,
+            categoryId: 'work',
+            priority: 'HIGH',
+            plannedStartAt: DateTime.utc(2026, 11, 6),
+            plannedEndAt: DateTime.utc(2026, 11, 8),
+            actualStartAt: null,
+            actualEndAt: null,
+          ),
+        );
+        final taskSync = await serviceA.sync();
+        expect(taskSync.pushed, 1);
+        await serviceB.sync();
+        expect((await tasksB.findById(taskId))?.title, 'E2E задача');
+        expect((await tasksB.findById(taskId))?.laneId, e2eLane.id);
+
+        final taskOnA = (await tasksA.findById(taskId))!;
+        await tasksA.moveToLane(taskOnA, DefaultLanes.inProgressLaneId);
+        await serviceA.sync();
+        await serviceB.sync();
+        expect(
+          (await tasksB.findById(taskId))?.laneId,
+          DefaultLanes.inProgressLaneId,
+        );
+
+        final movedTask = (await tasksA.findById(taskId))!;
+        await tasksA.setCancelled(movedTask, true);
+        await serviceA.sync();
+        await serviceB.sync();
+        expect((await tasksB.findById(taskId))?.isCancelled, isTrue);
       } finally {
         await databaseA.close();
         await databaseB.close();
@@ -103,6 +161,8 @@ SyncService _service(
 ) => SyncService(
   database: database,
   notes: notes,
+  tasks: TasksRepository(database),
+  lanes: LanesRepository(database),
   syncRepository: SyncRepository(database),
   api: DioSyncApi(baseUrl: _baseUrl),
   sessionResolver: ({bool force = false}) async => session,

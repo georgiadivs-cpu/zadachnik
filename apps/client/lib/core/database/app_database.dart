@@ -4,18 +4,28 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import 'default_lanes.dart';
 import 'tables.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Categories, Notes, SyncOutbox, SyncStates, Conflicts])
+@DriftDatabase(tables: [
+  Categories,
+  Notes,
+  SyncOutbox,
+  SyncStates,
+  Conflicts,
+  Lanes,
+  Tasks,
+  TaskStatusHistory,
+])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -30,10 +40,17 @@ class AppDatabase extends _$AppDatabase {
         await migrator.createTable(conflicts);
         await _enqueueLocalNotes();
       }
+      if (from < 3) {
+        await migrator.createTable(lanes);
+        await migrator.createTable(tasks);
+        await migrator.createTable(taskStatusHistory);
+        await _seedDefaultLanes();
+      }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
       await _seedCategories();
+      await _seedDefaultLanes();
     },
   );
 
@@ -70,6 +87,28 @@ class AppDatabase extends _$AppDatabase {
         ),
       );
     }
+  }
+
+  Future<void> _seedDefaultLanes() async {
+    final existing = await (select(lanes)..limit(1)).getSingleOrNull();
+    if (existing != null) {
+      return;
+    }
+
+    final now = DateTime.now().toUtc();
+    await batch((batch) {
+      batch.insertAll(lanes, [
+        for (final lane in DefaultLanes.all)
+          LanesCompanion.insert(
+            id: lane.id,
+            name: lane.name,
+            sortOrder: lane.sortOrder,
+            syncStatus: const Value('SYNCED'),
+            createdAt: now,
+            updatedAt: now,
+          ),
+      ]);
+    });
   }
 
   Future<void> _seedCategories() async {

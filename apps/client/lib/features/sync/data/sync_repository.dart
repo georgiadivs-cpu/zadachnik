@@ -30,6 +30,7 @@ class SyncRepository {
 
   Future<void> saveConflict({
     required String userId,
+    required String entityType,
     required String entityId,
     required int serverVersion,
     required Map<String, dynamic> serverPayload,
@@ -45,13 +46,27 @@ class SyncRepository {
           ConflictsCompanion.insert(
             id: '$userId:$entityId',
             userId: userId,
-            entityType: 'NOTE',
+            entityType: entityType,
             entityId: entityId,
             serverPayload: jsonEncode(serverPayload),
             serverVersion: serverVersion,
             createdAt: DateTime.now().toUtc(),
           ),
         );
+  }
+
+  Future<List<SyncOutboxData>> pendingOperations({int limit = 100}) {
+    final query = _database.select(_database.syncOutbox)
+      ..orderBy([(table) => OrderingTerm.asc(table.createdAt)])
+      ..limit(limit);
+    return query.get();
+  }
+
+  Future<bool> hasPendingOperation(String entityId) async {
+    final query = _database.select(_database.syncOutbox)
+      ..where((table) => table.entityId.equals(entityId))
+      ..limit(1);
+    return (await query.get()).isNotEmpty;
   }
 
   Future<int> pendingCount() async {

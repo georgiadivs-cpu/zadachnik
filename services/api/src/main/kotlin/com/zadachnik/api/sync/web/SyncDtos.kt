@@ -2,7 +2,6 @@ package com.zadachnik.api.sync.web
 
 import com.zadachnik.api.sync.application.PullResult
 import com.zadachnik.api.sync.application.SyncState
-import com.zadachnik.api.sync.domain.NoteSnapshot
 import com.zadachnik.api.sync.domain.OperationType
 import com.zadachnik.api.sync.domain.PushResult
 import com.zadachnik.api.sync.domain.PushStatus
@@ -43,37 +42,13 @@ data class PushRequest(
     val operations: List<PushOperationRequest>,
 )
 
-data class NoteEntityResponse(
-    val id: UUID,
-    val title: String,
-    val contentMarkdown: String,
-    val categoryId: String?,
-    val revision: Long,
-    val createdAt: Instant,
-    val updatedAt: Instant,
-    val deletedAt: Instant?,
-) {
-    companion object {
-        fun from(note: NoteSnapshot): NoteEntityResponse = NoteEntityResponse(
-            id = note.id,
-            title = note.title,
-            contentMarkdown = note.contentMarkdown,
-            categoryId = note.categoryId,
-            revision = note.revision,
-            createdAt = note.createdAt,
-            updatedAt = note.updatedAt,
-            deletedAt = note.deletedAt,
-        )
-    }
-}
-
 data class PushResultResponse(
     val operationId: UUID,
     val status: PushStatus,
     val entityId: UUID? = null,
     val revision: Long? = null,
     val changeSeq: Long? = null,
-    val serverEntity: NoteEntityResponse? = null,
+    val serverEntity: Map<String, Any?>? = null,
     val code: String? = null,
     val message: String? = null,
 ) {
@@ -84,7 +59,7 @@ data class PushResultResponse(
             entityId = result.entityId,
             revision = result.revision,
             changeSeq = result.changeSeq,
-            serverEntity = result.serverEntity?.let(NoteEntityResponse::from),
+            serverEntity = result.serverEntity,
             code = result.code,
             message = result.message,
         )

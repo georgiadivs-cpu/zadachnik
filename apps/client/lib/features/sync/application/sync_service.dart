@@ -3,6 +3,8 @@ import 'dart:convert';
 import '../../../core/auth/session.dart';
 import '../../../core/database/app_database.dart';
 import '../../notes/data/notes_repository.dart';
+import '../../tasks/data/lanes_repository.dart';
+import '../../tasks/data/tasks_repository.dart';
 import '../data/sync_api.dart';
 import '../data/sync_repository.dart';
 
@@ -42,6 +44,8 @@ class SyncService {
   SyncService({
     required this.database,
     required this.notes,
+    required this.tasks,
+    required this.lanes,
     required this.syncRepository,
     required this.api,
     required this.sessionResolver,
@@ -49,6 +53,8 @@ class SyncService {
 
   final AppDatabase database;
   final NotesRepository notes;
+  final TasksRepository tasks;
+  final LanesRepository lanes;
   final SyncRepository syncRepository;
   final SyncApi api;
   final SessionResolver sessionResolver;
@@ -96,7 +102,7 @@ class SyncService {
     var rejected = 0;
 
     for (var batch = 0; batch < _maxPushBatches; batch += 1) {
-      final pending = await notes.pendingOperations();
+      final pending = await syncRepository.pendingOperations();
       if (pending.isEmpty) {
         break;
       }
@@ -128,9 +134,8 @@ class SyncService {
       for (final operation in pending) {
         final outcome = byId[operation.operationId];
         if (outcome == null) {
-          await notes.markRejected(
-            operationId: operation.operationId,
-            noteId: operation.entityId,
+          await _markRejected(
+            operation: operation,
             message: 'Сервер не вернул результат операции',
           );
           rejected += 1;
@@ -140,31 +145,23 @@ class SyncService {
         switch (outcome.status) {
           case 'APPLIED':
           case 'DUPLICATE':
-            await notes.applyPushSuccess(
-              operationId: operation.operationId,
-              noteId: operation.entityId,
-              revision: outcome.revision ?? 1,
-              sentPayload: operation.payload,
-            );
+            await _applyPushSuccess(operation, outcome.revision ?? 1);
             pushed += 1;
             progress = true;
           case 'CONFLICT':
             await syncRepository.saveConflict(
               userId: session.userId,
+              entityType: operation.entityType,
               entityId: operation.entityId,
               serverVersion: outcome.revision ?? 0,
               serverPayload: outcome.serverEntity ?? const {},
             );
-            await notes.markConflict(
-              noteId: operation.entityId,
-              operationId: operation.operationId,
-            );
+            await _markConflict(operation);
             conflicts += 1;
             progress = true;
           case 'REJECTED':
-            await notes.markRejected(
-              operationId: operation.operationId,
-              noteId: operation.entityId,
+            await _markRejected(
+              operation: operation,
               message: outcome.message ?? outcome.code ?? 'Операция отклонена',
             );
             rejected += 1;
@@ -183,6 +180,78 @@ class SyncService {
     );
   }
 
+  Future<void> _applyPushSuccess(SyncOutboxData operation, int revision) async {
+    switch (operation.entityType) {
+      case 'NOTE':
+        await notes.applyPushSuccess(
+          operationId: operation.operationId,
+          noteId: operation.entityId,
+          revision: revision,
+          sentPayload: operation.payload,
+        );
+      case 'TASK':
+        await tasks.applyPushSuccess(
+          operationId: operation.operationId,
+          taskId: operation.entityId,
+          revision: revision,
+          sentPayload: operation.payload,
+        );
+      case 'LANE':
+        await lanes.applyPushSuccess(
+          operationId: operation.operationId,
+          laneId: operation.entityId,
+          revision: revision,
+          sentPayload: operation.payload,
+        );
+    }
+  }
+
+  Future<void> _markConflict(SyncOutboxData operation) async {
+    switch (operation.entityType) {
+      case 'NOTE':
+        await notes.markConflict(
+          noteId: operation.entityId,
+          operationId: operation.operationId,
+        );
+      case 'TASK':
+        await tasks.markConflict(
+          taskId: operation.entityId,
+          operationId: operation.operationId,
+        );
+      case 'LANE':
+        await lanes.markConflict(
+          laneId: operation.entityId,
+          operationId: operation.operationId,
+        );
+    }
+  }
+
+  Future<void> _markRejected({
+    required SyncOutboxData operation,
+    required String message,
+  }) async {
+    switch (operation.entityType) {
+      case 'NOTE':
+        await notes.markRejected(
+          operationId: operation.operationId,
+          noteId: operation.entityId,
+          message: message,
+        );
+      case 'TASK':
+        await tasks.markRejected(
+          operationId: operation.operationId,
+          taskId: operation.entityId,
+          message: message,
+        );
+      case 'LANE':
+        await lanes.markRejected(
+          operationId: operation.operationId,
+          laneId: operation.entityId,
+          message: message,
+        );
+    }
+  }
+
   Future<SyncSummary> _pull(Session session) async {
     var cursor = await syncRepository.readCursor(session.userId);
     var pulled = 0;
@@ -197,25 +266,38 @@ class SyncService {
 
       await database.transaction(() async {
         for (final change in page.changes) {
-          if (change.entityType != 'NOTE') {
+          if (!_supportedEntities.contains(change.entityType)) {
             continue;
           }
 
-          final pending = await notes.hasPendingOperation(change.entityId);
-          final local = await notes.findById(change.entityId);
-          if (pending || local?.syncStatus == 'CONFLICT') {
+          final pending = await syncRepository.hasPendingOperation(
+            change.entityId,
+          );
+          final status = await _localStatus(change.entityType, change.entityId);
+          if (pending || status == 'CONFLICT') {
             await syncRepository.saveConflict(
               userId: session.userId,
+              entityType: change.entityType,
               entityId: change.entityId,
               serverVersion: change.revision,
               serverPayload: change.payload,
             );
-            await notes.setSyncStatus(change.entityId, 'CONFLICT');
+            await _setConflict(change.entityType, change.entityId);
             conflicts += 1;
             continue;
           }
 
-          await notes.applyRemote(change.payload);
+          switch (change.entityType) {
+            case 'NOTE':
+              await notes.applyRemote(change.payload);
+            case 'TASK':
+              await tasks.applyRemote(
+                change.payload,
+                operationId: change.operationId,
+              );
+            case 'LANE':
+              await lanes.applyRemote(change.payload);
+          }
           pulled += 1;
         }
 
@@ -231,13 +313,32 @@ class SyncService {
     return SyncSummary(pulled: pulled, conflicts: conflicts);
   }
 
+  Future<String?> _localStatus(String entityType, String entityId) async {
+    return switch (entityType) {
+      'NOTE' => (await notes.findById(entityId))?.syncStatus,
+      'TASK' => (await tasks.findById(entityId))?.syncStatus,
+      'LANE' => (await lanes.findById(entityId))?.syncStatus,
+      _ => null,
+    };
+  }
+
+  Future<void> _setConflict(String entityType, String entityId) async {
+    switch (entityType) {
+      case 'NOTE':
+        await notes.setSyncStatus(entityId, 'CONFLICT');
+      case 'TASK':
+        await tasks.setSyncStatus(entityId, 'CONFLICT');
+      case 'LANE':
+        await lanes.setSyncStatus(entityId, 'CONFLICT');
+    }
+  }
+
   Map<String, dynamic>? _decode(String payload) {
+    if (payload.isEmpty) {
+      return null;
+    }
     try {
-      final value = payload.isEmpty ? null : payload;
-      if (value == null) {
-        return null;
-      }
-      final decoded = jsonDecode(value);
+      final decoded = jsonDecode(payload);
       return decoded is Map<String, dynamic> ? decoded : null;
     } on Object {
       return null;
@@ -247,4 +348,5 @@ class SyncService {
   static const int _pullLimit = 200;
   static const int _maxPushBatches = 10;
   static const int _maxPullPages = 50;
+  static const _supportedEntities = {'NOTE', 'TASK', 'LANE'};
 }

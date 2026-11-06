@@ -2250,6 +2250,1966 @@ class ConflictsCompanion extends UpdateCompanion<Conflict> {
   }
 }
 
+class $LanesTable extends Lanes with TableInfo<$LanesTable, LaneRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LanesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 60,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _revisionMeta = const VerificationMeta(
+    'revision',
+  );
+  @override
+  late final GeneratedColumn<int> revision = GeneratedColumn<int>(
+    'revision',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('SYNCED'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    sortOrder,
+    revision,
+    syncStatus,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'lanes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LaneRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sortOrderMeta);
+    }
+    if (data.containsKey('revision')) {
+      context.handle(
+        _revisionMeta,
+        revision.isAcceptableOrUnknown(data['revision']!, _revisionMeta),
+      );
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LaneRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LaneRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      revision: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}revision'],
+      )!,
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $LanesTable createAlias(String alias) {
+    return $LanesTable(attachedDatabase, alias);
+  }
+}
+
+class LaneRow extends DataClass implements Insertable<LaneRow> {
+  final String id;
+  final String name;
+  final int sortOrder;
+  final int revision;
+  final String syncStatus;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const LaneRow({
+    required this.id,
+    required this.name,
+    required this.sortOrder,
+    required this.revision,
+    required this.syncStatus,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['revision'] = Variable<int>(revision);
+    map['sync_status'] = Variable<String>(syncStatus);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  LanesCompanion toCompanion(bool nullToAbsent) {
+    return LanesCompanion(
+      id: Value(id),
+      name: Value(name),
+      sortOrder: Value(sortOrder),
+      revision: Value(revision),
+      syncStatus: Value(syncStatus),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory LaneRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LaneRow(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      revision: serializer.fromJson<int>(json['revision']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'revision': serializer.toJson<int>(revision),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  LaneRow copyWith({
+    String? id,
+    String? name,
+    int? sortOrder,
+    int? revision,
+    String? syncStatus,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => LaneRow(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    sortOrder: sortOrder ?? this.sortOrder,
+    revision: revision ?? this.revision,
+    syncStatus: syncStatus ?? this.syncStatus,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  LaneRow copyWithCompanion(LanesCompanion data) {
+    return LaneRow(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      revision: data.revision.present ? data.revision.value : this.revision,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LaneRow(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('revision: $revision, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    sortOrder,
+    revision,
+    syncStatus,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LaneRow &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.sortOrder == this.sortOrder &&
+          other.revision == this.revision &&
+          other.syncStatus == this.syncStatus &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class LanesCompanion extends UpdateCompanion<LaneRow> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<int> sortOrder;
+  final Value<int> revision;
+  final Value<String> syncStatus;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const LanesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.revision = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LanesCompanion.insert({
+    required String id,
+    required String name,
+    required int sortOrder,
+    this.revision = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       sortOrder = Value(sortOrder),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<LaneRow> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<int>? sortOrder,
+    Expression<int>? revision,
+    Expression<String>? syncStatus,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (revision != null) 'revision': revision,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LanesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<int>? sortOrder,
+    Value<int>? revision,
+    Value<String>? syncStatus,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return LanesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      sortOrder: sortOrder ?? this.sortOrder,
+      revision: revision ?? this.revision,
+      syncStatus: syncStatus ?? this.syncStatus,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (revision.present) {
+      map['revision'] = Variable<int>(revision.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LanesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('revision: $revision, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TasksTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 200,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _laneIdMeta = const VerificationMeta('laneId');
+  @override
+  late final GeneratedColumn<String> laneId = GeneratedColumn<String>(
+    'lane_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES lanes (id)',
+    ),
+  );
+  static const VerificationMeta _systemStateMeta = const VerificationMeta(
+    'systemState',
+  );
+  @override
+  late final GeneratedColumn<String> systemState = GeneratedColumn<String>(
+    'system_state',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('ACTIVE'),
+  );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
+    'category_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES categories (id)',
+    ),
+  );
+  static const VerificationMeta _priorityMeta = const VerificationMeta(
+    'priority',
+  );
+  @override
+  late final GeneratedColumn<String> priority = GeneratedColumn<String>(
+    'priority',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('NORMAL'),
+  );
+  static const VerificationMeta _plannedStartAtMeta = const VerificationMeta(
+    'plannedStartAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> plannedStartAt =
+      GeneratedColumn<DateTime>(
+        'planned_start_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _plannedEndAtMeta = const VerificationMeta(
+    'plannedEndAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> plannedEndAt = GeneratedColumn<DateTime>(
+    'planned_end_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _actualStartAtMeta = const VerificationMeta(
+    'actualStartAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> actualStartAt =
+      GeneratedColumn<DateTime>(
+        'actual_start_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _actualEndAtMeta = const VerificationMeta(
+    'actualEndAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> actualEndAt = GeneratedColumn<DateTime>(
+    'actual_end_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _revisionMeta = const VerificationMeta(
+    'revision',
+  );
+  @override
+  late final GeneratedColumn<int> revision = GeneratedColumn<int>(
+    'revision',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('PENDING'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    title,
+    description,
+    laneId,
+    systemState,
+    categoryId,
+    priority,
+    plannedStartAt,
+    plannedEndAt,
+    actualStartAt,
+    actualEndAt,
+    revision,
+    syncStatus,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'tasks';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TaskRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('lane_id')) {
+      context.handle(
+        _laneIdMeta,
+        laneId.isAcceptableOrUnknown(data['lane_id']!, _laneIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_laneIdMeta);
+    }
+    if (data.containsKey('system_state')) {
+      context.handle(
+        _systemStateMeta,
+        systemState.isAcceptableOrUnknown(
+          data['system_state']!,
+          _systemStateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    }
+    if (data.containsKey('priority')) {
+      context.handle(
+        _priorityMeta,
+        priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta),
+      );
+    }
+    if (data.containsKey('planned_start_at')) {
+      context.handle(
+        _plannedStartAtMeta,
+        plannedStartAt.isAcceptableOrUnknown(
+          data['planned_start_at']!,
+          _plannedStartAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('planned_end_at')) {
+      context.handle(
+        _plannedEndAtMeta,
+        plannedEndAt.isAcceptableOrUnknown(
+          data['planned_end_at']!,
+          _plannedEndAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('actual_start_at')) {
+      context.handle(
+        _actualStartAtMeta,
+        actualStartAt.isAcceptableOrUnknown(
+          data['actual_start_at']!,
+          _actualStartAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('actual_end_at')) {
+      context.handle(
+        _actualEndAtMeta,
+        actualEndAt.isAcceptableOrUnknown(
+          data['actual_end_at']!,
+          _actualEndAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('revision')) {
+      context.handle(
+        _revisionMeta,
+        revision.isAcceptableOrUnknown(data['revision']!, _revisionMeta),
+      );
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TaskRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TaskRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      )!,
+      laneId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}lane_id'],
+      )!,
+      systemState: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}system_state'],
+      )!,
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_id'],
+      ),
+      priority: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}priority'],
+      )!,
+      plannedStartAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}planned_start_at'],
+      ),
+      plannedEndAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}planned_end_at'],
+      ),
+      actualStartAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}actual_start_at'],
+      ),
+      actualEndAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}actual_end_at'],
+      ),
+      revision: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}revision'],
+      )!,
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $TasksTable createAlias(String alias) {
+    return $TasksTable(attachedDatabase, alias);
+  }
+}
+
+class TaskRow extends DataClass implements Insertable<TaskRow> {
+  final String id;
+  final String title;
+  final String description;
+  final String laneId;
+  final String systemState;
+  final String? categoryId;
+  final String priority;
+  final DateTime? plannedStartAt;
+  final DateTime? plannedEndAt;
+  final DateTime? actualStartAt;
+  final DateTime? actualEndAt;
+  final int revision;
+  final String syncStatus;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const TaskRow({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.laneId,
+    required this.systemState,
+    this.categoryId,
+    required this.priority,
+    this.plannedStartAt,
+    this.plannedEndAt,
+    this.actualStartAt,
+    this.actualEndAt,
+    required this.revision,
+    required this.syncStatus,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['title'] = Variable<String>(title);
+    map['description'] = Variable<String>(description);
+    map['lane_id'] = Variable<String>(laneId);
+    map['system_state'] = Variable<String>(systemState);
+    if (!nullToAbsent || categoryId != null) {
+      map['category_id'] = Variable<String>(categoryId);
+    }
+    map['priority'] = Variable<String>(priority);
+    if (!nullToAbsent || plannedStartAt != null) {
+      map['planned_start_at'] = Variable<DateTime>(plannedStartAt);
+    }
+    if (!nullToAbsent || plannedEndAt != null) {
+      map['planned_end_at'] = Variable<DateTime>(plannedEndAt);
+    }
+    if (!nullToAbsent || actualStartAt != null) {
+      map['actual_start_at'] = Variable<DateTime>(actualStartAt);
+    }
+    if (!nullToAbsent || actualEndAt != null) {
+      map['actual_end_at'] = Variable<DateTime>(actualEndAt);
+    }
+    map['revision'] = Variable<int>(revision);
+    map['sync_status'] = Variable<String>(syncStatus);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  TasksCompanion toCompanion(bool nullToAbsent) {
+    return TasksCompanion(
+      id: Value(id),
+      title: Value(title),
+      description: Value(description),
+      laneId: Value(laneId),
+      systemState: Value(systemState),
+      categoryId: categoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryId),
+      priority: Value(priority),
+      plannedStartAt: plannedStartAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(plannedStartAt),
+      plannedEndAt: plannedEndAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(plannedEndAt),
+      actualStartAt: actualStartAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(actualStartAt),
+      actualEndAt: actualEndAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(actualEndAt),
+      revision: Value(revision),
+      syncStatus: Value(syncStatus),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory TaskRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TaskRow(
+      id: serializer.fromJson<String>(json['id']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String>(json['description']),
+      laneId: serializer.fromJson<String>(json['laneId']),
+      systemState: serializer.fromJson<String>(json['systemState']),
+      categoryId: serializer.fromJson<String?>(json['categoryId']),
+      priority: serializer.fromJson<String>(json['priority']),
+      plannedStartAt: serializer.fromJson<DateTime?>(json['plannedStartAt']),
+      plannedEndAt: serializer.fromJson<DateTime?>(json['plannedEndAt']),
+      actualStartAt: serializer.fromJson<DateTime?>(json['actualStartAt']),
+      actualEndAt: serializer.fromJson<DateTime?>(json['actualEndAt']),
+      revision: serializer.fromJson<int>(json['revision']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String>(description),
+      'laneId': serializer.toJson<String>(laneId),
+      'systemState': serializer.toJson<String>(systemState),
+      'categoryId': serializer.toJson<String?>(categoryId),
+      'priority': serializer.toJson<String>(priority),
+      'plannedStartAt': serializer.toJson<DateTime?>(plannedStartAt),
+      'plannedEndAt': serializer.toJson<DateTime?>(plannedEndAt),
+      'actualStartAt': serializer.toJson<DateTime?>(actualStartAt),
+      'actualEndAt': serializer.toJson<DateTime?>(actualEndAt),
+      'revision': serializer.toJson<int>(revision),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  TaskRow copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? laneId,
+    String? systemState,
+    Value<String?> categoryId = const Value.absent(),
+    String? priority,
+    Value<DateTime?> plannedStartAt = const Value.absent(),
+    Value<DateTime?> plannedEndAt = const Value.absent(),
+    Value<DateTime?> actualStartAt = const Value.absent(),
+    Value<DateTime?> actualEndAt = const Value.absent(),
+    int? revision,
+    String? syncStatus,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => TaskRow(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    description: description ?? this.description,
+    laneId: laneId ?? this.laneId,
+    systemState: systemState ?? this.systemState,
+    categoryId: categoryId.present ? categoryId.value : this.categoryId,
+    priority: priority ?? this.priority,
+    plannedStartAt: plannedStartAt.present
+        ? plannedStartAt.value
+        : this.plannedStartAt,
+    plannedEndAt: plannedEndAt.present ? plannedEndAt.value : this.plannedEndAt,
+    actualStartAt: actualStartAt.present
+        ? actualStartAt.value
+        : this.actualStartAt,
+    actualEndAt: actualEndAt.present ? actualEndAt.value : this.actualEndAt,
+    revision: revision ?? this.revision,
+    syncStatus: syncStatus ?? this.syncStatus,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  TaskRow copyWithCompanion(TasksCompanion data) {
+    return TaskRow(
+      id: data.id.present ? data.id.value : this.id,
+      title: data.title.present ? data.title.value : this.title,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      laneId: data.laneId.present ? data.laneId.value : this.laneId,
+      systemState: data.systemState.present
+          ? data.systemState.value
+          : this.systemState,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+      priority: data.priority.present ? data.priority.value : this.priority,
+      plannedStartAt: data.plannedStartAt.present
+          ? data.plannedStartAt.value
+          : this.plannedStartAt,
+      plannedEndAt: data.plannedEndAt.present
+          ? data.plannedEndAt.value
+          : this.plannedEndAt,
+      actualStartAt: data.actualStartAt.present
+          ? data.actualStartAt.value
+          : this.actualStartAt,
+      actualEndAt: data.actualEndAt.present
+          ? data.actualEndAt.value
+          : this.actualEndAt,
+      revision: data.revision.present ? data.revision.value : this.revision,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TaskRow(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('laneId: $laneId, ')
+          ..write('systemState: $systemState, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('priority: $priority, ')
+          ..write('plannedStartAt: $plannedStartAt, ')
+          ..write('plannedEndAt: $plannedEndAt, ')
+          ..write('actualStartAt: $actualStartAt, ')
+          ..write('actualEndAt: $actualEndAt, ')
+          ..write('revision: $revision, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    title,
+    description,
+    laneId,
+    systemState,
+    categoryId,
+    priority,
+    plannedStartAt,
+    plannedEndAt,
+    actualStartAt,
+    actualEndAt,
+    revision,
+    syncStatus,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TaskRow &&
+          other.id == this.id &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.laneId == this.laneId &&
+          other.systemState == this.systemState &&
+          other.categoryId == this.categoryId &&
+          other.priority == this.priority &&
+          other.plannedStartAt == this.plannedStartAt &&
+          other.plannedEndAt == this.plannedEndAt &&
+          other.actualStartAt == this.actualStartAt &&
+          other.actualEndAt == this.actualEndAt &&
+          other.revision == this.revision &&
+          other.syncStatus == this.syncStatus &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class TasksCompanion extends UpdateCompanion<TaskRow> {
+  final Value<String> id;
+  final Value<String> title;
+  final Value<String> description;
+  final Value<String> laneId;
+  final Value<String> systemState;
+  final Value<String?> categoryId;
+  final Value<String> priority;
+  final Value<DateTime?> plannedStartAt;
+  final Value<DateTime?> plannedEndAt;
+  final Value<DateTime?> actualStartAt;
+  final Value<DateTime?> actualEndAt;
+  final Value<int> revision;
+  final Value<String> syncStatus;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const TasksCompanion({
+    this.id = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.laneId = const Value.absent(),
+    this.systemState = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.plannedStartAt = const Value.absent(),
+    this.plannedEndAt = const Value.absent(),
+    this.actualStartAt = const Value.absent(),
+    this.actualEndAt = const Value.absent(),
+    this.revision = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TasksCompanion.insert({
+    required String id,
+    required String title,
+    this.description = const Value.absent(),
+    required String laneId,
+    this.systemState = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.plannedStartAt = const Value.absent(),
+    this.plannedEndAt = const Value.absent(),
+    this.actualStartAt = const Value.absent(),
+    this.actualEndAt = const Value.absent(),
+    this.revision = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       title = Value(title),
+       laneId = Value(laneId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<TaskRow> custom({
+    Expression<String>? id,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<String>? laneId,
+    Expression<String>? systemState,
+    Expression<String>? categoryId,
+    Expression<String>? priority,
+    Expression<DateTime>? plannedStartAt,
+    Expression<DateTime>? plannedEndAt,
+    Expression<DateTime>? actualStartAt,
+    Expression<DateTime>? actualEndAt,
+    Expression<int>? revision,
+    Expression<String>? syncStatus,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (laneId != null) 'lane_id': laneId,
+      if (systemState != null) 'system_state': systemState,
+      if (categoryId != null) 'category_id': categoryId,
+      if (priority != null) 'priority': priority,
+      if (plannedStartAt != null) 'planned_start_at': plannedStartAt,
+      if (plannedEndAt != null) 'planned_end_at': plannedEndAt,
+      if (actualStartAt != null) 'actual_start_at': actualStartAt,
+      if (actualEndAt != null) 'actual_end_at': actualEndAt,
+      if (revision != null) 'revision': revision,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TasksCompanion copyWith({
+    Value<String>? id,
+    Value<String>? title,
+    Value<String>? description,
+    Value<String>? laneId,
+    Value<String>? systemState,
+    Value<String?>? categoryId,
+    Value<String>? priority,
+    Value<DateTime?>? plannedStartAt,
+    Value<DateTime?>? plannedEndAt,
+    Value<DateTime?>? actualStartAt,
+    Value<DateTime?>? actualEndAt,
+    Value<int>? revision,
+    Value<String>? syncStatus,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return TasksCompanion(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      laneId: laneId ?? this.laneId,
+      systemState: systemState ?? this.systemState,
+      categoryId: categoryId ?? this.categoryId,
+      priority: priority ?? this.priority,
+      plannedStartAt: plannedStartAt ?? this.plannedStartAt,
+      plannedEndAt: plannedEndAt ?? this.plannedEndAt,
+      actualStartAt: actualStartAt ?? this.actualStartAt,
+      actualEndAt: actualEndAt ?? this.actualEndAt,
+      revision: revision ?? this.revision,
+      syncStatus: syncStatus ?? this.syncStatus,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (laneId.present) {
+      map['lane_id'] = Variable<String>(laneId.value);
+    }
+    if (systemState.present) {
+      map['system_state'] = Variable<String>(systemState.value);
+    }
+    if (categoryId.present) {
+      map['category_id'] = Variable<String>(categoryId.value);
+    }
+    if (priority.present) {
+      map['priority'] = Variable<String>(priority.value);
+    }
+    if (plannedStartAt.present) {
+      map['planned_start_at'] = Variable<DateTime>(plannedStartAt.value);
+    }
+    if (plannedEndAt.present) {
+      map['planned_end_at'] = Variable<DateTime>(plannedEndAt.value);
+    }
+    if (actualStartAt.present) {
+      map['actual_start_at'] = Variable<DateTime>(actualStartAt.value);
+    }
+    if (actualEndAt.present) {
+      map['actual_end_at'] = Variable<DateTime>(actualEndAt.value);
+    }
+    if (revision.present) {
+      map['revision'] = Variable<int>(revision.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TasksCompanion(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('laneId: $laneId, ')
+          ..write('systemState: $systemState, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('priority: $priority, ')
+          ..write('plannedStartAt: $plannedStartAt, ')
+          ..write('plannedEndAt: $plannedEndAt, ')
+          ..write('actualStartAt: $actualStartAt, ')
+          ..write('actualEndAt: $actualEndAt, ')
+          ..write('revision: $revision, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TaskStatusHistoryTable extends TaskStatusHistory
+    with TableInfo<$TaskStatusHistoryTable, TaskHistoryRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TaskStatusHistoryTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _sequenceMeta = const VerificationMeta(
+    'sequence',
+  );
+  @override
+  late final GeneratedColumn<int> sequence = GeneratedColumn<int>(
+    'sequence',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _taskIdMeta = const VerificationMeta('taskId');
+  @override
+  late final GeneratedColumn<String> taskId = GeneratedColumn<String>(
+    'task_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fromLaneIdMeta = const VerificationMeta(
+    'fromLaneId',
+  );
+  @override
+  late final GeneratedColumn<String> fromLaneId = GeneratedColumn<String>(
+    'from_lane_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _toLaneIdMeta = const VerificationMeta(
+    'toLaneId',
+  );
+  @override
+  late final GeneratedColumn<String> toLaneId = GeneratedColumn<String>(
+    'to_lane_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _operationIdMeta = const VerificationMeta(
+    'operationId',
+  );
+  @override
+  late final GeneratedColumn<String> operationId = GeneratedColumn<String>(
+    'operation_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _changedAtMeta = const VerificationMeta(
+    'changedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> changedAt = GeneratedColumn<DateTime>(
+    'changed_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    sequence,
+    id,
+    taskId,
+    fromLaneId,
+    toLaneId,
+    operationId,
+    changedAt,
+    source,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'task_status_history';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TaskHistoryRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('sequence')) {
+      context.handle(
+        _sequenceMeta,
+        sequence.isAcceptableOrUnknown(data['sequence']!, _sequenceMeta),
+      );
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('task_id')) {
+      context.handle(
+        _taskIdMeta,
+        taskId.isAcceptableOrUnknown(data['task_id']!, _taskIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_taskIdMeta);
+    }
+    if (data.containsKey('from_lane_id')) {
+      context.handle(
+        _fromLaneIdMeta,
+        fromLaneId.isAcceptableOrUnknown(
+          data['from_lane_id']!,
+          _fromLaneIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('to_lane_id')) {
+      context.handle(
+        _toLaneIdMeta,
+        toLaneId.isAcceptableOrUnknown(data['to_lane_id']!, _toLaneIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_toLaneIdMeta);
+    }
+    if (data.containsKey('operation_id')) {
+      context.handle(
+        _operationIdMeta,
+        operationId.isAcceptableOrUnknown(
+          data['operation_id']!,
+          _operationIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('changed_at')) {
+      context.handle(
+        _changedAtMeta,
+        changedAt.isAcceptableOrUnknown(data['changed_at']!, _changedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_changedAtMeta);
+    }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {sequence};
+  @override
+  TaskHistoryRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TaskHistoryRow(
+      sequence: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sequence'],
+      )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      taskId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}task_id'],
+      )!,
+      fromLaneId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}from_lane_id'],
+      ),
+      toLaneId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}to_lane_id'],
+      )!,
+      operationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}operation_id'],
+      ),
+      changedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}changed_at'],
+      )!,
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
+    );
+  }
+
+  @override
+  $TaskStatusHistoryTable createAlias(String alias) {
+    return $TaskStatusHistoryTable(attachedDatabase, alias);
+  }
+}
+
+class TaskHistoryRow extends DataClass implements Insertable<TaskHistoryRow> {
+  final int sequence;
+  final String id;
+  final String taskId;
+  final String? fromLaneId;
+  final String toLaneId;
+  final String? operationId;
+  final DateTime changedAt;
+  final String source;
+  const TaskHistoryRow({
+    required this.sequence,
+    required this.id,
+    required this.taskId,
+    this.fromLaneId,
+    required this.toLaneId,
+    this.operationId,
+    required this.changedAt,
+    required this.source,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['sequence'] = Variable<int>(sequence);
+    map['id'] = Variable<String>(id);
+    map['task_id'] = Variable<String>(taskId);
+    if (!nullToAbsent || fromLaneId != null) {
+      map['from_lane_id'] = Variable<String>(fromLaneId);
+    }
+    map['to_lane_id'] = Variable<String>(toLaneId);
+    if (!nullToAbsent || operationId != null) {
+      map['operation_id'] = Variable<String>(operationId);
+    }
+    map['changed_at'] = Variable<DateTime>(changedAt);
+    map['source'] = Variable<String>(source);
+    return map;
+  }
+
+  TaskStatusHistoryCompanion toCompanion(bool nullToAbsent) {
+    return TaskStatusHistoryCompanion(
+      sequence: Value(sequence),
+      id: Value(id),
+      taskId: Value(taskId),
+      fromLaneId: fromLaneId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fromLaneId),
+      toLaneId: Value(toLaneId),
+      operationId: operationId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(operationId),
+      changedAt: Value(changedAt),
+      source: Value(source),
+    );
+  }
+
+  factory TaskHistoryRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TaskHistoryRow(
+      sequence: serializer.fromJson<int>(json['sequence']),
+      id: serializer.fromJson<String>(json['id']),
+      taskId: serializer.fromJson<String>(json['taskId']),
+      fromLaneId: serializer.fromJson<String?>(json['fromLaneId']),
+      toLaneId: serializer.fromJson<String>(json['toLaneId']),
+      operationId: serializer.fromJson<String?>(json['operationId']),
+      changedAt: serializer.fromJson<DateTime>(json['changedAt']),
+      source: serializer.fromJson<String>(json['source']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'sequence': serializer.toJson<int>(sequence),
+      'id': serializer.toJson<String>(id),
+      'taskId': serializer.toJson<String>(taskId),
+      'fromLaneId': serializer.toJson<String?>(fromLaneId),
+      'toLaneId': serializer.toJson<String>(toLaneId),
+      'operationId': serializer.toJson<String?>(operationId),
+      'changedAt': serializer.toJson<DateTime>(changedAt),
+      'source': serializer.toJson<String>(source),
+    };
+  }
+
+  TaskHistoryRow copyWith({
+    int? sequence,
+    String? id,
+    String? taskId,
+    Value<String?> fromLaneId = const Value.absent(),
+    String? toLaneId,
+    Value<String?> operationId = const Value.absent(),
+    DateTime? changedAt,
+    String? source,
+  }) => TaskHistoryRow(
+    sequence: sequence ?? this.sequence,
+    id: id ?? this.id,
+    taskId: taskId ?? this.taskId,
+    fromLaneId: fromLaneId.present ? fromLaneId.value : this.fromLaneId,
+    toLaneId: toLaneId ?? this.toLaneId,
+    operationId: operationId.present ? operationId.value : this.operationId,
+    changedAt: changedAt ?? this.changedAt,
+    source: source ?? this.source,
+  );
+  TaskHistoryRow copyWithCompanion(TaskStatusHistoryCompanion data) {
+    return TaskHistoryRow(
+      sequence: data.sequence.present ? data.sequence.value : this.sequence,
+      id: data.id.present ? data.id.value : this.id,
+      taskId: data.taskId.present ? data.taskId.value : this.taskId,
+      fromLaneId: data.fromLaneId.present
+          ? data.fromLaneId.value
+          : this.fromLaneId,
+      toLaneId: data.toLaneId.present ? data.toLaneId.value : this.toLaneId,
+      operationId: data.operationId.present
+          ? data.operationId.value
+          : this.operationId,
+      changedAt: data.changedAt.present ? data.changedAt.value : this.changedAt,
+      source: data.source.present ? data.source.value : this.source,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TaskHistoryRow(')
+          ..write('sequence: $sequence, ')
+          ..write('id: $id, ')
+          ..write('taskId: $taskId, ')
+          ..write('fromLaneId: $fromLaneId, ')
+          ..write('toLaneId: $toLaneId, ')
+          ..write('operationId: $operationId, ')
+          ..write('changedAt: $changedAt, ')
+          ..write('source: $source')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    sequence,
+    id,
+    taskId,
+    fromLaneId,
+    toLaneId,
+    operationId,
+    changedAt,
+    source,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TaskHistoryRow &&
+          other.sequence == this.sequence &&
+          other.id == this.id &&
+          other.taskId == this.taskId &&
+          other.fromLaneId == this.fromLaneId &&
+          other.toLaneId == this.toLaneId &&
+          other.operationId == this.operationId &&
+          other.changedAt == this.changedAt &&
+          other.source == this.source);
+}
+
+class TaskStatusHistoryCompanion extends UpdateCompanion<TaskHistoryRow> {
+  final Value<int> sequence;
+  final Value<String> id;
+  final Value<String> taskId;
+  final Value<String?> fromLaneId;
+  final Value<String> toLaneId;
+  final Value<String?> operationId;
+  final Value<DateTime> changedAt;
+  final Value<String> source;
+  const TaskStatusHistoryCompanion({
+    this.sequence = const Value.absent(),
+    this.id = const Value.absent(),
+    this.taskId = const Value.absent(),
+    this.fromLaneId = const Value.absent(),
+    this.toLaneId = const Value.absent(),
+    this.operationId = const Value.absent(),
+    this.changedAt = const Value.absent(),
+    this.source = const Value.absent(),
+  });
+  TaskStatusHistoryCompanion.insert({
+    this.sequence = const Value.absent(),
+    required String id,
+    required String taskId,
+    this.fromLaneId = const Value.absent(),
+    required String toLaneId,
+    this.operationId = const Value.absent(),
+    required DateTime changedAt,
+    required String source,
+  }) : id = Value(id),
+       taskId = Value(taskId),
+       toLaneId = Value(toLaneId),
+       changedAt = Value(changedAt),
+       source = Value(source);
+  static Insertable<TaskHistoryRow> custom({
+    Expression<int>? sequence,
+    Expression<String>? id,
+    Expression<String>? taskId,
+    Expression<String>? fromLaneId,
+    Expression<String>? toLaneId,
+    Expression<String>? operationId,
+    Expression<DateTime>? changedAt,
+    Expression<String>? source,
+  }) {
+    return RawValuesInsertable({
+      if (sequence != null) 'sequence': sequence,
+      if (id != null) 'id': id,
+      if (taskId != null) 'task_id': taskId,
+      if (fromLaneId != null) 'from_lane_id': fromLaneId,
+      if (toLaneId != null) 'to_lane_id': toLaneId,
+      if (operationId != null) 'operation_id': operationId,
+      if (changedAt != null) 'changed_at': changedAt,
+      if (source != null) 'source': source,
+    });
+  }
+
+  TaskStatusHistoryCompanion copyWith({
+    Value<int>? sequence,
+    Value<String>? id,
+    Value<String>? taskId,
+    Value<String?>? fromLaneId,
+    Value<String>? toLaneId,
+    Value<String?>? operationId,
+    Value<DateTime>? changedAt,
+    Value<String>? source,
+  }) {
+    return TaskStatusHistoryCompanion(
+      sequence: sequence ?? this.sequence,
+      id: id ?? this.id,
+      taskId: taskId ?? this.taskId,
+      fromLaneId: fromLaneId ?? this.fromLaneId,
+      toLaneId: toLaneId ?? this.toLaneId,
+      operationId: operationId ?? this.operationId,
+      changedAt: changedAt ?? this.changedAt,
+      source: source ?? this.source,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (sequence.present) {
+      map['sequence'] = Variable<int>(sequence.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (taskId.present) {
+      map['task_id'] = Variable<String>(taskId.value);
+    }
+    if (fromLaneId.present) {
+      map['from_lane_id'] = Variable<String>(fromLaneId.value);
+    }
+    if (toLaneId.present) {
+      map['to_lane_id'] = Variable<String>(toLaneId.value);
+    }
+    if (operationId.present) {
+      map['operation_id'] = Variable<String>(operationId.value);
+    }
+    if (changedAt.present) {
+      map['changed_at'] = Variable<DateTime>(changedAt.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TaskStatusHistoryCompanion(')
+          ..write('sequence: $sequence, ')
+          ..write('id: $id, ')
+          ..write('taskId: $taskId, ')
+          ..write('fromLaneId: $fromLaneId, ')
+          ..write('toLaneId: $toLaneId, ')
+          ..write('operationId: $operationId, ')
+          ..write('changedAt: $changedAt, ')
+          ..write('source: $source')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2258,6 +4218,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SyncOutboxTable syncOutbox = $SyncOutboxTable(this);
   late final $SyncStatesTable syncStates = $SyncStatesTable(this);
   late final $ConflictsTable conflicts = $ConflictsTable(this);
+  late final $LanesTable lanes = $LanesTable(this);
+  late final $TasksTable tasks = $TasksTable(this);
+  late final $TaskStatusHistoryTable taskStatusHistory =
+      $TaskStatusHistoryTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2268,6 +4232,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     syncOutbox,
     syncStates,
     conflicts,
+    lanes,
+    tasks,
+    taskStatusHistory,
   ];
 }
 
@@ -2306,6 +4273,25 @@ final class $$CategoriesTableReferences
     ).filter((f) => f.categoryId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_notesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$TasksTable, List<TaskRow>> _tasksRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.tasks,
+    aliasName: 'categories__id__tasks__category_id',
+  );
+
+  $$TasksTableProcessedTableManager get tasksRefs {
+    final manager = $$TasksTableTableManager(
+      $_db,
+      $_db.tasks,
+    ).filter((f) => f.categoryId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_tasksRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -2362,6 +4348,31 @@ class $$CategoriesTableFilterComposer
           }) => $$NotesTableFilterComposer(
             $db: $db,
             $table: $db.notes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> tasksRefs(
+    Expression<bool> Function($$TasksTableFilterComposer f) f,
+  ) {
+    final $$TasksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.tasks,
+      getReferencedColumn: (t) => t.categoryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TasksTableFilterComposer(
+            $db: $db,
+            $table: $db.tasks,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -2455,6 +4466,31 @@ class $$CategoriesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> tasksRefs<T extends Object>(
+    Expression<T> Function($$TasksTableAnnotationComposer a) f,
+  ) {
+    final $$TasksTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.tasks,
+      getReferencedColumn: (t) => t.categoryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TasksTableAnnotationComposer(
+            $db: $db,
+            $table: $db.tasks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$CategoriesTableTableManager
@@ -2470,7 +4506,7 @@ class $$CategoriesTableTableManager
           $$CategoriesTableUpdateCompanionBuilder,
           (Category, $$CategoriesTableReferences),
           Category,
-          PrefetchHooks Function({bool notesRefs})
+          PrefetchHooks Function({bool notesRefs, bool tasksRefs})
         > {
   $$CategoriesTableTableManager(_$AppDatabase db, $CategoriesTable table)
     : super(
@@ -2523,10 +4559,13 @@ class $$CategoriesTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({notesRefs = false}) {
+          prefetchHooksCallback: ({notesRefs = false, tasksRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [if (notesRefs) db.notes],
+              explicitlyWatchedTables: [
+                if (notesRefs) db.notes,
+                if (tasksRefs) db.tasks,
+              ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
                 return [
@@ -2542,6 +4581,22 @@ class $$CategoriesTableTableManager
                           ._notesRefsTable(db),
                       managerFromTypedResult: (p0) =>
                           $$CategoriesTableReferences(db, table, p0).notesRefs,
+                      currentColumn: 'id',
+                      referencedColumn: 'category_id',
+                      typedResults: items,
+                    ),
+                  if (tasksRefs)
+                    await $_getPrefetchedDataByColumns<
+                      Category,
+                      $CategoriesTable,
+                      TaskRow,
+                      $TasksTable
+                    >(
+                      currentTable: table,
+                      referencedTable: $$CategoriesTableReferences
+                          ._tasksRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$CategoriesTableReferences(db, table, p0).tasksRefs,
                       currentColumn: 'id',
                       referencedColumn: 'category_id',
                       typedResults: items,
@@ -2566,7 +4621,7 @@ typedef $$CategoriesTableProcessedTableManager =
       $$CategoriesTableUpdateCompanionBuilder,
       (Category, $$CategoriesTableReferences),
       Category,
-      PrefetchHooks Function({bool notesRefs})
+      PrefetchHooks Function({bool notesRefs, bool tasksRefs})
     >;
 typedef $$NotesTableCreateCompanionBuilder = NotesCompanion Function({
   required String id,
@@ -3662,6 +5717,1255 @@ typedef $$ConflictsTableProcessedTableManager =
       Conflict,
       PrefetchHooks Function()
     >;
+typedef $$LanesTableCreateCompanionBuilder = LanesCompanion Function({
+  required String id,
+  required String name,
+  required int sortOrder,
+  Value<int> revision,
+  Value<String> syncStatus,
+  required DateTime createdAt,
+  required DateTime updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<int> rowid,
+});
+typedef $$LanesTableUpdateCompanionBuilder = LanesCompanion Function({
+  Value<String> id,
+  Value<String> name,
+  Value<int> sortOrder,
+  Value<int> revision,
+  Value<String> syncStatus,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<int> rowid,
+});
+
+final class $$LanesTableReferences
+    extends BaseReferences<_$AppDatabase, $LanesTable, LaneRow> {
+  $$LanesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$TasksTable, List<TaskRow>> _tasksRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.tasks,
+    aliasName: 'lanes__id__tasks__lane_id',
+  );
+
+  $$TasksTableProcessedTableManager get tasksRefs {
+    final manager = $$TasksTableTableManager(
+      $_db,
+      $_db.tasks,
+    ).filter((f) => f.laneId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_tasksRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$LanesTableFilterComposer extends Composer<_$AppDatabase, $LanesTable> {
+  $$LanesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> tasksRefs(
+    Expression<bool> Function($$TasksTableFilterComposer f) f,
+  ) {
+    final $$TasksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.tasks,
+      getReferencedColumn: (t) => t.laneId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TasksTableFilterComposer(
+            $db: $db,
+            $table: $db.tasks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$LanesTableOrderingComposer
+    extends Composer<_$AppDatabase, $LanesTable> {
+  $$LanesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LanesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LanesTable> {
+  $$LanesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<int> get revision =>
+      $composableBuilder(column: $table.revision, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  Expression<T> tasksRefs<T extends Object>(
+    Expression<T> Function($$TasksTableAnnotationComposer a) f,
+  ) {
+    final $$TasksTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.tasks,
+      getReferencedColumn: (t) => t.laneId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TasksTableAnnotationComposer(
+            $db: $db,
+            $table: $db.tasks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$LanesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LanesTable,
+          LaneRow,
+          $$LanesTableFilterComposer,
+          $$LanesTableOrderingComposer,
+          $$LanesTableAnnotationComposer,
+          $$LanesTableCreateCompanionBuilder,
+          $$LanesTableUpdateCompanionBuilder,
+          (LaneRow, $$LanesTableReferences),
+          LaneRow,
+          PrefetchHooks Function({bool tasksRefs})
+        > {
+  $$LanesTableTableManager(_$AppDatabase db, $LanesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LanesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LanesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LanesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> revision = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LanesCompanion(
+                id: id,
+                name: name,
+                sortOrder: sortOrder,
+                revision: revision,
+                syncStatus: syncStatus,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                required int sortOrder,
+                Value<int> revision = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LanesCompanion.insert(
+                id: id,
+                name: name,
+                sortOrder: sortOrder,
+                revision: revision,
+                syncStatus: syncStatus,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$LanesTable, LaneRow>(table),
+                  $$LanesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({tasksRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (tasksRefs) db.tasks],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (tasksRefs)
+                    await $_getPrefetchedDataByColumns<
+                      LaneRow,
+                      $LanesTable,
+                      TaskRow,
+                      $TasksTable
+                    >(
+                      currentTable: table,
+                      referencedTable: $$LanesTableReferences._tasksRefsTable(
+                        db,
+                      ),
+                      managerFromTypedResult: (p0) =>
+                          $$LanesTableReferences(db, table, p0).tasksRefs,
+                      currentColumn: 'id',
+                      referencedColumn: 'lane_id',
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$LanesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LanesTable,
+      LaneRow,
+      $$LanesTableFilterComposer,
+      $$LanesTableOrderingComposer,
+      $$LanesTableAnnotationComposer,
+      $$LanesTableCreateCompanionBuilder,
+      $$LanesTableUpdateCompanionBuilder,
+      (LaneRow, $$LanesTableReferences),
+      LaneRow,
+      PrefetchHooks Function({bool tasksRefs})
+    >;
+typedef $$TasksTableCreateCompanionBuilder = TasksCompanion Function({
+  required String id,
+  required String title,
+  Value<String> description,
+  required String laneId,
+  Value<String> systemState,
+  Value<String?> categoryId,
+  Value<String> priority,
+  Value<DateTime?> plannedStartAt,
+  Value<DateTime?> plannedEndAt,
+  Value<DateTime?> actualStartAt,
+  Value<DateTime?> actualEndAt,
+  Value<int> revision,
+  Value<String> syncStatus,
+  required DateTime createdAt,
+  required DateTime updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<int> rowid,
+});
+typedef $$TasksTableUpdateCompanionBuilder = TasksCompanion Function({
+  Value<String> id,
+  Value<String> title,
+  Value<String> description,
+  Value<String> laneId,
+  Value<String> systemState,
+  Value<String?> categoryId,
+  Value<String> priority,
+  Value<DateTime?> plannedStartAt,
+  Value<DateTime?> plannedEndAt,
+  Value<DateTime?> actualStartAt,
+  Value<DateTime?> actualEndAt,
+  Value<int> revision,
+  Value<String> syncStatus,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<int> rowid,
+});
+
+final class $$TasksTableReferences
+    extends BaseReferences<_$AppDatabase, $TasksTable, TaskRow> {
+  $$TasksTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $LanesTable _laneIdTable(_$AppDatabase db) =>
+      db.lanes.createAlias('tasks__lane_id__lanes__id');
+
+  $$LanesTableProcessedTableManager get laneId {
+    final $_column = $_itemColumn<String>('lane_id')!;
+
+    final manager = $$LanesTableTableManager(
+      $_db,
+      $_db.lanes,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_laneIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $CategoriesTable _categoryIdTable(_$AppDatabase db) =>
+      db.categories.createAlias('tasks__category_id__categories__id');
+
+  $$CategoriesTableProcessedTableManager? get categoryId {
+    final $_column = $_itemColumn<String>('category_id');
+    if ($_column == null) return null;
+    final manager = $$CategoriesTableTableManager(
+      $_db,
+      $_db.categories,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_categoryIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
+  $$TasksTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get systemState => $composableBuilder(
+    column: $table.systemState,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get plannedStartAt => $composableBuilder(
+    column: $table.plannedStartAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get plannedEndAt => $composableBuilder(
+    column: $table.plannedEndAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get actualStartAt => $composableBuilder(
+    column: $table.actualStartAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get actualEndAt => $composableBuilder(
+    column: $table.actualEndAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$LanesTableFilterComposer get laneId {
+    final $$LanesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.laneId,
+      referencedTable: $db.lanes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LanesTableFilterComposer(
+            $db: $db,
+            $table: $db.lanes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CategoriesTableFilterComposer get categoryId {
+    final $$CategoriesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.categoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableFilterComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TasksTableOrderingComposer
+    extends Composer<_$AppDatabase, $TasksTable> {
+  $$TasksTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get systemState => $composableBuilder(
+    column: $table.systemState,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get plannedStartAt => $composableBuilder(
+    column: $table.plannedStartAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get plannedEndAt => $composableBuilder(
+    column: $table.plannedEndAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get actualStartAt => $composableBuilder(
+    column: $table.actualStartAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get actualEndAt => $composableBuilder(
+    column: $table.actualEndAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$LanesTableOrderingComposer get laneId {
+    final $$LanesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.laneId,
+      referencedTable: $db.lanes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LanesTableOrderingComposer(
+            $db: $db,
+            $table: $db.lanes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CategoriesTableOrderingComposer get categoryId {
+    final $$CategoriesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.categoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableOrderingComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TasksTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TasksTable> {
+  $$TasksTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get systemState => $composableBuilder(
+    column: $table.systemState,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get priority =>
+      $composableBuilder(column: $table.priority, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get plannedStartAt => $composableBuilder(
+    column: $table.plannedStartAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get plannedEndAt => $composableBuilder(
+    column: $table.plannedEndAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get actualStartAt => $composableBuilder(
+    column: $table.actualStartAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get actualEndAt => $composableBuilder(
+    column: $table.actualEndAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get revision =>
+      $composableBuilder(column: $table.revision, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  $$LanesTableAnnotationComposer get laneId {
+    final $$LanesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.laneId,
+      referencedTable: $db.lanes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LanesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.lanes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CategoriesTableAnnotationComposer get categoryId {
+    final $$CategoriesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.categoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TasksTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TasksTable,
+          TaskRow,
+          $$TasksTableFilterComposer,
+          $$TasksTableOrderingComposer,
+          $$TasksTableAnnotationComposer,
+          $$TasksTableCreateCompanionBuilder,
+          $$TasksTableUpdateCompanionBuilder,
+          (TaskRow, $$TasksTableReferences),
+          TaskRow,
+          PrefetchHooks Function({bool laneId, bool categoryId})
+        > {
+  $$TasksTableTableManager(_$AppDatabase db, $TasksTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TasksTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TasksTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TasksTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<String> laneId = const Value.absent(),
+                Value<String> systemState = const Value.absent(),
+                Value<String?> categoryId = const Value.absent(),
+                Value<String> priority = const Value.absent(),
+                Value<DateTime?> plannedStartAt = const Value.absent(),
+                Value<DateTime?> plannedEndAt = const Value.absent(),
+                Value<DateTime?> actualStartAt = const Value.absent(),
+                Value<DateTime?> actualEndAt = const Value.absent(),
+                Value<int> revision = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TasksCompanion(
+                id: id,
+                title: title,
+                description: description,
+                laneId: laneId,
+                systemState: systemState,
+                categoryId: categoryId,
+                priority: priority,
+                plannedStartAt: plannedStartAt,
+                plannedEndAt: plannedEndAt,
+                actualStartAt: actualStartAt,
+                actualEndAt: actualEndAt,
+                revision: revision,
+                syncStatus: syncStatus,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String title,
+                Value<String> description = const Value.absent(),
+                required String laneId,
+                Value<String> systemState = const Value.absent(),
+                Value<String?> categoryId = const Value.absent(),
+                Value<String> priority = const Value.absent(),
+                Value<DateTime?> plannedStartAt = const Value.absent(),
+                Value<DateTime?> plannedEndAt = const Value.absent(),
+                Value<DateTime?> actualStartAt = const Value.absent(),
+                Value<DateTime?> actualEndAt = const Value.absent(),
+                Value<int> revision = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TasksCompanion.insert(
+                id: id,
+                title: title,
+                description: description,
+                laneId: laneId,
+                systemState: systemState,
+                categoryId: categoryId,
+                priority: priority,
+                plannedStartAt: plannedStartAt,
+                plannedEndAt: plannedEndAt,
+                actualStartAt: actualStartAt,
+                actualEndAt: actualEndAt,
+                revision: revision,
+                syncStatus: syncStatus,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$TasksTable, TaskRow>(table),
+                  $$TasksTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({laneId = false, categoryId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (laneId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.laneId,
+                        referencedTable: $$TasksTableReferences._laneIdTable(
+                          db,
+                        ),
+                        referencedColumn: $$TasksTableReferences
+                            ._laneIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+                    if (categoryId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.categoryId,
+                        referencedTable: $$TasksTableReferences
+                            ._categoryIdTable(db),
+                        referencedColumn: $$TasksTableReferences
+                            ._categoryIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$TasksTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TasksTable,
+      TaskRow,
+      $$TasksTableFilterComposer,
+      $$TasksTableOrderingComposer,
+      $$TasksTableAnnotationComposer,
+      $$TasksTableCreateCompanionBuilder,
+      $$TasksTableUpdateCompanionBuilder,
+      (TaskRow, $$TasksTableReferences),
+      TaskRow,
+      PrefetchHooks Function({bool laneId, bool categoryId})
+    >;
+typedef $$TaskStatusHistoryTableCreateCompanionBuilder =
+    TaskStatusHistoryCompanion Function({
+      Value<int> sequence,
+      required String id,
+      required String taskId,
+      Value<String?> fromLaneId,
+      required String toLaneId,
+      Value<String?> operationId,
+      required DateTime changedAt,
+      required String source,
+    });
+typedef $$TaskStatusHistoryTableUpdateCompanionBuilder =
+    TaskStatusHistoryCompanion Function({
+      Value<int> sequence,
+      Value<String> id,
+      Value<String> taskId,
+      Value<String?> fromLaneId,
+      Value<String> toLaneId,
+      Value<String?> operationId,
+      Value<DateTime> changedAt,
+      Value<String> source,
+    });
+
+class $$TaskStatusHistoryTableFilterComposer
+    extends Composer<_$AppDatabase, $TaskStatusHistoryTable> {
+  $$TaskStatusHistoryTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get sequence => $composableBuilder(
+    column: $table.sequence,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taskId => $composableBuilder(
+    column: $table.taskId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fromLaneId => $composableBuilder(
+    column: $table.fromLaneId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get toLaneId => $composableBuilder(
+    column: $table.toLaneId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get operationId => $composableBuilder(
+    column: $table.operationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get changedAt => $composableBuilder(
+    column: $table.changedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TaskStatusHistoryTableOrderingComposer
+    extends Composer<_$AppDatabase, $TaskStatusHistoryTable> {
+  $$TaskStatusHistoryTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get sequence => $composableBuilder(
+    column: $table.sequence,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get taskId => $composableBuilder(
+    column: $table.taskId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fromLaneId => $composableBuilder(
+    column: $table.fromLaneId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get toLaneId => $composableBuilder(
+    column: $table.toLaneId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get operationId => $composableBuilder(
+    column: $table.operationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get changedAt => $composableBuilder(
+    column: $table.changedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TaskStatusHistoryTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TaskStatusHistoryTable> {
+  $$TaskStatusHistoryTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get sequence =>
+      $composableBuilder(column: $table.sequence, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get taskId =>
+      $composableBuilder(column: $table.taskId, builder: (column) => column);
+
+  GeneratedColumn<String> get fromLaneId => $composableBuilder(
+    column: $table.fromLaneId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get toLaneId =>
+      $composableBuilder(column: $table.toLaneId, builder: (column) => column);
+
+  GeneratedColumn<String> get operationId => $composableBuilder(
+    column: $table.operationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get changedAt =>
+      $composableBuilder(column: $table.changedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+}
+
+class $$TaskStatusHistoryTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TaskStatusHistoryTable,
+          TaskHistoryRow,
+          $$TaskStatusHistoryTableFilterComposer,
+          $$TaskStatusHistoryTableOrderingComposer,
+          $$TaskStatusHistoryTableAnnotationComposer,
+          $$TaskStatusHistoryTableCreateCompanionBuilder,
+          $$TaskStatusHistoryTableUpdateCompanionBuilder,
+          (
+            TaskHistoryRow,
+            BaseReferences<
+              _$AppDatabase,
+              $TaskStatusHistoryTable,
+              TaskHistoryRow
+            >,
+          ),
+          TaskHistoryRow,
+          PrefetchHooks Function()
+        > {
+  $$TaskStatusHistoryTableTableManager(
+    _$AppDatabase db,
+    $TaskStatusHistoryTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TaskStatusHistoryTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TaskStatusHistoryTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TaskStatusHistoryTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> sequence = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> taskId = const Value.absent(),
+                Value<String?> fromLaneId = const Value.absent(),
+                Value<String> toLaneId = const Value.absent(),
+                Value<String?> operationId = const Value.absent(),
+                Value<DateTime> changedAt = const Value.absent(),
+                Value<String> source = const Value.absent(),
+              }) => TaskStatusHistoryCompanion(
+                sequence: sequence,
+                id: id,
+                taskId: taskId,
+                fromLaneId: fromLaneId,
+                toLaneId: toLaneId,
+                operationId: operationId,
+                changedAt: changedAt,
+                source: source,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> sequence = const Value.absent(),
+                required String id,
+                required String taskId,
+                Value<String?> fromLaneId = const Value.absent(),
+                required String toLaneId,
+                Value<String?> operationId = const Value.absent(),
+                required DateTime changedAt,
+                required String source,
+              }) => TaskStatusHistoryCompanion.insert(
+                sequence: sequence,
+                id: id,
+                taskId: taskId,
+                fromLaneId: fromLaneId,
+                toLaneId: toLaneId,
+                operationId: operationId,
+                changedAt: changedAt,
+                source: source,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$TaskStatusHistoryTable, TaskHistoryRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $TaskStatusHistoryTable,
+                    TaskHistoryRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TaskStatusHistoryTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TaskStatusHistoryTable,
+      TaskHistoryRow,
+      $$TaskStatusHistoryTableFilterComposer,
+      $$TaskStatusHistoryTableOrderingComposer,
+      $$TaskStatusHistoryTableAnnotationComposer,
+      $$TaskStatusHistoryTableCreateCompanionBuilder,
+      $$TaskStatusHistoryTableUpdateCompanionBuilder,
+      (
+        TaskHistoryRow,
+        BaseReferences<_$AppDatabase, $TaskStatusHistoryTable, TaskHistoryRow>,
+      ),
+      TaskHistoryRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3676,4 +6980,10 @@ class $AppDatabaseManager {
       $$SyncStatesTableTableManager(_db, _db.syncStates);
   $$ConflictsTableTableManager get conflicts =>
       $$ConflictsTableTableManager(_db, _db.conflicts);
+  $$LanesTableTableManager get lanes =>
+      $$LanesTableTableManager(_db, _db.lanes);
+  $$TasksTableTableManager get tasks =>
+      $$TasksTableTableManager(_db, _db.tasks);
+  $$TaskStatusHistoryTableTableManager get taskStatusHistory =>
+      $$TaskStatusHistoryTableTableManager(_db, _db.taskStatusHistory);
 }

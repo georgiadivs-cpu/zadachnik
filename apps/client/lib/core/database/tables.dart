@@ -55,6 +55,63 @@ class SyncStates extends Table {
   Set<Column<Object>> get primaryKey => {userId};
 }
 
+/// Дорожка TODO-доски. Дорожка — рабочий статус задачи.
+@DataClassName('LaneRow')
+class Lanes extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text().withLength(min: 1, max: 60)();
+  IntColumn get sortOrder => integer()();
+  IntColumn get revision => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('SYNCED'))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+/// Задача на единственной доске.
+@DataClassName('TaskRow')
+class Tasks extends Table {
+  TextColumn get id => text()();
+  TextColumn get title => text().withLength(min: 1, max: 200)();
+  TextColumn get description => text().withDefault(const Constant(''))();
+  TextColumn get laneId => text().references(Lanes, #id)();
+  TextColumn get systemState =>
+      text().withDefault(const Constant('ACTIVE'))();
+  TextColumn get categoryId => text().nullable().references(Categories, #id)();
+  TextColumn get priority => text().withDefault(const Constant('NORMAL'))();
+  DateTimeColumn get plannedStartAt => dateTime().nullable()();
+  DateTimeColumn get plannedEndAt => dateTime().nullable()();
+  DateTimeColumn get actualStartAt => dateTime().nullable()();
+  DateTimeColumn get actualEndAt => dateTime().nullable()();
+  IntColumn get revision => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('PENDING'))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+/// Локальная история перемещений задачи между дорожками.
+@DataClassName('TaskHistoryRow')
+class TaskStatusHistory extends Table {
+  IntColumn get sequence => integer().autoIncrement()();
+  TextColumn get id => text().unique()();
+  TextColumn get taskId => text()();
+  TextColumn get fromLaneId => text().nullable()();
+  TextColumn get toLaneId => text()();
+  TextColumn get operationId => text().nullable()();
+  DateTimeColumn get changedAt => dateTime()();
+  TextColumn get source => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {sequence};
+}
+
 /// Серверная версия сущности при конфликте.
 class Conflicts extends Table {
   TextColumn get id => text()();

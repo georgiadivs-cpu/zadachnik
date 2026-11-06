@@ -8,6 +8,9 @@ import 'package:zadachnik_client/features/auth/data/auth_models.dart';
 import 'package:zadachnik_client/features/notes/application/notes_providers.dart';
 import 'package:zadachnik_client/features/notes/domain/note.dart';
 import 'package:zadachnik_client/features/sync/application/sync_controller.dart';
+import 'package:zadachnik_client/features/tasks/application/tasks_providers.dart';
+import 'package:zadachnik_client/features/tasks/domain/lane.dart';
+import 'package:zadachnik_client/features/tasks/domain/task.dart';
 
 import 'fakes.dart';
 
@@ -34,6 +37,12 @@ void main() {
           authApiProvider.overrideWithValue(api),
           notesProvider.overrideWith(
             (ref) => Stream<List<Note>>.value(const []),
+          ),
+          lanesProvider.overrideWith(
+            (ref) => Stream<List<Lane>>.value(const []),
+          ),
+          tasksProvider.overrideWith(
+            (ref) => Stream<List<Task>>.value(const []),
           ),
           syncControllerProvider.overrideWith(NoopSyncController.new),
         ],

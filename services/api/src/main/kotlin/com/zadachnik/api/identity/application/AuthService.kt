@@ -8,6 +8,7 @@ import com.zadachnik.api.identity.domain.UserStatus
 import com.zadachnik.api.identity.infrastructure.DeviceRepository
 import com.zadachnik.api.identity.infrastructure.RefreshTokenRepository
 import com.zadachnik.api.identity.infrastructure.UserRepository
+import com.zadachnik.api.sync.infrastructure.LaneRepository
 import java.security.MessageDigest
 import java.time.Instant
 import java.util.UUID
@@ -58,6 +59,7 @@ class AuthService(
     private val users: UserRepository,
     private val devices: DeviceRepository,
     private val refreshTokens: RefreshTokenRepository,
+    private val lanes: LaneRepository,
     private val passwordEncoder: PasswordEncoder,
     private val jwt: JwtService,
     private val jwtProperties: JwtProperties,
@@ -87,6 +89,7 @@ class AuthService(
         val now = Instant.now()
         val userId = UUID.randomUUID()
         users.insert(userId, email, passwordEncoder.encode(command.password), now)
+        lanes.seedDefaults(userId, now)
 
         val user = users.findById(userId) ?: error("User was not created")
         val device = resolveDevice(user.id, command.device, now)

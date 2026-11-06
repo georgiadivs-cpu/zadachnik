@@ -8,10 +8,15 @@ import 'package:zadachnik_client/features/notes/data/notes_repository.dart';
 import 'package:zadachnik_client/features/sync/application/sync_service.dart';
 import 'package:zadachnik_client/features/sync/data/sync_api.dart';
 import 'package:zadachnik_client/features/sync/data/sync_repository.dart';
+import 'package:zadachnik_client/features/tasks/data/lanes_repository.dart';
+import 'package:zadachnik_client/features/tasks/data/tasks_repository.dart';
+import 'package:zadachnik_client/features/tasks/domain/task.dart';
 
 void main() {
   late AppDatabase database;
   late NotesRepository notes;
+  late TasksRepository tasks;
+  late LanesRepository lanes;
   late SyncRepository syncRepository;
   late FakeSyncApi api;
   late Session session;
@@ -19,6 +24,8 @@ void main() {
   setUp(() {
     database = AppDatabase.forTesting(NativeDatabase.memory());
     notes = NotesRepository(database);
+    tasks = TasksRepository(database);
+    lanes = LanesRepository(database);
     syncRepository = SyncRepository(database);
     api = FakeSyncApi();
     session = Session(
@@ -39,6 +46,8 @@ void main() {
   SyncService service({SessionResolver? resolver}) => SyncService(
     database: database,
     notes: notes,
+    tasks: tasks,
+    lanes: lanes,
     syncRepository: syncRepository,
     api: api,
     sessionResolver: resolver ?? ({bool force = false}) async => session,
@@ -443,6 +452,76 @@ void main() {
     },
   );
 
+  test('TASK APPLIED удаляет операцию и сохраняет revision задачи', () async {
+    final lanesData = await lanes.watchAll().first;
+    final id = await tasks.create(
+      TaskDraft(
+        title: 'Задача',
+        description: 'Описание',
+        laneId: lanesData.first.id,
+        categoryId: 'work',
+        priority: 'HIGH',
+        plannedStartAt: null,
+        plannedEndAt: null,
+        actualStartAt: null,
+        actualEndAt: null,
+      ),
+    );
+    api.pushHandler = (operations) async => [
+      PushOutcome(
+        operationId: operations.single.operationId,
+        status: 'APPLIED',
+        entityId: id,
+        revision: 2,
+      ),
+    ];
+
+    final summary = await service().sync();
+
+    expect(summary.pushed, 1);
+    expect(await pendingOperations(database), isEmpty);
+    final task = await tasks.findById(id);
+    expect(task?.revision, 2);
+    expect(task?.syncStatus, 'SYNCED');
+  });
+
+  test('pull применяет LANE и TASK и создаёт историю', () async {
+    const laneId = 'lane-remote-1';
+    const taskId = 'task-remote-1';
+    api.pullHandler = (cursor, limit) async => PullPage(
+      changes: [
+        _entityChange(
+          seq: 1,
+          entityType: 'LANE',
+          payload: _lanePayload(id: laneId, name: 'Идеи', sortOrder: 4),
+        ),
+        _entityChange(
+          seq: 2,
+          entityType: 'TASK',
+          payload: _taskPayload(
+            id: taskId,
+            laneId: laneId,
+            title: 'Удалённая задача',
+          ),
+        ),
+      ],
+      nextCursor: '2',
+      hasMore: false,
+    );
+
+    final summary = await service().sync();
+
+    expect(summary.pulled, 2);
+    expect((await lanes.findById(laneId))?.name, 'Идеи');
+    final task = await tasks.findById(taskId);
+    expect(task?.title, 'Удалённая задача');
+    expect(task?.syncStatus, 'SYNCED');
+    final history = await tasks.watchHistory(taskId).first;
+    expect(history, hasLength(1));
+    expect(history.single.fromLaneId, isNull);
+    expect(history.single.toLaneId, laneId);
+  });
+
   test('при 401 обновляет сессию и повторяет цикл один раз', () async {
     final id = await notes.create(
       title: 'Заметка',
@@ -516,6 +595,64 @@ Map<String, dynamic> _payload({
     'createdAt': now.toIso8601String(),
     'updatedAt': now.toIso8601String(),
     'deletedAt': deletedAt?.toIso8601String(),
+  };
+}
+
+PullChange _entityChange({
+  required int seq,
+  required String entityType,
+  required Map<String, dynamic> payload,
+}) => PullChange(
+  seq: seq,
+  entityType: entityType,
+  entityId: payload['id'] as String,
+  operationId: 'op-$seq',
+  operationType: 'CREATE',
+  revision: payload['revision'] as int,
+  payload: payload,
+);
+
+Map<String, dynamic> _lanePayload({
+  required String id,
+  required String name,
+  required int sortOrder,
+  int revision = 1,
+}) {
+  final now = DateTime.utc(2026, 11, 6, 12);
+  return {
+    'id': id,
+    'name': name,
+    'sortOrder': sortOrder,
+    'revision': revision,
+    'createdAt': now.toIso8601String(),
+    'updatedAt': now.toIso8601String(),
+    'deletedAt': null,
+  };
+}
+
+Map<String, dynamic> _taskPayload({
+  required String id,
+  required String laneId,
+  required String title,
+  int revision = 1,
+}) {
+  final now = DateTime.utc(2026, 11, 6, 12);
+  return {
+    'id': id,
+    'title': title,
+    'description': '',
+    'laneId': laneId,
+    'systemState': 'ACTIVE',
+    'categoryId': 'work',
+    'priority': 'NORMAL',
+    'plannedStartAt': null,
+    'plannedEndAt': null,
+    'actualStartAt': null,
+    'actualEndAt': null,
+    'revision': revision,
+    'createdAt': now.toIso8601String(),
+    'updatedAt': now.toIso8601String(),
+    'deletedAt': null,
   };
 }
 

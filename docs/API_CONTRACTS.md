@@ -214,8 +214,41 @@ Content-Type: application/json
 - `clientTimestamp` используется для аудита, но не для порядка;
 - каждая операция обрабатывается отдельной транзакцией;
 - частичный успех пакета допустим;
-- текущая реализация синхронизирует только `NOTE`; остальные типы
-  возвращают `REJECTED UNSUPPORTED_ENTITY`.
+- текущая реализация синхронизирует `NOTE`, `TASK` и `LANE`;
+  остальные типы возвращают `REJECTED UNSUPPORTED_ENTITY`.
+
+Payload `TASK`:
+
+```json
+{
+  "title": "Подготовить план",
+  "description": "Описание",
+  "laneId": "uuid",
+  "systemState": "ACTIVE",
+  "categoryId": "work",
+  "priority": "HIGH",
+  "plannedStartAt": "2026-11-06T09:00:00Z",
+  "plannedEndAt": "2026-11-08T18:00:00Z",
+  "actualStartAt": null,
+  "actualEndAt": null
+}
+```
+
+`systemState` — `ACTIVE` или `CANCELLED`; отмена не является дорожкой.
+Приоритет — `LOW`, `NORMAL` или `HIGH`.
+
+Payload `LANE`:
+
+```json
+{
+  "name": "В работе",
+  "sortOrder": 1
+}
+```
+
+Дорожки по умолчанию имеют стабильные ID и создаются на сервере
+при setup, а на клиенте — при инициализации локальной БД.
+Удаление непустой дорожки возвращает `REJECTED LANE_NOT_EMPTY`.
 
 Ответ `200 OK`:
 
