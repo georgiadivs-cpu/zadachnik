@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../features/calendar/application/calendar_providers.dart';
 import '../features/calendar/presentation/calendar_page.dart';
 import '../features/gantt/presentation/gantt_page.dart';
 import '../features/notes/presentation/notes_page.dart';
@@ -21,7 +22,14 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(syncControllerProvider.notifier).sync());
+    Future.microtask(() async {
+      try {
+        await ref.read(reminderCoordinatorProvider).reconcile();
+      } on Object {
+        // Ошибка уведомлений не должна блокировать работу приложения.
+      }
+      await ref.read(syncControllerProvider.notifier).sync();
+    });
   }
 
   static const _pages = <Widget>[

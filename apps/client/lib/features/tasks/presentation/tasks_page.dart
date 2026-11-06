@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../calendar/application/calendar_providers.dart';
 import '../../sync/application/sync_controller.dart';
+import '../application/task_editor_service.dart';
 import '../application/tasks_providers.dart';
 import '../domain/lane.dart';
 import '../domain/task.dart';
@@ -25,7 +27,11 @@ class _TasksPageState extends ConsumerState<TasksPage> {
   Widget build(BuildContext context) {
     final lanes = ref.watch(lanesProvider);
     final tasks = ref.watch(tasksProvider);
+    final reminders = ref.watch(remindersProvider);
     final sync = ref.watch(syncControllerProvider);
+    final reminderTaskIds =
+        reminders.value?.map((reminder) => reminder.taskId).toSet() ??
+        const <String>{};
 
     return Scaffold(
       appBar: AppBar(
@@ -66,7 +72,8 @@ class _TasksPageState extends ConsumerState<TasksPage> {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, stackTrace) =>
                 const Center(child: Text('Не удалось загрузить задачи')),
-            data: (tasksData) => _buildBoard(lanesData, tasksData),
+            data: (tasksData) =>
+                _buildBoard(lanesData, tasksData, reminderTaskIds),
           ),
         ),
       ),
@@ -83,7 +90,11 @@ class _TasksPageState extends ConsumerState<TasksPage> {
     );
   }
 
-  Widget _buildBoard(List<Lane> lanes, List<Task> tasks) {
+  Widget _buildBoard(
+    List<Lane> lanes,
+    List<Task> tasks,
+    Set<String> reminderTaskIds,
+  ) {
     final visible = tasks.where(_matchesFilter).toList();
     final cancelled = tasks.where((task) => task.isCancelled).toList();
     final taskCounts = <String, int>{};
@@ -133,6 +144,7 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                               .toList(),
                           allTasks: visible,
                           allLanes: lanes,
+                          reminderTaskIds: reminderTaskIds,
                           onOpenTask: (task) => _openTaskEditor(task, lanes),
                           onMoveTask: (task, laneId) => _moveTask(task, laneId),
                           onCancelTask: (task) => _setCancelled(task, true),
@@ -186,26 +198,37 @@ class _TasksPageState extends ConsumerState<TasksPage> {
     List<Lane> lanes, {
     String? laneId,
   }) async {
-    final draft = await showTaskEditorDialog(
+    final existingReminder = task == null
+        ? null
+        : await ref.read(remindersRepositoryProvider).findForTask(task.id);
+    if (!mounted) {
+      return;
+    }
+    final result = await showTaskEditorDialog(
       context: context,
       lanes: lanes,
       task: task,
       initialLaneId: laneId,
+      reminderAt: existingReminder?.remindAt,
+      allowReminder: task?.isCancelled != true,
     );
-    if (draft == null || !mounted) {
+    if (result == null || !mounted) {
       return;
     }
 
     try {
-      final repository = ref.read(tasksRepositoryProvider);
-      if (task == null) {
-        await repository.create(draft);
-      } else {
-        await repository.updateLocal(task, draft);
+      final outcome = await ref
+          .read(taskEditorServiceProvider)
+          .save(task: task, draft: result.draft, reminderAt: result.reminderAt);
+      if (!mounted) {
+        return;
       }
-      if (mounted) {
-        unawaited(_sync(context, ref, notify: false));
+      if (!outcome.notificationsAllowed) {
+        _showMessage(
+          'Задача сохранена, но уведомления запрещены в настройках системы',
+        );
       }
+      unawaited(_sync(context, ref, notify: false));
     } on ArgumentError catch (error) {
       if (mounted) {
         _showMessage(error.message?.toString() ?? 'Некорректная задача');
@@ -233,6 +256,9 @@ class _TasksPageState extends ConsumerState<TasksPage> {
   Future<void> _setCancelled(Task task, bool cancelled) async {
     try {
       await ref.read(tasksRepositoryProvider).setCancelled(task, cancelled);
+      if (cancelled) {
+        await ref.read(reminderCoordinatorProvider).cancelForTask(task.id);
+      }
       if (mounted) {
         _showMessage(cancelled ? 'Задача отменена' : 'Задача возвращена');
         unawaited(_sync(context, ref, notify: false));
@@ -300,6 +326,7 @@ class _LaneColumn extends StatelessWidget {
     required this.tasks,
     required this.allTasks,
     required this.allLanes,
+    required this.reminderTaskIds,
     required this.onOpenTask,
     required this.onMoveTask,
     required this.onCancelTask,
@@ -312,6 +339,7 @@ class _LaneColumn extends StatelessWidget {
   final List<Task> tasks;
   final List<Task> allTasks;
   final List<Lane> allLanes;
+  final Set<String> reminderTaskIds;
   final ValueChanged<Task> onOpenTask;
   final void Function(Task task, String laneId) onMoveTask;
   final ValueChanged<Task> onCancelTask;
@@ -386,6 +414,7 @@ class _LaneColumn extends StatelessWidget {
                           return _DraggableTaskCard(
                             task: task,
                             allLanes: allLanes,
+                            hasReminder: reminderTaskIds.contains(task.id),
                             onOpen: () => onOpenTask(task),
                             onMove: (laneId) => onMoveTask(task, laneId),
                             onCancel: () => onCancelTask(task),
@@ -469,6 +498,7 @@ class _CancelledColumn extends StatelessWidget {
                       return _TaskCard(
                         task: task,
                         allLanes: const [],
+                        hasReminder: false,
                         onOpen: () => onOpenTask(task),
                         onMove: (_) {},
                         onCancel: null,
@@ -487,6 +517,7 @@ class _DraggableTaskCard extends StatelessWidget {
   const _DraggableTaskCard({
     required this.task,
     required this.allLanes,
+    required this.hasReminder,
     required this.onOpen,
     required this.onMove,
     required this.onCancel,
@@ -495,6 +526,7 @@ class _DraggableTaskCard extends StatelessWidget {
 
   final Task task;
   final List<Lane> allLanes;
+  final bool hasReminder;
   final VoidCallback onOpen;
   final ValueChanged<String> onMove;
   final VoidCallback onCancel;
@@ -505,6 +537,7 @@ class _DraggableTaskCard extends StatelessWidget {
     final card = _TaskCard(
       task: task,
       allLanes: allLanes,
+      hasReminder: hasReminder,
       onOpen: onOpen,
       onMove: onMove,
       onCancel: onCancel,
@@ -529,6 +562,7 @@ class _TaskCard extends StatelessWidget {
   const _TaskCard({
     required this.task,
     required this.allLanes,
+    required this.hasReminder,
     required this.onOpen,
     required this.onMove,
     required this.onCancel,
@@ -537,6 +571,7 @@ class _TaskCard extends StatelessWidget {
 
   final Task task;
   final List<Lane> allLanes;
+  final bool hasReminder;
   final VoidCallback onOpen;
   final ValueChanged<String> onMove;
   final VoidCallback? onCancel;
@@ -642,6 +677,11 @@ class _TaskCard extends StatelessWidget {
                   ),
                   if (task.priority == 'HIGH')
                     _Tag(text: 'Высокий', color: theme.colorScheme.error),
+                  if (hasReminder)
+                    _Tag(
+                      text: 'Напоминание',
+                      color: theme.colorScheme.tertiary,
+                    ),
                   if (task.isCancelled)
                     _Tag(text: 'Отменена', color: theme.colorScheme.error),
                 ],

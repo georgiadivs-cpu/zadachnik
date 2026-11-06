@@ -3,18 +3,31 @@ import 'package:flutter/material.dart';
 import '../domain/lane.dart';
 import '../domain/task.dart';
 
-Future<TaskDraft?> showTaskEditorDialog({
+class TaskEditorResult {
+  const TaskEditorResult({required this.draft, required this.reminderAt});
+
+  final TaskDraft draft;
+  final DateTime? reminderAt;
+}
+
+Future<TaskEditorResult?> showTaskEditorDialog({
   required BuildContext context,
   required List<Lane> lanes,
   Task? task,
   String? initialLaneId,
+  DateTime? reminderAt,
+  DateTime? initialDate,
+  bool allowReminder = true,
 }) {
-  return showDialog<TaskDraft>(
+  return showDialog<TaskEditorResult>(
     context: context,
     builder: (context) => TaskEditorDialog(
       lanes: lanes,
       task: task,
       initialLaneId: initialLaneId,
+      reminderAt: reminderAt,
+      initialDate: initialDate,
+      allowReminder: allowReminder,
     ),
   );
 }
@@ -25,11 +38,17 @@ class TaskEditorDialog extends StatefulWidget {
     required this.lanes,
     this.task,
     this.initialLaneId,
+    this.reminderAt,
+    this.initialDate,
+    this.allowReminder = true,
   });
 
   final List<Lane> lanes;
   final Task? task;
   final String? initialLaneId;
+  final DateTime? reminderAt;
+  final DateTime? initialDate;
+  final bool allowReminder;
 
   @override
   State<TaskEditorDialog> createState() => _TaskEditorDialogState();
@@ -45,6 +64,7 @@ class _TaskEditorDialogState extends State<TaskEditorDialog> {
   DateTime? _plannedEnd;
   DateTime? _actualStart;
   DateTime? _actualEnd;
+  DateTime? _reminderAt;
   String? _error;
 
   bool get _isNew => widget.task == null;
@@ -61,10 +81,11 @@ class _TaskEditorDialogState extends State<TaskEditorDialog> {
         (widget.lanes.isEmpty ? '' : widget.lanes.first.id);
     _categoryId = task?.categoryId;
     _priority = task?.priority ?? 'NORMAL';
-    _plannedStart = task?.plannedStartAt;
-    _plannedEnd = task?.plannedEndAt;
+    _plannedStart = task?.plannedStartAt ?? widget.initialDate?.toUtc();
+    _plannedEnd = task?.plannedEndAt ?? widget.initialDate?.toUtc();
     _actualStart = task?.actualStartAt;
     _actualEnd = task?.actualEndAt;
+    _reminderAt = widget.reminderAt?.toUtc();
   }
 
   @override
@@ -88,6 +109,53 @@ class _TaskEditorDialogState extends State<TaskEditorDialog> {
     if (picked != null) {
       onChanged(DateTime(picked.year, picked.month, picked.day));
     }
+  }
+
+  Future<void> _pickReminderDate() async {
+    final current = _reminderAt?.toLocal() ?? DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: current,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null) {
+      return;
+    }
+    final existing = _reminderAt?.toLocal() ?? DateTime.now();
+    final local = DateTime(
+      picked.year,
+      picked.month,
+      picked.day,
+      existing.hour,
+      existing.minute,
+    );
+    setState(() => _reminderAt = local.toUtc());
+  }
+
+  Future<void> _pickReminderTime() async {
+    final current = _reminderAt?.toLocal() ?? DateTime.now();
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(current),
+    );
+    if (picked == null) {
+      return;
+    }
+    final local = DateTime(
+      current.year,
+      current.month,
+      current.day,
+      picked.hour,
+      picked.minute,
+    );
+    setState(() => _reminderAt = local.toUtc());
+  }
+
+  void _addReminder() {
+    final now = DateTime.now();
+    final local = DateTime(now.year, now.month, now.day, now.hour + 1, 0);
+    setState(() => _reminderAt = local.toUtc());
   }
 
   void _save() {
@@ -114,16 +182,19 @@ class _TaskEditorDialogState extends State<TaskEditorDialog> {
     }
 
     Navigator.of(context).pop(
-      TaskDraft(
-        title: title,
-        description: _description.text,
-        laneId: _laneId,
-        categoryId: _categoryId,
-        priority: _priority,
-        plannedStartAt: _plannedStart?.toUtc(),
-        plannedEndAt: _plannedEnd?.toUtc(),
-        actualStartAt: _actualStart?.toUtc(),
-        actualEndAt: _actualEnd?.toUtc(),
+      TaskEditorResult(
+        reminderAt: _reminderAt?.toUtc(),
+        draft: TaskDraft(
+          title: title,
+          description: _description.text,
+          laneId: _laneId,
+          categoryId: _categoryId,
+          priority: _priority,
+          plannedStartAt: _plannedStart?.toUtc(),
+          plannedEndAt: _plannedEnd?.toUtc(),
+          actualStartAt: _actualStart?.toUtc(),
+          actualEndAt: _actualEnd?.toUtc(),
+        ),
       ),
     );
   }
@@ -304,6 +375,16 @@ class _TaskEditorDialogState extends State<TaskEditorDialog> {
                       ),
                       onClear: () => setState(() => _actualEnd = null),
                     ),
+                    if (widget.allowReminder) ...[
+                      const SizedBox(height: 16),
+                      _ReminderEditor(
+                        reminderAt: _reminderAt,
+                        onAdd: _addReminder,
+                        onPickDate: _pickReminderDate,
+                        onPickTime: _pickReminderTime,
+                        onClear: () => setState(() => _reminderAt = null),
+                      ),
+                    ],
                     if (_error != null) ...[
                       const SizedBox(height: 12),
                       Text(
@@ -334,6 +415,102 @@ class _TaskEditorDialogState extends State<TaskEditorDialog> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ReminderEditor extends StatelessWidget {
+  const _ReminderEditor({
+    required this.reminderAt,
+    required this.onAdd,
+    required this.onPickDate,
+    required this.onPickTime,
+    required this.onClear,
+  });
+
+  final DateTime? reminderAt;
+  final VoidCallback onAdd;
+  final VoidCallback onPickDate;
+  final VoidCallback onPickTime;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final local = reminderAt?.toLocal();
+    final date = local == null
+        ? ''
+        : '${local.day.toString().padLeft(2, '0')}.'
+              '${local.month.toString().padLeft(2, '0')}.${local.year}';
+    final time = local == null
+        ? ''
+        : '${local.hour.toString().padLeft(2, '0')}:'
+              '${local.minute.toString().padLeft(2, '0')}';
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.35),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.notifications_active_outlined, size: 18),
+              const SizedBox(width: 7),
+              Text(
+                'Напоминание',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Локальное уведомление на этом устройстве. '
+            'Время отображается в локальной зоне.',
+            style: theme.textTheme.bodySmall,
+          ),
+          const SizedBox(height: 8),
+          if (local == null)
+            OutlinedButton.icon(
+              key: const Key('addReminderButton'),
+              onPressed: onAdd,
+              icon: const Icon(Icons.add_alarm, size: 18),
+              label: const Text('Добавить напоминание'),
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    key: const Key('reminderDateButton'),
+                    onPressed: onPickDate,
+                    child: Text(date),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton(
+                    key: const Key('reminderTimeButton'),
+                    onPressed: onPickTime,
+                    child: Text(time),
+                  ),
+                ),
+                IconButton(
+                  key: const Key('clearReminderButton'),
+                  tooltip: 'Удалить напоминание',
+                  onPressed: onClear,
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                ),
+              ],
+            ),
+        ],
       ),
     );
   }

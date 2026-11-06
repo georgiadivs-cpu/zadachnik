@@ -31,6 +31,7 @@ class SyncService(
     private val notes: NoteSyncProcessor,
     private val tasks: TaskSyncProcessor,
     private val lanes: LaneSyncProcessor,
+    private val reminders: ReminderSyncProcessor,
     private val changeLog: ChangeLogRepository,
     private val objectMapper: ObjectMapper,
 ) {
@@ -41,7 +42,7 @@ class SyncService(
                 operation.entityType !in SUPPORTED_ENTITIES -> rejected(
                     operation,
                     "UNSUPPORTED_ENTITY",
-                    "Поддерживаются NOTE, TASK и LANE",
+                    "Поддерживаются NOTE, TASK, LANE и REMINDER",
                 )
                 operation.deviceId != deviceId -> rejected(
                     operation,
@@ -53,6 +54,7 @@ class SyncService(
                         "NOTE" -> notes.process(userId, deviceId, operation)
                         "TASK" -> tasks.process(userId, deviceId, operation)
                         "LANE" -> lanes.process(userId, deviceId, operation)
+                        "REMINDER" -> reminders.process(userId, deviceId, operation)
                         else -> error("Unsupported entity")
                     }
                 } catch (conflict: OperationConflict) {
@@ -112,7 +114,7 @@ class SyncService(
         )
 
     companion object {
-        private val SUPPORTED_ENTITIES = setOf("NOTE", "TASK", "LANE")
+        private val SUPPORTED_ENTITIES = setOf("NOTE", "TASK", "LANE", "REMINDER")
         const val PROTOCOL_VERSION = 1
         const val DEFAULT_LIMIT = 200
         const val MAX_LIMIT = 500

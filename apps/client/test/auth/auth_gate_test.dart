@@ -5,6 +5,8 @@ import 'package:zadachnik_client/app/app.dart';
 import 'package:zadachnik_client/core/auth/session_store.dart';
 import 'package:zadachnik_client/features/auth/application/auth_controller.dart';
 import 'package:zadachnik_client/features/auth/data/auth_models.dart';
+import 'package:zadachnik_client/features/calendar/application/calendar_providers.dart';
+import 'package:zadachnik_client/features/calendar/domain/task_reminder.dart';
 import 'package:zadachnik_client/features/notes/application/notes_providers.dart';
 import 'package:zadachnik_client/features/notes/domain/note.dart';
 import 'package:zadachnik_client/features/sync/application/sync_controller.dart';
@@ -43,6 +45,9 @@ void main() {
           ),
           tasksProvider.overrideWith(
             (ref) => Stream<List<Task>>.value(const []),
+          ),
+          remindersProvider.overrideWith(
+            (ref) => Stream<List<TaskReminder>>.value(const []),
           ),
           syncControllerProvider.overrideWith(NoopSyncController.new),
         ],

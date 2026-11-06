@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zadachnik_client/app/home_shell.dart';
+import 'package:zadachnik_client/features/calendar/application/calendar_providers.dart';
+import 'package:zadachnik_client/features/calendar/domain/task_reminder.dart';
 import 'package:zadachnik_client/features/notes/application/notes_providers.dart';
 import 'package:zadachnik_client/features/notes/domain/note.dart';
 import 'package:zadachnik_client/features/sync/application/sync_controller.dart';
@@ -24,6 +26,9 @@ void main() {
           ),
           tasksProvider.overrideWith(
             (ref) => Stream<List<Task>>.value(const []),
+          ),
+          remindersProvider.overrideWith(
+            (ref) => Stream<List<TaskReminder>>.value(const []),
           ),
           syncControllerProvider.overrideWith(NoopSyncController.new),
         ],

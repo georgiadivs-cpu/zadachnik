@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/database_provider.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../calendar/application/calendar_providers.dart';
 import '../../notes/application/notes_providers.dart';
 import '../../tasks/application/tasks_providers.dart';
 import '../data/sync_api.dart';
@@ -46,6 +47,7 @@ final syncServiceProvider = Provider<SyncService>((ref) {
     notes: ref.watch(notesRepositoryProvider),
     tasks: ref.watch(tasksRepositoryProvider),
     lanes: ref.watch(lanesRepositoryProvider),
+    reminders: ref.watch(remindersRepositoryProvider),
     syncRepository: ref.watch(syncRepositoryProvider),
     api: ref.watch(syncApiProvider),
     sessionResolver: ({bool force = false}) => ref
@@ -73,6 +75,11 @@ class SyncController extends Notifier<SyncViewState> {
 
     try {
       final summary = await ref.read(syncServiceProvider).sync();
+      try {
+        await ref.read(reminderCoordinatorProvider).reconcile();
+      } on Object {
+        // Ошибка уведомлений не должна менять результат синхронизации.
+      }
       if (!ref.mounted) {
         return;
       }

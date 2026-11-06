@@ -142,7 +142,10 @@ system_state предварительно может содержать:
 - task_time_entries
 - task_reminders
 
-Не все дополнительные сущности обязательно входят в MVP.
+В реализации этапа 8 `task_reminders` содержит `id`, `task_id`,
+`remind_at` (UTC), `revision`, `created_at`, `updated_at`, `deleted_at`.
+Одно активное напоминание на задачу; удаление — tombstone.
+Остальные дополнительные сущности не входят в MVP.
 
 ## 6. Чек-листы и задачи
 

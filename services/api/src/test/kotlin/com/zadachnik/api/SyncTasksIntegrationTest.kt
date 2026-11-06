@@ -242,6 +242,136 @@ class SyncTasksIntegrationTest {
     }
 
     @Test
+    fun `reminder can be created, updated and deleted`() {
+        val owner = setup()
+        val taskId = UUID.randomUUID()
+        push(
+            owner.accessToken,
+            taskOperation(
+                deviceId = owner.deviceId,
+                taskId = taskId,
+                operationType = "CREATE",
+                baseRevision = null,
+                laneId = DefaultLanes.NEW,
+                title = "Задача с напоминанием",
+            ),
+        )
+
+        val reminderId = UUID.randomUUID()
+        val create = reminderOperation(
+            owner.deviceId,
+            reminderId,
+            "CREATE",
+            null,
+            taskId,
+            "2026-11-06T14:00:00Z",
+        )
+        val created = push(owner.accessToken, create)
+        assertThat(created.results.single().status).isEqualTo(PushStatus.APPLIED)
+        assertThat(created.results.single().revision).isEqualTo(1)
+
+        val duplicate = push(owner.accessToken, create)
+        assertThat(duplicate.results.single().status).isEqualTo(PushStatus.DUPLICATE)
+
+        val update = reminderOperation(
+            owner.deviceId,
+            reminderId,
+            "UPDATE",
+            1,
+            taskId,
+            "2026-11-06T15:30:00Z",
+        )
+        val updated = push(owner.accessToken, update)
+        assertThat(updated.results.single().status).isEqualTo(PushStatus.APPLIED)
+        assertThat(updated.results.single().revision).isEqualTo(2)
+
+        val pull = pull(owner.accessToken, "0")
+        assertThat(pull.changes).hasSize(3)
+        assertThat(pull.changes.last().entityType).isEqualTo("REMINDER")
+        assertThat(pull.changes.last().payload["remindAt"])
+            .isEqualTo("2026-11-06T15:30:00Z")
+
+        val deleted = push(
+            owner.accessToken,
+            reminderOperation(
+                owner.deviceId,
+                reminderId,
+                "DELETE",
+                2,
+                taskId,
+                null,
+            ),
+        )
+        assertThat(deleted.results.single().status).isEqualTo(PushStatus.APPLIED)
+        assertThat(deleted.results.single().revision).isEqualTo(3)
+
+        val afterDelete = pull(owner.accessToken, "0")
+        assertThat(afterDelete.changes.last().payload["deletedAt"]).isNotNull()
+    }
+
+    @Test
+    fun `second active reminder for task is rejected`() {
+        val owner = setup()
+        val taskId = UUID.randomUUID()
+        push(
+            owner.accessToken,
+            taskOperation(
+                deviceId = owner.deviceId,
+                taskId = taskId,
+                operationType = "CREATE",
+                baseRevision = null,
+                laneId = DefaultLanes.NEW,
+                title = "Задача",
+            ),
+        )
+        push(
+            owner.accessToken,
+            reminderOperation(
+                owner.deviceId,
+                UUID.randomUUID(),
+                "CREATE",
+                null,
+                taskId,
+                "2026-11-06T14:00:00Z",
+            ),
+        )
+
+        val second = push(
+            owner.accessToken,
+            reminderOperation(
+                owner.deviceId,
+                UUID.randomUUID(),
+                "CREATE",
+                null,
+                taskId,
+                "2026-11-06T15:00:00Z",
+            ),
+        )
+
+        assertThat(second.results.single().status).isEqualTo(PushStatus.REJECTED)
+        assertThat(second.results.single().code).isEqualTo("REMINDER_EXISTS")
+    }
+
+    @Test
+    fun `reminder for missing task is rejected`() {
+        val owner = setup()
+        val response = push(
+            owner.accessToken,
+            reminderOperation(
+                owner.deviceId,
+                UUID.randomUUID(),
+                "CREATE",
+                null,
+                UUID.randomUUID(),
+                "2026-11-06T14:00:00Z",
+            ),
+        )
+
+        assertThat(response.results.single().status).isEqualTo(PushStatus.REJECTED)
+        assertThat(response.results.single().code).isEqualTo("TASK_NOT_FOUND")
+    }
+
+    @Test
     fun `task pull returns lane before dependent task`() {
         val owner = setup()
         val laneId = UUID.randomUUID()
@@ -339,6 +469,26 @@ class SyncTasksIntegrationTest {
                     "actualEndAt" to null,
                 ),
             )
+        }
+    }
+
+    private fun reminderOperation(
+        deviceId: UUID,
+        reminderId: UUID,
+        operationType: String,
+        baseRevision: Long?,
+        taskId: UUID,
+        remindAt: String?,
+    ): Map<String, Any?> = buildMap {
+        put("operationId", UUID.randomUUID().toString())
+        put("deviceId", deviceId.toString())
+        put("entityType", "REMINDER")
+        put("entityId", reminderId.toString())
+        put("operationType", operationType)
+        if (baseRevision != null) put("baseRevision", baseRevision)
+        put("clientTimestamp", Instant.now().toString())
+        if (operationType != "DELETE") {
+            put("payload", mapOf("taskId" to taskId.toString(), "remindAt" to remindAt))
         }
     }
 

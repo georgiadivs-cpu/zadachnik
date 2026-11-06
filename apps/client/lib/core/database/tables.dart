@@ -112,6 +112,22 @@ class TaskStatusHistory extends Table {
   Set<Column<Object>> get primaryKey => {sequence};
 }
 
+/// Одно активное напоминание задачи. Время хранится в UTC.
+@DataClassName('ReminderRow')
+class TaskReminders extends Table {
+  TextColumn get id => text()();
+  TextColumn get taskId => text().references(Tasks, #id)();
+  DateTimeColumn get remindAt => dateTime()();
+  IntColumn get revision => integer().withDefault(const Constant(1))();
+  TextColumn get syncStatus => text().withDefault(const Constant('PENDING'))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 /// Серверная версия сущности при конфликте.
 class Conflicts extends Table {
   TextColumn get id => text()();

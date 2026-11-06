@@ -4,12 +4,14 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zadachnik_client/core/auth/session.dart';
 import 'package:zadachnik_client/core/database/app_database.dart';
+import 'package:zadachnik_client/features/calendar/data/reminders_repository.dart';
 import 'package:zadachnik_client/features/notes/data/notes_repository.dart';
 import 'package:zadachnik_client/features/sync/application/sync_service.dart';
 import 'package:zadachnik_client/features/sync/data/sync_api.dart';
 import 'package:zadachnik_client/features/sync/data/sync_repository.dart';
 import 'package:zadachnik_client/features/tasks/data/lanes_repository.dart';
 import 'package:zadachnik_client/features/tasks/data/tasks_repository.dart';
+import 'package:zadachnik_client/features/tasks/domain/lane.dart';
 import 'package:zadachnik_client/features/tasks/domain/task.dart';
 
 void main() {
@@ -17,6 +19,7 @@ void main() {
   late NotesRepository notes;
   late TasksRepository tasks;
   late LanesRepository lanes;
+  late RemindersRepository reminders;
   late SyncRepository syncRepository;
   late FakeSyncApi api;
   late Session session;
@@ -26,6 +29,7 @@ void main() {
     notes = NotesRepository(database);
     tasks = TasksRepository(database);
     lanes = LanesRepository(database);
+    reminders = RemindersRepository(database);
     syncRepository = SyncRepository(database);
     api = FakeSyncApi();
     session = Session(
@@ -48,6 +52,7 @@ void main() {
     notes: notes,
     tasks: tasks,
     lanes: lanes,
+    reminders: reminders,
     syncRepository: syncRepository,
     api: api,
     sessionResolver: resolver ?? ({bool force = false}) async => session,
@@ -522,6 +527,133 @@ void main() {
     expect(history.single.toLaneId, laneId);
   });
 
+  test('REMINDER APPLIED удаляет операцию и сохраняет revision', () async {
+    final lanesData = await lanes.watchAll().first;
+    final taskId = await tasks.create(
+      TaskDraft(
+        title: 'Задача',
+        description: '',
+        laneId: lanesData.first.id,
+        categoryId: 'work',
+        priority: 'NORMAL',
+        plannedStartAt: null,
+        plannedEndAt: null,
+        actualStartAt: null,
+        actualEndAt: null,
+      ),
+    );
+    final taskOperation = (await pendingOperations(database)).single;
+    await tasks.applyPushSuccess(
+      operationId: taskOperation.operationId,
+      taskId: taskId,
+      revision: 1,
+      sentPayload: taskOperation.payload,
+    );
+    final reminder = await reminders.saveForTask(
+      taskId,
+      DateTime.utc(2030, 1, 10, 14),
+    );
+    api.pushHandler = (operations) async => [
+      PushOutcome(
+        operationId: operations.single.operationId,
+        status: 'APPLIED',
+        entityId: reminder!.id,
+        revision: 1,
+      ),
+    ];
+
+    final summary = await service().sync();
+
+    expect(summary.pushed, 1);
+    expect(await pendingOperations(database), isEmpty);
+    expect((await reminders.findForTask(taskId))?.syncStatus, 'SYNCED');
+  });
+
+  test('pull применяет REMINDER', () async {
+    final lanesData = await lanes.watchAll().first;
+    final taskIdLocal = await tasks.create(
+      TaskDraft(
+        title: 'Удалённая задача',
+        description: '',
+        laneId: lanesData.first.id,
+        categoryId: 'work',
+        priority: 'NORMAL',
+        plannedStartAt: null,
+        plannedEndAt: null,
+        actualStartAt: null,
+        actualEndAt: null,
+      ),
+    );
+    final taskOperation = (await pendingOperations(database)).single;
+    await tasks.applyPushSuccess(
+      operationId: taskOperation.operationId,
+      taskId: taskIdLocal,
+      revision: 1,
+      sentPayload: taskOperation.payload,
+    );
+    api.pullHandler = (cursor, limit) async => PullPage(
+      changes: [
+        _entityChange(
+          seq: 1,
+          entityType: 'REMINDER',
+          payload: _reminderPayload(
+            id: 'reminder-remote-1',
+            taskId: taskIdLocal,
+          ),
+        ),
+      ],
+      nextCursor: '1',
+      hasMore: false,
+    );
+
+    final summary = await service().sync();
+
+    expect(summary.pulled, 1);
+    final saved = await reminders.findForTask(taskIdLocal);
+    expect(saved?.remindAt, DateTime.utc(2030, 1, 10, 14));
+    expect(saved?.syncStatus, 'SYNCED');
+  });
+
+  test('push отправляет LANE раньше TASK и REMINDER', () async {
+    final initial = await lanes.watchAll().first;
+    await lanes.saveConfiguration([
+      for (final lane in initial) LaneDraft(id: lane.id, name: lane.name),
+      const LaneDraft(name: 'Порядок'),
+    ]);
+    final configured = await lanes.watchAll().first;
+    final custom = configured.firstWhere((lane) => lane.name == 'Порядок');
+    final taskId = await tasks.create(
+      TaskDraft(
+        title: 'Задача',
+        description: '',
+        laneId: custom.id,
+        categoryId: 'work',
+        priority: 'NORMAL',
+        plannedStartAt: null,
+        plannedEndAt: null,
+        actualStartAt: null,
+        actualEndAt: null,
+      ),
+    );
+    await reminders.saveForTask(taskId, DateTime.utc(2030, 1, 10, 14));
+    api.pushHandler = (operations) async => [
+      for (final operation in operations)
+        PushOutcome(
+          operationId: operation.operationId,
+          status: 'APPLIED',
+          entityId: operation.entityId,
+          revision: 1,
+        ),
+    ];
+
+    await service().sync();
+
+    final types = api.pushCalls.single
+        .map((operation) => operation.entityType)
+        .toList();
+    expect(types, ['LANE', 'TASK', 'REMINDER']);
+  });
+
   test('при 401 обновляет сессию и повторяет цикл один раз', () async {
     final id = await notes.create(
       title: 'Заметка',
@@ -649,6 +781,23 @@ Map<String, dynamic> _taskPayload({
     'plannedEndAt': null,
     'actualStartAt': null,
     'actualEndAt': null,
+    'revision': revision,
+    'createdAt': now.toIso8601String(),
+    'updatedAt': now.toIso8601String(),
+    'deletedAt': null,
+  };
+}
+
+Map<String, dynamic> _reminderPayload({
+  required String id,
+  required String taskId,
+  int revision = 1,
+}) {
+  final now = DateTime.utc(2030, 1, 9, 12);
+  return {
+    'id': id,
+    'taskId': taskId,
+    'remindAt': '2030-01-10T14:00:00.000Z',
     'revision': revision,
     'createdAt': now.toIso8601String(),
     'updatedAt': now.toIso8601String(),

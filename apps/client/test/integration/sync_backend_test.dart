@@ -5,6 +5,7 @@ import 'package:zadachnik_client/core/auth/session.dart';
 import 'package:zadachnik_client/core/database/app_database.dart';
 import 'package:zadachnik_client/core/database/default_lanes.dart';
 import 'package:zadachnik_client/features/auth/data/auth_api.dart';
+import 'package:zadachnik_client/features/calendar/data/reminders_repository.dart';
 import 'package:zadachnik_client/features/auth/data/auth_models.dart';
 import 'package:zadachnik_client/features/notes/data/notes_repository.dart';
 import 'package:zadachnik_client/features/sync/application/sync_service.dart';
@@ -24,7 +25,7 @@ void main() {
   final enabled = _baseUrl.isNotEmpty && _setupToken.isNotEmpty;
 
   test(
-    'NOTE + LANE + TASK: create → pull → update → delete',
+    'NOTE + LANE + TASK + REMINDER: create → pull → update → delete',
     () async {
       final auth = DioAuthApi(baseUrl: _baseUrl);
       final email = 'e2e-${DateTime.now().microsecondsSinceEpoch}@example.com';
@@ -48,6 +49,8 @@ void main() {
       final tasksB = TasksRepository(databaseB);
       final lanesA = LanesRepository(databaseA);
       final lanesB = LanesRepository(databaseB);
+      final remindersA = RemindersRepository(databaseA);
+      final remindersB = RemindersRepository(databaseB);
       final serviceA = _service(databaseA, notesA, session);
       final serviceB = _service(databaseB, notesB, session);
 
@@ -138,6 +141,19 @@ void main() {
           DefaultLanes.inProgressLaneId,
         );
 
+        await remindersA.saveForTask(taskId, DateTime.utc(2030, 1, 10, 14));
+        await serviceA.sync();
+        await serviceB.sync();
+        expect(
+          (await remindersB.findForTask(taskId))?.remindAt,
+          DateTime.utc(2030, 1, 10, 14),
+        );
+
+        await remindersA.saveForTask(taskId, null);
+        await serviceA.sync();
+        await serviceB.sync();
+        expect(await remindersB.findForTask(taskId), isNull);
+
         final movedTask = (await tasksA.findById(taskId))!;
         await tasksA.setCancelled(movedTask, true);
         await serviceA.sync();
@@ -163,6 +179,7 @@ SyncService _service(
   notes: notes,
   tasks: TasksRepository(database),
   lanes: LanesRepository(database),
+  reminders: RemindersRepository(database),
   syncRepository: SyncRepository(database),
   api: DioSyncApi(baseUrl: _baseUrl),
   sessionResolver: ({bool force = false}) async => session,

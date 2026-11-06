@@ -33,6 +33,20 @@ class TasksRepository {
     );
   }
 
+  Future<List<Task>> listAll() async {
+    final rows = await (_database.select(
+      _database.tasks,
+    )..where((table) => table.deletedAt.isNull())).get();
+    final result = <Task>[];
+    for (final row in rows) {
+      final category = await (_database.select(_database.categories)
+            ..where((table) => table.id.equals(row.categoryId ?? '')))
+          .getSingleOrNull();
+      result.add(_domain(row, category?.name));
+    }
+    return result;
+  }
+
   Future<Task?> findById(String id) async {
     final row = await (_database.select(
       _database.tasks,

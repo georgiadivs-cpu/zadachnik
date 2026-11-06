@@ -5,6 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zadachnik_client/core/database/app_database.dart';
 import 'package:zadachnik_client/core/database/default_lanes.dart';
+import 'package:zadachnik_client/features/calendar/application/calendar_providers.dart';
+import 'package:zadachnik_client/features/calendar/application/reminder_coordinator.dart';
+import 'package:zadachnik_client/features/calendar/data/reminders_repository.dart';
+import 'package:zadachnik_client/features/calendar/domain/task_reminder.dart';
 import 'package:zadachnik_client/features/sync/application/sync_controller.dart';
 import 'package:zadachnik_client/features/tasks/application/tasks_providers.dart';
 import 'package:zadachnik_client/features/tasks/data/lanes_repository.dart';
@@ -14,16 +18,27 @@ import 'package:zadachnik_client/features/tasks/domain/task.dart';
 import 'package:zadachnik_client/features/tasks/presentation/tasks_page.dart';
 
 import '../../auth/fakes.dart';
+import '../../calendar/fakes.dart';
 
 void main() {
   late AppDatabase database;
   late LanesRepository lanes;
   late TasksRepository tasks;
+  late RemindersRepository reminders;
+  late FakeReminderScheduler scheduler;
+  late ReminderCoordinator coordinator;
 
   setUp(() {
     database = AppDatabase.forTesting(NativeDatabase.memory());
     lanes = LanesRepository(database);
     tasks = TasksRepository(database);
+    reminders = RemindersRepository(database);
+    scheduler = FakeReminderScheduler();
+    coordinator = ReminderCoordinator(
+      reminders: reminders,
+      tasks: tasks,
+      scheduler: scheduler,
+    );
   });
 
   tearDown(() async {
@@ -63,13 +78,21 @@ void main() {
     actualEndAt: null,
   );
 
-  Widget app({required List<Lane> lanesData, required List<Task> tasksData}) {
+  Widget app({
+    required List<Lane> lanesData,
+    required List<Task> tasksData,
+    List<TaskReminder> remindersData = const [],
+  }) {
     return ProviderScope(
       overrides: [
         lanesRepositoryProvider.overrideWithValue(lanes),
         tasksRepositoryProvider.overrideWithValue(tasks),
+        remindersRepositoryProvider.overrideWithValue(reminders),
+        reminderSchedulerProvider.overrideWithValue(scheduler),
+        reminderCoordinatorProvider.overrideWithValue(coordinator),
         lanesProvider.overrideWith((ref) => Stream.value(lanesData)),
         tasksProvider.overrideWith((ref) => Stream.value(tasksData)),
+        remindersProvider.overrideWith((ref) => Stream.value(remindersData)),
         syncControllerProvider.overrideWith(NoopSyncController.new),
       ],
       child: const MaterialApp(home: TasksPage()),
@@ -208,6 +231,23 @@ void main() {
     expect(configured, hasLength(5));
     expect(configured.first.name, 'Входящие');
     expect(configured.last.name, 'Идеи');
+  });
+
+  testWidgets('показывает напоминание на карточке', (tester) async {
+    final lanesData = await loadLanes();
+    final id = await tasks.create(draft(DefaultLanes.newLaneId));
+    final task = (await tasks.findById(id))!;
+    final reminder = await reminders.saveForTask(
+      id,
+      DateTime.utc(2030, 1, 10, 14),
+    );
+
+    await tester.pumpWidget(
+      app(lanesData: lanesData, tasksData: [task], remindersData: [reminder!]),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Напоминание'), findsOneWidget);
   });
 
   testWidgets('доска помещается на узком экране', (tester) async {

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../../../core/auth/session.dart';
 import '../../../core/database/app_database.dart';
+import '../../calendar/data/reminders_repository.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../tasks/data/lanes_repository.dart';
 import '../../tasks/data/tasks_repository.dart';
@@ -46,6 +47,7 @@ class SyncService {
     required this.notes,
     required this.tasks,
     required this.lanes,
+    required this.reminders,
     required this.syncRepository,
     required this.api,
     required this.sessionResolver,
@@ -55,6 +57,7 @@ class SyncService {
   final NotesRepository notes;
   final TasksRepository tasks;
   final LanesRepository lanes;
+  final RemindersRepository reminders;
   final SyncRepository syncRepository;
   final SyncApi api;
   final SessionResolver sessionResolver;
@@ -102,7 +105,7 @@ class SyncService {
     var rejected = 0;
 
     for (var batch = 0; batch < _maxPushBatches; batch += 1) {
-      final pending = await syncRepository.pendingOperations();
+      final pending = _orderedForPush(await syncRepository.pendingOperations());
       if (pending.isEmpty) {
         break;
       }
@@ -203,6 +206,13 @@ class SyncService {
           revision: revision,
           sentPayload: operation.payload,
         );
+      case 'REMINDER':
+        await reminders.applyPushSuccess(
+          operationId: operation.operationId,
+          reminderId: operation.entityId,
+          revision: revision,
+          sentPayload: operation.payload,
+        );
     }
   }
 
@@ -221,6 +231,11 @@ class SyncService {
       case 'LANE':
         await lanes.markConflict(
           laneId: operation.entityId,
+          operationId: operation.operationId,
+        );
+      case 'REMINDER':
+        await reminders.markConflict(
+          reminderId: operation.entityId,
           operationId: operation.operationId,
         );
     }
@@ -247,6 +262,12 @@ class SyncService {
         await lanes.markRejected(
           operationId: operation.operationId,
           laneId: operation.entityId,
+          message: message,
+        );
+      case 'REMINDER':
+        await reminders.markRejected(
+          operationId: operation.operationId,
+          reminderId: operation.entityId,
           message: message,
         );
     }
@@ -297,6 +318,8 @@ class SyncService {
               );
             case 'LANE':
               await lanes.applyRemote(change.payload);
+            case 'REMINDER':
+              await reminders.applyRemote(change.payload);
           }
           pulled += 1;
         }
@@ -318,6 +341,7 @@ class SyncService {
       'NOTE' => (await notes.findById(entityId))?.syncStatus,
       'TASK' => (await tasks.findById(entityId))?.syncStatus,
       'LANE' => (await lanes.findById(entityId))?.syncStatus,
+      'REMINDER' => (await reminders.syncStatusFor(entityId)),
       _ => null,
     };
   }
@@ -330,7 +354,34 @@ class SyncService {
         await tasks.setSyncStatus(entityId, 'CONFLICT');
       case 'LANE':
         await lanes.setSyncStatus(entityId, 'CONFLICT');
+      case 'REMINDER':
+        await reminders.setSyncStatus(entityId, 'CONFLICT');
     }
+  }
+
+  List<SyncOutboxData> _orderedForPush(List<SyncOutboxData> pending) {
+    final ordered = [...pending];
+    ordered.sort((a, b) {
+      final rank = _pushRank(a).compareTo(_pushRank(b));
+      if (rank != 0) {
+        return rank;
+      }
+      return a.createdAt.compareTo(b.createdAt);
+    });
+    return ordered;
+  }
+
+  static int _pushRank(SyncOutboxData operation) {
+    if (operation.entityType == 'LANE' && operation.operationType == 'DELETE') {
+      return 40;
+    }
+    return switch (operation.entityType) {
+      'LANE' => 0,
+      'TASK' => 10,
+      'REMINDER' => 20,
+      'NOTE' => 30,
+      _ => 35,
+    };
   }
 
   Map<String, dynamic>? _decode(String payload) {
@@ -348,5 +399,5 @@ class SyncService {
   static const int _pullLimit = 200;
   static const int _maxPushBatches = 10;
   static const int _maxPullPages = 50;
-  static const _supportedEntities = {'NOTE', 'TASK', 'LANE'};
+  static const _supportedEntities = {'NOTE', 'TASK', 'LANE', 'REMINDER'};
 }

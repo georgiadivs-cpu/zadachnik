@@ -30,4 +30,5 @@ Windows-сборка выполняется на Windows-машине или в 
 - `lib/core/database` — Drift-схема и подключение;
 - `lib/features/notes` — domain/data/application/presentation заметок;
 - `lib/features/tasks` — TODO-доска, задачи, дорожки и история;
-- `lib/features/calendar`, `gantt`, `settings` — каркас/настройки модулей.
+- `lib/features/calendar` — календарь, напоминания и уведомления;
+- `lib/features/gantt`, `settings` — каркас/настройки модулей.

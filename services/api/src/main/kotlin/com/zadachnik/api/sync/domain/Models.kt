@@ -92,6 +92,27 @@ data class TaskSnapshot(
     )
 }
 
+data class ReminderSnapshot(
+    override val id: UUID,
+    val userId: UUID,
+    val taskId: UUID,
+    val remindAt: Instant,
+    override val revision: Long,
+    val createdAt: Instant,
+    val updatedAt: Instant,
+    val deletedAt: Instant?,
+) : SyncSnapshot {
+    override fun toPayload(): Map<String, Any?> = mapOf(
+        "id" to id,
+        "taskId" to taskId,
+        "remindAt" to remindAt,
+        "revision" to revision,
+        "createdAt" to createdAt,
+        "updatedAt" to updatedAt,
+        "deletedAt" to deletedAt,
+    )
+}
+
 data class SyncOperationCommand(
     val operationId: UUID,
     val deviceId: UUID,
