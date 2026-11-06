@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../auth/application/auth_controller.dart';
+import '../../backup/presentation/backup_page.dart';
 import '../../sync/application/sync_controller.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -90,6 +91,21 @@ class SettingsPage extends ConsumerWidget {
               title: Text('AI Approval'),
               subtitle: Text(
                 'Изменения AI применяются только после подтверждения.',
+              ),
+            ),
+          ),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.backup_outlined),
+              title: const Text('Резервные копии'),
+              subtitle: const Text(
+                'Отдельный диск, шифрование age, проверка восстановления.',
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) => const BackupPage(),
+                ),
               ),
             ),
           ),

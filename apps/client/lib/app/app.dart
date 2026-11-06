@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../features/auth/presentation/auth_gate.dart';
+import '../features/backup/presentation/backup_status_bar.dart';
+
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
 class ZadachnikApp extends StatelessWidget {
   const ZadachnikApp({super.key});
@@ -13,6 +16,7 @@ class ZadachnikApp extends StatelessWidget {
     );
 
     return MaterialApp(
+      navigatorKey: appNavigatorKey,
       title: 'Ежедневник',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -32,6 +36,8 @@ class ZadachnikApp extends StatelessWidget {
           ),
         ),
       ),
+      builder: (context, child) =>
+          BackupStatusHost(child: child ?? const SizedBox.shrink()),
       home: const AuthGate(),
     );
   }

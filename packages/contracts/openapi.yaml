@@ -24,6 +24,8 @@ tags:
     description: Push и pull синхронизации
   - name: attachments
     description: Файлы вложений и их метаданные
+  - name: backups
+    description: Резервные копии, проверка и снимки устройств
 
 paths:
   /auth/setup:
@@ -313,6 +315,137 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /backups/status:
+    get:
+      tags: [backups]
+      summary: Статус и история резервных копий
+      responses:
+        '200':
+          description: Статус
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackupStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /backups:
+    get:
+      tags: [backups]
+      summary: История резервных копий
+      responses:
+        '200':
+          description: Статус и история
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackupStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [backups]
+      summary: Запустить резервное копирование
+      responses:
+        '202':
+          description: Копирование запущено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackupStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '503':
+          description: Резервное копирование не настроено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /backups/{id}/verify:
+    post:
+      tags: [backups]
+      summary: Проверить архив
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Архив проверен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackupArchive'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /backups/{id}/download:
+    get:
+      tags: [backups]
+      summary: Скачать зашифрованный архив
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Файл .zip.age
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /backups/devices:
+    post:
+      tags: [backups]
+      summary: Загрузить снимок SQLite текущего устройства
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [sha256, schemaVersion, file]
+              properties:
+                sha256:
+                  type: string
+                  pattern: '^[0-9a-fA-F]{64}$'
+                schemaVersion:
+                  type: integer
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Снимок зашифрован и сохранён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceSnapshot'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '503':
+          description: Резервное копирование не настроено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -369,6 +502,117 @@ components:
             $ref: '#/components/schemas/ErrorResponse'
 
   schemas:
+    BackupStatus:
+      type: object
+      properties:
+        configured:
+          type: boolean
+        configError:
+          type: string
+        state:
+          type: object
+          properties:
+            running:
+              type: boolean
+            operation:
+              type: string
+            lastAttemptAt:
+              type: string
+              format: date-time
+            lastSuccessAt:
+              type: string
+              format: date-time
+            lastVerifiedAt:
+              type: string
+              format: date-time
+            lastError:
+              type: string
+        archives:
+          type: array
+          items:
+            $ref: '#/components/schemas/BackupArchive'
+        devices:
+          type: array
+          items:
+            type: object
+            properties:
+              deviceId:
+                type: string
+              snapshotCount:
+                type: integer
+              latest:
+                $ref: '#/components/schemas/DeviceSnapshot'
+        disk:
+          type: object
+          properties:
+            freeBytes:
+              type: integer
+              format: int64
+            totalBytes:
+              type: integer
+              format: int64
+        retention:
+          type: object
+          properties:
+            recent:
+              type: integer
+            weekly:
+              type: integer
+            monthly:
+              type: integer
+            deviceSnapshots:
+              type: integer
+    BackupArchive:
+      type: object
+      properties:
+        id:
+          type: string
+        fileName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+        sizeBytes:
+          type: integer
+          format: int64
+        sha256:
+          type: string
+        status:
+          type: string
+          enum: [SUCCESS, VERIFIED]
+        verifiedAt:
+          type: string
+          format: date-time
+        schemaVersion:
+          type: string
+        counts:
+          type: object
+          additionalProperties:
+            type: integer
+        error:
+          type: string
+    DeviceSnapshot:
+      type: object
+      properties:
+        id:
+          type: string
+        deviceId:
+          type: string
+        fileName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        sizeBytes:
+          type: integer
+          format: int64
+        sha256:
+          type: string
+        schemaVersion:
+          type: integer
     ErrorResponse:
       type: object
       required: [error]

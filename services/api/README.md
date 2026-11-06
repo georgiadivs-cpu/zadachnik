@@ -28,9 +28,15 @@ Health: `http://localhost:8080/actuator/health`.
 - `GET /api/v1/devices`, `DELETE /api/v1/devices/{id}`;
 - `POST /api/v1/sync/push` — операции заметок;
 - `GET /api/v1/sync/pull` — изменения после cursor;
-- `GET /api/v1/sync/state`.
+- `GET /api/v1/sync/state`;
+- `GET /api/v1/backups/status`, `POST /api/v1/backups`,
+  `POST /api/v1/backups/{id}/verify`,
+  `GET /api/v1/backups/{id}/download`;
+- `POST /api/v1/backups/devices` — снимок SQLite устройства.
 
-Синхронизация на этом шаге поддерживает только `NOTE`.
+Синхронизация поддерживает `NOTE`, `TASK`, `LANE`, `REMINDER`.
+Резервные копии требуют `age`, `pg_dump` и `pg_restore`; см.
+`scripts/backup/README.md`.
 
 ## Проверки
 
@@ -40,3 +46,5 @@ Health: `http://localhost:8080/actuator/health`.
 ```
 
 Интеграционные тесты используют PostgreSQL через Testcontainers.
+Тест резервных копий требует установленные `age` и клиент PostgreSQL
+совместимой версии.

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ежедневник — Backup/restore</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1c2a20;
+    background:
+      radial-gradient(1000px 600px at 8% 0%, #eef8ef 0%, transparent 60%),
+      radial-gradient(900px 700px at 100% 100%, #d7ebde 0%, transparent 65%),
+      linear-gradient(140deg, #e3f1e6, #f8fbf8);
+    min-height: 100vh;
+    padding: 20px clamp(12px, 3vw, 38px) 30px;
+  }
+  .page-head { max-width: 1180px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark { width: 42px; height: 42px; border-radius: 12px; background: #2e7d5b; color: #fff; display: grid; place-items: center; font-size: 21px; box-shadow: 0 10px 22px rgba(46,125,91,.25); }
+  .eyebrow { margin: 0 0 2px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #5f7161; font-weight: 800; }
+  h1.page-title { margin: 0; font-size: clamp(18px, 2.2vw, 25px); letter-spacing: -.02em; }
+  h1.page-title span { color: #2e7d5b; font-weight: 600; }
+  .demo-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .demo-controls .label { font-size: 10px; color: #5f7161; margin-right: 3px; }
+  .demo-btn { border: 1px solid rgba(46,61,47,.16); background: rgba(255,255,255,.75); border-radius: 999px; padding: 6px 10px; font: inherit; font-size: 10px; cursor: pointer; color: #34493a; }
+  .demo-btn.active { background: #2e7d5b; color: #fff; border-color: #2e7d5b; }
+
+  .window {
+    --bg: #f5faf6; --panel: #fff; --panel-2: #edf6ef; --line: #dfece2;
+    --text: #1c2a20; --muted: #637367; --primary: #2e7d5b; --primary-soft: #e0f1e5;
+    --blue: #4a6d8c; --blue-soft: #e5eef6; --amber: #c98a2e; --amber-soft: #fdf3df;
+    --red: #b8433c; --red-soft: #fbe9e7;
+    width: min(1180px, 100%); height: min(840px, calc(100vh - 110px)); min-height: 680px;
+    margin: 0 auto; border-radius: 18px; overflow: hidden; border: 1px solid #cbd8ce;
+    background: var(--bg); color: var(--text);
+    box-shadow: 0 30px 70px rgba(24,52,34,.18), 0 8px 20px rgba(24,52,34,.12);
+    display: flex; flex-direction: column; position: relative;
+  }
+  .titlebar { height: 38px; flex: none; display: flex; align-items: center; gap: 9px; padding: 0 14px; background: #e8f1ea; border-bottom: 1px solid var(--line); }
+  .traffic { display: flex; gap: 6px; }
+  .traffic i { width: 10px; height: 10px; border-radius: 50%; display: block; }
+  .traffic i:nth-child(1) { background: #ff5f57; }
+  .traffic i:nth-child(2) { background: #febc2e; }
+  .traffic i:nth-child(3) { background: #28c840; }
+  .window-title { font-size: 11px; font-weight: 650; color: var(--muted); margin-left: 5px; }
+
+  .status-strip { flex: none; height: 27px; display: flex; align-items: center; gap: 7px; padding: 0 14px; background: #e3f2e8; border-bottom: 1px solid #cfe4d6; font-size: 10.5px; color: #365443; cursor: pointer; }
+  .status-strip:hover { background: #d8ecdf; }
+  .status-strip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); flex: none; }
+  .status-strip.warn { background: #fdf4e2; border-bottom-color: #efdcb6; color: #6f572e; }
+  .status-strip.warn .dot { background: #c98a2e; }
+  .status-strip.error { background: #fbeae8; border-bottom-color: #efcbc7; color: #83352f; }
+  .status-strip.error .dot { background: #b8433c; }
+  .status-strip.running .dot { background: #4a6d8c; animation: pulse 1.1s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+  .status-strip .spacer { flex: 1; }
+  .status-strip b { font-weight: 650; }
+  .status-strip .hint { font-size: 9.5px; opacity: .72; }
+
+  .appbar { flex: none; display: flex; align-items: center; gap: 10px; padding: 12px 20px 10px; border-bottom: 1px solid var(--line); background: #dcefdf; }
+  .appbar h2 { margin: 0; font-size: 19px; letter-spacing: -.02em; }
+  .appbar .sub { font-size: 10px; color: var(--muted); }
+  .appbar .spacer { flex: 1; }
+  .icon-btn { border: 1px solid rgba(46,61,47,.14); background: rgba(255,255,255,.7); border-radius: 8px; width: 30px; height: 30px; display: grid; place-items: center; cursor: pointer; font-size: 13px; }
+  .icon-btn:hover { background: #fff; }
+
+  .content { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 20px 24px; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 14px; align-items: start; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .panel-pad { padding: 14px; }
+  .panel-head { display: flex; align-items: center; gap: 8px; padding: 13px 14px 9px; border-bottom: 1px solid var(--line); }
+  .panel-head h3 { margin: 0; font-size: 13px; }
+  .panel-head .spacer { flex: 1; }
+  .hero { padding: 16px; background: linear-gradient(135deg, #eff9f1, #ffffff); }
+  .hero .top { display: flex; gap: 12px; align-items: flex-start; }
+  .hero-icon { width: 44px; height: 44px; border-radius: 13px; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; font-size: 21px; flex: none; }
+  .hero h3 { margin: 0 0 3px; font-size: 16px; letter-spacing: -.01em; }
+  .hero p { margin: 0; color: var(--muted); font-size: 10.5px; line-height: 1.5; }
+  .hero .tag { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; font-size: 9.5px; padding: 4px 8px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); font-weight: 650; }
+  .hero .tag.warn { background: var(--amber-soft); color: var(--amber); }
+  .hero .tag.error { background: var(--red-soft); color: var(--red); }
+  .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+  .metric { background: rgba(255,255,255,.8); border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; }
+  .metric .k { font-size: 8.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+  .metric .v { margin-top: 3px; font-size: 12px; font-weight: 650; }
+  .metric .v small { font-size: 9px; font-weight: 400; color: var(--muted); }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .primary-btn { border: 0; background: var(--primary); color: #fff; border-radius: 9px; height: 34px; padding: 0 14px; font: inherit; font-size: 11px; font-weight: 650; cursor: pointer; }
+  .primary-btn:hover { background: #276b4e; }
+  .primary-btn:disabled { opacity: .55; cursor: default; }
+  .ghost-btn { border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 9px; height: 34px; padding: 0 12px; font: inherit; font-size: 10.5px; cursor: pointer; }
+  .ghost-btn:hover { background: var(--panel-2); }
+  .ghost-btn:disabled { opacity: .5; cursor: default; }
+  .progress-wrap { margin-top: 14px; border: 1px solid #cbdfd7; background: #f3fbf5; border-radius: 10px; padding: 10px 11px; display: none; }
+  .progress-wrap.show { display: block; }
+  .progress-top { display: flex; justify-content: space-between; font-size: 10px; color: #365443; margin-bottom: 6px; }
+  .bar { height: 6px; background: #dcece2; border-radius: 999px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 46%; background: linear-gradient(90deg, #2e7d5b, #67b98c); border-radius: 999px; transition: width .3s ease; }
+  .progress-note { margin-top: 6px; font-size: 9px; color: var(--muted); }
+
+  .section { border-top: 1px solid var(--line); padding: 13px 14px; }
+  .section:first-child { border-top: 0; }
+  .section h4 { margin: 0 0 8px; font-size: 11.5px; display: flex; align-items: center; gap: 6px; }
+  .section p { margin: 0; font-size: 10px; line-height: 1.55; color: var(--muted); }
+  .device-row { display: flex; align-items: center; gap: 9px; padding: 8px 0; border-bottom: 1px dashed var(--line); font-size: 10px; }
+  .device-row:last-of-type { border-bottom: 0; }
+  .device-row .icon { width: 27px; height: 27px; border-radius: 8px; background: var(--panel-2); display: grid; place-items: center; flex: none; }
+  .device-row .name { flex: 1; min-width: 0; }
+  .device-row .name b { display: block; font-size: 10.5px; }
+  .device-row .name span { color: var(--muted); font-size: 9px; }
+  .device-row .ok { color: var(--primary); font-size: 9px; font-weight: 650; white-space: nowrap; }
+  .device-row .old { color: var(--amber); font-size: 9px; font-weight: 650; white-space: nowrap; }
+  .journal-item { display: flex; gap: 8px; align-items: flex-start; padding: 7px 0; border-bottom: 1px dashed var(--line); font-size: 9.5px; color: var(--muted); }
+  .journal-item:last-child { border-bottom: 0; }
+  .journal-item .status { width: 7px; height: 7px; border-radius: 50%; margin-top: 4px; flex: none; background: var(--primary); }
+  .journal-item .status.warn { background: var(--amber); }
+  .journal-item .status.error { background: var(--red); }
+  .journal-item b { display: block; color: var(--text); font-size: 10px; margin-bottom: 2px; }
+  .retention { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .retention span { font-size: 8.5px; padding: 3px 7px; border-radius: 999px; background: var(--panel-2); color: var(--muted); }
+  .restore { background: #f7fbf8; }
+  .restore ol { margin: 8px 0 0; padding-left: 16px; font-size: 9.5px; color: var(--muted); line-height: 1.7; }
+  .restore code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; background: #eaf3ed; padding: 2px 5px; border-radius: 5px; color: #274a36; word-break: break-word; }
+  .warning { border: 1px solid #eedbb2; background: var(--amber-soft); color: #6f572e; border-radius: 10px; padding: 9px 10px; font-size: 9.5px; line-height: 1.5; margin-top: 9px; }
+
+  .notes-demo { display: none; }
+  .notes-demo.show { display: block; }
+  .backup-demo.hide { display: none; }
+  .notes-head { display: flex; align-items: center; gap: 9px; padding: 12px 16px 9px; }
+  .notes-head h3 { margin: 0; font-size: 16px; }
+  .notes-head .spacer { flex: 1; }
+  .search-pill { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px; font-size: 10px; color: var(--muted); background: #fff; }
+  .note-card { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-top: 1px solid var(--line); }
+  .note-card .stripe { width: 4px; align-self: stretch; border-radius: 4px; background: var(--primary); flex: none; }
+  .note-card .stripe.family { background: #c9656e; }
+  .note-card .stripe.work { background: #4a6d8c; }
+  .note-card h4 { margin: 0 0 3px; font-size: 12px; }
+  .note-card p { margin: 0; font-size: 10px; color: var(--muted); line-height: 1.45; }
+  .note-card .date { margin-left: auto; font-size: 8.5px; color: var(--muted); white-space: nowrap; }
+
+  .toast { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%) translateY(12px); background: #1c2a20; color: #fff; font-size: 11px; padding: 8px 13px; border-radius: 9px; opacity: 0; pointer-events: none; transition: .18s ease; z-index: 20; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .drawer-backdrop { position: absolute; inset: 0; background: rgba(20,34,25,.28); display: none; z-index: 8; }
+  .drawer-backdrop.show { display: block; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: min(420px, 100%); background: var(--panel); border-left: 1px solid var(--line); z-index: 9; transform: translateX(100%); transition: transform .2s ease; display: flex; flex-direction: column; }
+  .drawer.show { transform: translateX(0); }
+  .drawer-head { padding: 16px 18px 12px; border-bottom: 1px solid var(--line); display: flex; gap: 10px; align-items: flex-start; }
+  .drawer-head h3 { margin: 0; font-size: 15px; }
+  .drawer-head small { display: block; color: var(--muted); font-size: 10px; margin-top: 3px; }
+  .drawer-head .spacer { flex: 1; }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 14px 18px 22px; font-size: 10.5px; line-height: 1.6; color: var(--muted); }
+  .drawer-body h4 { margin: 14px 0 6px; font-size: 11px; color: var(--text); }
+  .drawer-body code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; background: #eef6f0; padding: 2px 5px; border-radius: 5px; color: #274a36; }
+  .kv { display: grid; grid-template-columns: 130px 1fr; gap: 6px 10px; font-size: 10px; }
+  .kv b { color: var(--text); font-weight: 650; }
+
+  @media (max-width: 900px) {
+    body { padding: 10px 8px 18px; }
+    .page-head { margin-bottom: 8px; }
+    .demo-controls { display: none; }
+    .window { height: calc(100vh - 78px); min-height: 600px; border-radius: 14px; }
+    .layout { grid-template-columns: 1fr; }
+    .content { padding: 10px 12px 18px; }
+    .appbar { padding: 10px 14px 8px; }
+    .metrics { grid-template-columns: 1fr; }
+    .status-strip { height: 25px; padding: 0 10px; font-size: 9.5px; }
+    .status-strip .hint { display: none; }
+  }
+</style>
+</head>
+<body>
+<header class="page-head">
+  <div class="brand">
+    <div class="brand-mark">⛁</div>
+    <div>
+      <p class="eyebrow">Ежедневник · этап 13</p>
+      <h1 class="page-title">Backup <span>/ restore</span></h1>
+    </div>
+  </div>
+  <div class="demo-controls">
+    <span class="label">Демо:</span>
+    <button class="demo-btn active" data-state="ok">Всё в порядке</button>
+    <button class="demo-btn" data-state="old">Давно не было</button>
+    <button class="demo-btn" data-state="error">Ошибка</button>
+    <button class="demo-btn" data-state="running">Идёт копирование</button>
+    <button class="demo-btn" data-state="notes">Полоса на экране заметок</button>
+  </div>
+</header>
+
+<main class="window">
+  <div class="titlebar">
+    <div class="traffic"><i></i><i></i><i></i></div>
+    <div class="window-title">Ежедневник — резервные копии</div>
+  </div>
+
+  <div class="status-strip" id="statusStrip" title="Открыть резервные копии">
+    <span class="dot"></span>
+    <span id="statusText"><b>Бэкап:</b> сегодня 08:12 · проверено</span>
+    <span class="spacer"></span>
+    <span class="hint" id="statusHint">Отдельный диск · 412 ГБ свободно</span>
+  </div>
+
+  <div class="backup-demo" id="backupDemo">
+    <div class="appbar">
+      <h2>Резервные копии</h2>
+      <span class="sub">PostgreSQL + вложения + снимки устройств</span>
+      <span class="spacer"></span>
+      <button class="icon-btn" id="settingsBtn" title="Параметры">⚙</button>
+    </div>
+
+    <div class="content">
+      <div class="layout">
+        <div>
+          <section class="panel">
+            <div class="hero">
+              <div class="top">
+                <div class="hero-icon">🛡</div>
+                <div>
+                  <h3 id="heroTitle">Последняя копия в порядке</h3>
+                  <p id="heroText">Сегодня, 08:12 · PostgreSQL, вложения и снимок этого устройства. Проверка целостности пройдена.</p>
+                  <span class="tag" id="heroTag">✓ проверено · 2,4 ГБ · 14 сек</span>
+                </div>
+              </div>
+              <div class="metrics">
+                <div class="metric"><div class="k">Последний успех</div><div class="v" id="mLast">сегодня, 08:12</div></div>
+                <div class="metric"><div class="k">Следующая проверка</div><div class="v" id="mCheck">через 7 дней <small>вручную</small></div></div>
+                <div class="metric"><div class="k">Диск</div><div class="v" id="mDisk">412 ГБ свободно <small>из 2 ТБ</small></div></div>
+              </div>
+              <div class="actions">
+                <button class="primary-btn" id="startBtn">Создать копию</button>
+                <button class="ghost-btn" id="verifyBtn">Проверить последнюю</button>
+                <button class="ghost-btn" id="deviceBtn">Снимок этого устройства</button>
+              </div>
+              <div class="progress-wrap" id="progressWrap">
+                <div class="progress-top"><span id="progressLabel">Копирую вложения…</span><span id="progressPercent">46%</span></div>
+                <div class="bar"><i id="progressBar"></i></div>
+                <div class="progress-note">Не закрывайте приложение. Сервер продолжит работу, даже если экран закроется.</div>
+              </div>
+            </div>
+
+            <div class="section">
+              <h4>Снимки устройств <span class="tag" style="background:#e5eef6;color:#4a6d8c">локальные БД</span></h4>
+              <p>Снимок SQLite и журнала AI загружается на собственный сервер и шифруется до записи на диск. Токены и secure storage не входят.</p>
+              <div class="device-row">
+                <div class="icon">🖥</div>
+                <div class="name"><b>MacBook — это устройство</b><span>снимок сегодня, 08:11 · схема v6</span></div>
+                <span class="ok">готово</span>
+              </div>
+              <div class="device-row">
+                <div class="icon">📱</div>
+                <div class="name"><b>iPhone</b><span>снимок вчера, 21:40 · схема v6</span></div>
+                <span class="ok">готово</span>
+              </div>
+              <div class="device-row">
+                <div class="icon">💻</div>
+                <div class="name"><b>Windows</b><span>снимок 3 дня назад · схема v6</span></div>
+                <span class="old">устарел</span>
+              </div>
+            </div>
+
+            <div class="section restore">
+              <h4>Восстановление</h4>
+              <p>Восстановление выполняется только в отдельную БД и папку. Рабочие данные не перезаписываются автоматически.</p>
+              <ol>
+                <li>Скачайте архив <code>zadachnik-2026-11-06-0812.tar.age</code> и ключ <code>backup.key</code> с офлайн-носителя.</li>
+                <li>Расшифруйте: <code>age -d -i backup.key archive.tar.age &gt; archive.tar</code>.</li>
+                <li>Запустите <code>./scripts/restore-verify.sh --archive archive.tar --target zadachnik_restore</code>.</li>
+                <li>Скрипт проверит схему, количество записей и SHA-256 вложений. Только после этого — ручное переключение.</li>
+              </ol>
+              <div class="warning">Восстановление поверх рабочей БД без свежей копии и подтверждения запрещено. Ключ <code>backup.key</code> нельзя хранить только на сервере.</div>
+            </div>
+          </section>
+        </div>
+
+        <aside>
+          <section class="panel" style="margin-bottom:12px">
+            <div class="panel-head"><h3>История</h3><span class="spacer"></span><span class="tag" id="historyTag">17 копий</span></div>
+            <div class="panel-pad" style="padding-top:6px;padding-bottom:6px">
+              <div class="journal-item"><span class="status"></span><div><b>Успешно · 2,4 ГБ · проверено</b><span>сегодня, 08:12 · MacBook</span></div></div>
+              <div class="journal-item"><span class="status"></span><div><b>Успешно · 2,3 ГБ</b><span>вчера, 08:10 · по расписанию нет</span></div></div>
+              <div class="journal-item"><span class="status warn"></span><div><b>Предупреждение · диск был отключён</b><span>3 дня назад, 08:10 · повтор вручную</span></div></div>
+              <div class="journal-item"><span class="status error"></span><div><b>Ошибка · нет места на диске</b><span>4 дня назад, 08:09 · старые копии сохранены</span></div></div>
+            </div>
+            <div class="panel-pad" style="border-top:1px solid var(--line)">
+              <h4 style="margin:0 0 6px;font-size:10.5px">Политика хранения</h4>
+              <div class="retention"><span>7 последних</span><span>4 недельных</span><span>6 месячных</span><span>до ~17</span></div>
+              <p style="margin-top:8px">Удаление только после успешной проверки новой копии. Последняя исправная копия не удаляется.</p>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h3>Шифрование</h3><span class="spacer"></span><span class="tag" style="background:var(--primary-soft);color:var(--primary)">age</span></div>
+            <div class="panel-pad">
+              <div class="kv">
+                <b>Ключ на сервере</b><span><code>backup.key</code> · права 0600</span>
+                <b>Офлайн-копия</b><span>в менеджере паролей + бумага</span>
+                <b>Архив</b><span>tar → age, потоково</span>
+                <b>Проверка</b><span>SHA-256 + pg_restore --list</span>
+              </div>
+              <p style="margin-top:9px">Пароль от офлайн-копии не хранится на сервере. При потере ключа восстановление невозможно.</p>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes-demo" id="notesDemo">
+    <div class="notes-head">
+      <h3>Заметки</h3>
+      <span class="spacer"></span>
+      <span class="search-pill">🔍 Поиск</span>
+      <button class="icon-btn">＋</button>
+    </div>
+    <div class="note-card"><div class="stripe work"></div><div style="flex:1"><h4>Планы на неделю</h4><p>Собрать план, согласовать встречу и проверить бюджет.</p></div><span class="date">сегодня</span></div>
+    <div class="note-card"><div class="stripe family"></div><div style="flex:1"><h4>Семья</h4><p>Купить подарок, записаться к врачу.</p></div><span class="date">вчера</span></div>
+    <div class="note-card"><div class="stripe"></div><div style="flex:1"><h4>Идеи</h4><p>Черновик структуры личного ежедневника.</p></div><span class="date">2 дня назад</span></div>
+    <div class="note-card"><div class="stripe work"></div><div style="flex:1"><h4>Встреча 12.11</h4><p>Повестка, участники, вопросы по договору.</p></div><span class="date">3 дня назад</span></div>
+    <div class="panel-pad" style="margin:14px;background:#f7fbf8;border:1px dashed var(--line);border-radius:10px">
+      <p style="margin:0;font-size:10.5px;line-height:1.6;color:var(--muted)">Полоса статуса остаётся в верхнем левом углу на всех экранах: заметки, задачи, календарь, Гант, AI, настройки, редакторы и поиск. Нажатие открывает резервные копии.</p>
+    </div>
+  </div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">
+      <div>
+        <h3>Параметры backup</h3>
+        <small>Диск, ключ и политика хранения</small>
+      </div>
+      <div class="spacer"></div>
+      <button class="ghost-btn" id="closeDrawer">Закрыть</button>
+    </div>
+    <div class="drawer-body">
+      <h4>Расположение</h4>
+      <div class="kv">
+        <b>Каталог</b><span><code>/Volumes/ZadachnikBackup/zadachnik</code></span>
+        <b>Свободно</b><span>412 ГБ из 2 ТБ</span>
+        <b>Порог</b><span>не начинать, если меньше 10 ГБ</span>
+      </div>
+      <h4>Запуск</h4>
+      <p>Вручную из приложения или CLI на сервере. Оба пути используют один процесс и один lock-файл. Расписания нет.</p>
+      <h4>Ключ</h4>
+      <p>Рабочий ключ age: <code>/etc/zadachnik/backup.key</code>, права 0600. Офлайн-копия ключа хранится отдельно; пароль от неё — в менеджере паролей.</p>
+      <h4>Снимки устройств</h4>
+      <p>SQLite и журнал AI; последние 3 снимка на устройство. Токены, secure storage и локальные вложения не копируются: файлы уже на сервере.</p>
+      <h4>Ограничения</h4>
+      <p>Один диск — не полная схема 3-2-1. Рекомендуется периодически копировать самый свежий проверенный архив на второй офлайн-носитель.</p>
+    </div>
+  </aside>
+
+  <div class="toast" id="toast"></div>
+</main>
+
+<script>
+(() => {
+  const state = {
+    ok: {
+      cls: '', text: '<b>Бэкап:</b> сегодня 08:12 · проверено', hint: 'Отдельный диск · 412 ГБ свободно',
+      hero: 'Последняя копия в порядке',
+      heroText: 'Сегодня, 08:12 · PostgreSQL, вложения и снимок этого устройства. Проверка целостности пройдена.',
+      tag: '✓ проверено · 2,4 ГБ · 14 сек', tagCls: '',
+      last: 'сегодня, 08:12', check: 'через 7 дней <small>вручную</small>',
+    },
+    old: {
+      cls: 'warn', text: '<b>Бэкап:</b> 9 дней назад · пора создать копию', hint: 'Отдельный диск · 412 ГБ свободно',
+      hero: 'Копия устарела',
+      heroText: 'Последняя успешная копия — 9 дней назад. Локальные изменения с тех пор не защищены отдельным архивом.',
+      tag: '! требуется новый backup', tagCls: 'warn',
+      last: '9 дней назад', check: 'рекомендуется сегодня',
+    },
+    error: {
+      cls: 'error', text: '<b>Бэкап:</b> ошибка · нет места на диске', hint: 'Освободите место · старые копии сохранены',
+      hero: 'Последняя попытка не удалась',
+      heroText: 'Свободного места меньше порога. Данные и предыдущие копии не изменены.',
+      tag: '✕ ошибка записи', tagCls: 'error',
+      last: 'вчера, 08:10', check: 'после освобождения места',
+    },
+    running: {
+      cls: 'running', text: '<b>Бэкап:</b> идёт копирование · 46%', hint: 'Не закрывайте приложение',
+      hero: 'Создаю резервную копию',
+      heroText: 'Сначала снимок БД, затем вложения. Архив шифруется потоково и появится только после успешной проверки.',
+      tag: 'выполняется · 14 сек', tagCls: '',
+      last: 'сегодня, 08:12', check: 'после завершения',
+    },
+  };
+
+  const strip = document.getElementById('statusStrip');
+  const statusText = document.getElementById('statusText');
+  const statusHint = document.getElementById('statusHint');
+  const heroTitle = document.getElementById('heroTitle');
+  const heroText = document.getElementById('heroText');
+  const heroTag = document.getElementById('heroTag');
+  const mLast = document.getElementById('mLast');
+  const mCheck = document.getElementById('mCheck');
+  const progressWrap = document.getElementById('progressWrap');
+  const progressBar = document.getElementById('progressBar');
+  const progressPercent = document.getElementById('progressPercent');
+  const progressLabel = document.getElementById('progressLabel');
+  const backupDemo = document.getElementById('backupDemo');
+  const notesDemo = document.getElementById('notesDemo');
+  const toast = document.getElementById('toast');
+  let progressTimer = null;
+
+  function notify(message) {
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(notify.timer);
+    notify.timer = setTimeout(() => toast.classList.remove('show'), 1900);
+  }
+
+  function applyState(name) {
+    const s = state[name] || state.ok;
+    strip.className = 'status-strip ' + s.cls;
+    statusText.innerHTML = s.text;
+    statusHint.textContent = s.hint;
+    heroTitle.textContent = s.hero;
+    heroText.textContent = s.heroText;
+    heroTag.textContent = s.tag;
+    heroTag.className = 'tag ' + (s.tagCls || '');
+    mLast.innerHTML = s.last;
+    mCheck.innerHTML = s.check;
+    if (progressTimer) { clearInterval(progressTimer); progressTimer = null; }
+    progressWrap.classList.remove('show');
+    if (name === 'running') {
+      progressWrap.classList.add('show');
+      let value = 46;
+      progressBar.style.width = value + '%';
+      progressPercent.textContent = value + '%';
+      progressLabel.textContent = 'Копирую вложения…';
+      progressTimer = setInterval(() => {
+        value = Math.min(100, value + 7);
+        progressBar.style.width = value + '%';
+        progressPercent.textContent = value + '%';
+        if (value >= 100) {
+          progressLabel.textContent = 'Проверяю архив…';
+          clearInterval(progressTimer);
+          progressTimer = null;
+        }
+      }, 700);
+    }
+  }
+
+  document.querySelectorAll('[data-state]').forEach((button) => {
+    button.addEventListener('click', () => {
+      document.querySelectorAll('[data-state]').forEach((b) => b.classList.remove('active'));
+      button.classList.add('active');
+      const name = button.dataset.state;
+      if (name === 'notes') {
+        backupDemo.classList.add('hide');
+        notesDemo.classList.add('show');
+        strip.className = 'status-strip';
+        statusText.innerHTML = '<b>Бэкап:</b> сегодня 08:12 · проверено';
+        statusHint.textContent = 'Отдельный диск · 412 ГБ свободно';
+      } else {
+        backupDemo.classList.remove('hide');
+        notesDemo.classList.remove('show');
+        applyState(name);
+      }
+    });
+  });
+
+  document.getElementById('startBtn').addEventListener('click', () => {
+    applyState('running');
+    notify('Копирование запущено на сервере');
+  });
+  document.getElementById('verifyBtn').addEventListener('click', () => notify('Проверка последней копии поставлена в очередь'));
+  document.getElementById('deviceBtn').addEventListener('click', () => notify('Снимок устройства готовится к загрузке'));
+  strip.addEventListener('click', () => {
+    backupDemo.classList.remove('hide');
+    notesDemo.classList.remove('show');
+    notify('Открываю резервные копии');
+  });
+
+  const drawer = document.getElementById('drawer');
+  const backdrop = document.getElementById('drawerBackdrop');
+  document.getElementById('settingsBtn').addEventListener('click', () => {
+    drawer.classList.add('show');
+    backdrop.classList.add('show');
+  });
+  document.getElementById('closeDrawer').addEventListener('click', () => {
+    drawer.classList.remove('show');
+    backdrop.classList.remove('show');
+  });
+  backdrop.addEventListener('click', () => {
+    drawer.classList.remove('show');
+    backdrop.classList.remove('show');
+  });
+})();
+</script>
+</body>
+</html>

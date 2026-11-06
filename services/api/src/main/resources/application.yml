@@ -16,8 +16,8 @@ spring:
     time-zone: UTC
   servlet:
     multipart:
-      max-file-size: 25MB
-      max-request-size: 26MB
+      max-file-size: 256MB
+      max-request-size: 300MB
 
 server:
   port: ${SERVER_PORT:8080}
@@ -38,6 +38,21 @@ app:
   attachments:
     dir: ${ATTACHMENTS_DIR:./data/attachments}
     max-bytes: ${ATTACHMENTS_MAX_BYTES:26214400}
+  backups:
+    dir: ${BACKUP_DIR:./data/backups}
+    age-binary: ${BACKUP_AGE_BINARY:age}
+    age-keygen-binary: ${BACKUP_AGE_KEYGEN_BINARY:age-keygen}
+    age-identity: ${BACKUP_AGE_IDENTITY:}
+    age-recipient: ${BACKUP_AGE_RECIPIENT:}
+    pg-dump: ${BACKUP_PG_DUMP:pg_dump}
+    pg-restore: ${BACKUP_PG_RESTORE:pg_restore}
+    device-snapshot-max-bytes: ${BACKUP_DEVICE_MAX_BYTES:268435456}
+    min-free-bytes: ${BACKUP_MIN_FREE_BYTES:10737418240}
+    retention-recent: ${BACKUP_RETENTION_RECENT:7}
+    retention-weekly: ${BACKUP_RETENTION_WEEKLY:4}
+    retention-monthly: ${BACKUP_RETENTION_MONTHLY:6}
+    device-retention: ${BACKUP_DEVICE_RETENTION:3}
+    process-timeout: ${BACKUP_PROCESS_TIMEOUT:30m}
   security:
     setup-token: ${SETUP_TOKEN:}
     jwt:

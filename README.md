@@ -75,3 +75,5 @@ cd apps/client && flutter pub get && \
   dart run build_runner build && \
   flutter run -d macos
 ```
+
+Резервные копии и восстановление: `scripts/backup/README.md`.

@@ -38,6 +38,7 @@
 | Access token | 15 минут |
 | Refresh token | 30 дней |
 | Повтор refresh | ротация; повтор старого токена отзывает устройство |
+| Снимок устройства | до 256 MiB |
 
 Точные лимиты могут быть уменьшены конфигурацией сервера.
 
@@ -412,7 +413,86 @@ Authorization: Bearer <access>
 
 Создаёт tombstone и удаляет файл. Повторное удаление безопасно.
 
-## 9. Безопасность
+## 9. Резервные копии
+
+Копии создаются вручную. Сервер хранит архивы и снимки устройств
+на отдельном диске `BACKUP_DIR`; архивы шифруются `age`.
+Все методы требуют `Authorization: Bearer <access>`.
+
+### 9.1. Статус и история
+
+```http
+GET /api/v1/backups/status
+GET /api/v1/backups
+```
+
+Ответ содержит:
+
+- `configured`, `configError`;
+- `state`: `running`, `operation`, `lastAttemptAt`, `lastSuccessAt`,
+  `lastVerifiedAt`, `lastError`;
+- `archives`: id, fileName, createdAt, finishedAt, sizeBytes, sha256,
+  status (`SUCCESS`/`VERIFIED`), verifiedAt, schemaVersion, counts;
+- `devices`: deviceId, snapshotCount, latest snapshot;
+- `disk`: freeBytes, totalBytes;
+- `retention`: recent, weekly, monthly, deviceSnapshots.
+
+### 9.2. Запуск копии
+
+```http
+POST /api/v1/backups
+```
+
+Возвращает `202 Accepted` и текущий статус. Одновременно выполняется
+только одна операция. Если сервер не настроен — `503
+BACKUP_NOT_CONFIGURED`; если операция уже идёт — `409 BACKUP_RUNNING`.
+
+Сервер выполняет `pg_dump`, добавляет вложения и последние снимки
+устройств в ZIP, шифрует `age`, проверяет SHA-256, manifest и
+`pg_restore --list`, затем применяет политику хранения.
+
+### 9.3. Проверка копии
+
+```http
+POST /api/v1/backups/{id}/verify
+```
+
+Расшифровывает архив, проверяет manifest, SHA-256 файлов и читаемость
+дампа. Возвращает обновлённую запись архива. Рабочие данные не меняет.
+
+### 9.4. Скачивание архива
+
+```http
+GET /api/v1/backups/{id}/download
+```
+
+Возвращает зашифрованный файл `.zip.age` для офлайн-копии или
+восстановления через CLI.
+
+### 9.5. Снимок устройства
+
+```http
+POST /api/v1/backups/devices
+Authorization: Bearer <access>
+Content-Type: multipart/form-data
+```
+
+Поля формы: `sha256` (hex), `schemaVersion`, `file` (SQLite-снимок).
+Сервер проверяет размер до 256 MiB, заголовок SQLite, SHA-256 и
+принадлежность устройства текущей сессии. Повтор с тем же SHA-256
+идемпотентен. Снимок шифруется `age` сразу при приёме; хранятся
+последние 3 снимка на устройство. Токены и secure storage в снимок
+не входят.
+
+### 9.6. Ошибки
+
+- `503 BACKUP_NOT_CONFIGURED` — нет ключа, `age`, `pg_dump`/`pg_restore`
+  или недостаточно места;
+- `409 BACKUP_RUNNING` — уже выполняется backup или проверка;
+- `413 PAYLOAD_TOO_LARGE` — снимок больше лимита;
+- `400 VALIDATION_ERROR` — неверный SHA-256, схема или не SQLite.
+
+## 10. Безопасность
 
 - TLS обязателен.
 - Access token не логируется.
