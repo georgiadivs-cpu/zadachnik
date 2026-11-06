@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ежедневник — диаграмма Ганта</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1c2a20;
+    background:
+      radial-gradient(1000px 600px at 8% 0%, #eef8ef 0%, transparent 60%),
+      radial-gradient(900px 700px at 100% 100%, #d7ebde 0%, transparent 65%),
+      linear-gradient(140deg, #e3f1e6, #f8fbf8);
+    min-height: 100vh;
+    padding: 22px clamp(14px, 3vw, 40px) 34px;
+  }
+  .page-head { max-width: 1240px; margin: 0 auto 14px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark { width: 42px; height: 42px; border-radius: 12px; background: #2e7d5b; color: #fff; display: grid; place-items: center; font-size: 21px; box-shadow: 0 10px 22px rgba(46,125,91,.25); }
+  .eyebrow { margin: 0 0 2px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #5f7161; font-weight: 800; }
+  h1.page-title { margin: 0; font-size: clamp(18px, 2.2vw, 25px); letter-spacing: -.02em; }
+  h1.page-title span { color: #2e7d5b; font-weight: 600; }
+  .legend-pill { font-size: 11px; color: #5f7161; background: rgba(255,255,255,.65); border: 1px solid rgba(46,61,47,.12); padding: 8px 11px; border-radius: 999px; }
+
+  .window {
+    --bg: #f5faf6; --panel: #fff; --panel-2: #edf6ef; --line: #dfece2;
+    --text: #1c2a20; --muted: #637367; --primary: #2e7d5b; --primary-soft: #e0f1e5;
+    --blue: #4a6d8c; --blue-soft: #e5eef6; --amber: #c98a2e; --amber-soft: #fdf3df;
+    --red: #b8433c; --red-soft: #fbe9e7; --family: #c9656e;
+    width: min(1240px, 100%); height: min(820px, calc(100vh - 120px)); min-height: 660px;
+    margin: 0 auto; border-radius: 18px; overflow: hidden; border: 1px solid #cbd8ce;
+    background: var(--bg); color: var(--text);
+    box-shadow: 0 30px 70px rgba(24,52,34,.18), 0 8px 20px rgba(24,52,34,.12);
+    display: flex; flex-direction: column; position: relative;
+  }
+  .titlebar { height: 42px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 16px; background: var(--panel-2); border-bottom: 1px solid var(--line); }
+  .traffic { display: flex; gap: 6px; }
+  .traffic i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+  .traffic i:nth-child(1) { background: #ff5f57; }
+  .traffic i:nth-child(2) { background: #febc2e; }
+  .traffic i:nth-child(3) { background: #28c840; }
+  .window-title { font-size: 12px; font-weight: 650; color: var(--muted); margin-left: 6px; }
+  .titlebar .spacer { flex: 1; }
+  .sync-pill { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--muted); background: var(--panel); border: 1px solid var(--line); padding: 5px 9px; border-radius: 999px; }
+  .sync-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: #35a36b; }
+
+  .topbar { flex: none; display: flex; align-items: center; gap: 9px; padding: 14px 20px 8px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+  .topbar h2 { margin: 0; font-size: 20px; letter-spacing: -.02em; }
+  .topbar .sub { font-size: 10.5px; color: var(--muted); }
+  .topbar .spacer { flex: 1; }
+  .ghost-btn { border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 8px; height: 31px; padding: 0 10px; font: inherit; font-size: 10.5px; cursor: pointer; }
+  .ghost-btn:hover { background: var(--panel-2); }
+  .seg { display: flex; background: var(--panel-2); border: 1px solid var(--line); border-radius: 9px; padding: 2px; }
+  .seg button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 10.5px; padding: 5px 9px; border-radius: 7px; cursor: pointer; }
+  .seg button.active { background: var(--panel); color: var(--text); box-shadow: 0 1px 3px rgba(24,52,34,.1); }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; padding: 9px 20px 10px; align-items: center; }
+  .filter { border: 1px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 999px; height: 27px; padding: 0 10px; font: inherit; font-size: 10px; cursor: pointer; }
+  .filter.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .filter.actual.active { background: var(--blue); border-color: var(--blue); }
+  .legend { display: flex; gap: 12px; align-items: center; margin-left: auto; font-size: 9.5px; color: var(--muted); }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .legend i { width: 14px; height: 6px; border-radius: 3px; display: inline-block; }
+
+  .gantt-shell { flex: 1; min-height: 0; padding: 0 20px 18px; }
+  .gantt-card { height: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+  .gantt-scroll { flex: 1; min-height: 0; overflow: auto; }
+  .gantt-inner { min-width: 980px; }
+  .gantt-head { display: flex; position: sticky; top: 0; z-index: 2; background: var(--panel-2); border-bottom: 1px solid var(--line); }
+  .label-cell { width: 230px; flex: none; padding: 9px 12px; font-size: 10px; font-weight: 700; color: var(--muted); border-right: 1px solid var(--line); }
+  .timeline-head { flex: 1; display: flex; }
+  .time-cell { flex: 1; min-width: 0; padding: 7px 2px; text-align: center; font-size: 9px; color: var(--muted); border-right: 1px solid var(--line); white-space: nowrap; overflow: hidden; }
+  .time-cell:last-child { border-right: 0; }
+  .time-cell.today { color: var(--primary); font-weight: 800; background: var(--primary-soft); }
+  .gantt-row { display: flex; min-height: 54px; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .gantt-row:hover { background: #f9fcfa; }
+  .row-label { width: 230px; flex: none; padding: 9px 12px; border-right: 1px solid var(--line); min-width: 0; }
+  .row-label b { display: block; font-size: 11px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row-label small { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+  .track { flex: 1; position: relative; background-image: repeating-linear-gradient(to right, transparent, transparent calc(100% / var(--cols) - 1px), var(--line) calc(100% / var(--cols) - 1px), var(--line) calc(100% / var(--cols))); }
+  .bar { position: absolute; height: 12px; top: 14px; border-radius: 4px; background: var(--primary); box-shadow: 0 2px 5px rgba(46,125,91,.15); min-width: 2px; }
+  .bar.actual { height: 5px; top: 33px; background: var(--blue); box-shadow: none; opacity: .9; }
+  .bar.overdue { background: var(--red); box-shadow: 0 2px 5px rgba(184,67,60,.18); }
+  .bar-label { position: absolute; top: 31px; font-size: 8.5px; color: var(--muted); white-space: nowrap; transform: translateY(100%); }
+  .today-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--primary); opacity: .45; pointer-events: none; }
+  .empty { padding: 34px 20px; color: var(--muted); text-align: center; font-size: 11px; }
+  .gantt-note { padding: 9px 14px; border-top: 1px solid var(--line); font-size: 9.5px; color: var(--muted); background: var(--panel-2); }
+
+  .drawer-backdrop { position: absolute; inset: 0; background: rgba(20,34,25,.28); display: none; z-index: 8; }
+  .drawer-backdrop.show { display: block; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: min(420px, 100%); background: var(--panel); border-left: 1px solid var(--line); z-index: 9; transform: translateX(100%); transition: transform .2s ease; display: flex; flex-direction: column; }
+  .drawer.show { transform: translateX(0); }
+  .drawer-head { padding: 16px 18px 12px; border-bottom: 1px solid var(--line); display: flex; align-items: flex-start; gap: 10px; }
+  .drawer-head h3 { margin: 0; font-size: 16px; }
+  .drawer-head small { display: block; color: var(--muted); font-size: 10px; margin-top: 3px; }
+  .drawer-head .spacer { flex: 1; }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 16px 18px 24px; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 9.5px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 800; margin-bottom: 5px; }
+  .field input { width: 100%; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--text); padding: 8px 9px; font: inherit; font-size: 11.5px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .drawer-actions { display: flex; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--line); }
+  .drawer-actions .spacer { flex: 1; }
+  .primary-btn { border: 0; background: var(--primary); color: #fff; border-radius: 9px; height: 33px; padding: 0 13px; font: inherit; font-size: 11.5px; font-weight: 650; cursor: pointer; }
+  .note-box { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 11px; font-size: 10px; line-height: 1.5; color: var(--muted); margin-top: 10px; }
+  .tag { display: inline-flex; align-items: center; font-size: 9.5px; padding: 3px 7px; border-radius: 999px; background: var(--panel-2); color: var(--muted); white-space: nowrap; }
+  .tag.green { background: var(--primary-soft); color: var(--primary); }
+  .tag.blue { background: var(--blue-soft); color: var(--blue); }
+  .tag.red { background: var(--red-soft); color: var(--red); }
+  .tag.family { background: #fbe9ec; color: var(--family); }
+  .toast { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%) translateY(12px); background: #1c2a20; color: #fff; font-size: 11px; padding: 8px 13px; border-radius: 9px; opacity: 0; pointer-events: none; transition: .18s ease; z-index: 20; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 760px) {
+    body { padding: 10px 8px 18px; }
+    .legend-pill { display: none; }
+    .window { height: calc(100vh - 70px); min-height: 560px; border-radius: 14px; }
+    .topbar { padding: 12px 14px 8px; }
+    .filters { padding: 8px 14px; }
+    .gantt-shell { padding: 0 14px 14px; }
+    .label-cell, .row-label { width: 170px; }
+    .gantt-inner { min-width: 900px; }
+    .drawer { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<header class="page-head">
+  <div class="brand">
+    <div class="brand-mark">▤</div>
+    <div>
+      <p class="eyebrow">Ежедневник · этап 9</p>
+      <h1 class="page-title">Диаграмма <span>Ганта</span></h1>
+    </div>
+  </div>
+  <div class="legend-pill">Прототип · план/факт · масштабы · просрочка</div>
+</header>
+
+<main class="window">
+  <div class="titlebar">
+    <div class="traffic"><i></i><i></i><i></i></div>
+    <div class="window-title">Гант — Ежедневник</div>
+    <div class="spacer"></div>
+    <div class="sync-pill"><span class="dot"></span> Данные локальны · синхронизировано</div>
+  </div>
+
+  <section class="topbar">
+    <h2>Гант</h2>
+    <span class="sub">Плановые и фактические интервалы</span>
+    <span class="spacer"></span>
+    <button class="ghost-btn" id="prev">‹</button>
+    <button class="ghost-btn" id="todayBtn">Сегодня</button>
+    <button class="ghost-btn" id="next">›</button>
+    <div class="seg" id="scaleSeg">
+      <button data-scale="day">День</button>
+      <button data-scale="week" class="active">Неделя</button>
+      <button data-scale="month">Месяц</button>
+    </div>
+  </section>
+
+  <section class="filters">
+    <button class="filter active" data-filter="all">Все задачи</button>
+    <button class="filter" data-filter="work">Работа</button>
+    <button class="filter" data-filter="personal">Личное</button>
+    <button class="filter" data-filter="family">Семья</button>
+    <button class="filter" data-filter="high">Высокий приоритет</button>
+    <button class="filter actual active" id="actualToggle">Показать фактические</button>
+    <div class="legend">
+      <span><i style="background:var(--primary)"></i>план</span>
+      <span><i style="background:var(--blue)"></i>факт</span>
+      <span><i style="background:var(--red)"></i>просрочено</span>
+    </div>
+  </section>
+
+  <section class="gantt-shell">
+    <div class="gantt-card">
+      <div class="gantt-scroll">
+        <div class="gantt-inner" id="ganttInner">
+          <div class="gantt-head" id="ganttHead"></div>
+          <div id="ganttRows"></div>
+          <div class="empty" id="emptyState" hidden>Нет задач с датами для выбранного фильтра.</div>
+        </div>
+      </div>
+      <div class="gantt-note">Нажмите на строку, чтобы открыть задачу и изменить плановые/фактические даты. Просрочка — плановая дата завершения прошла, а факт не закрыт.</div>
+    </div>
+  </section>
+
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">
+      <div>
+        <h3 id="drawerTitle">Задача</h3>
+        <small>Плановые и фактические даты</small>
+      </div>
+      <div class="spacer"></div>
+      <button class="ghost-btn" id="closeDrawer">Закрыть</button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+    <div class="drawer-actions">
+      <span class="spacer"></span>
+      <button class="ghost-btn" id="cancelDrawer">Отмена</button>
+      <button class="primary-btn" id="saveTask">Сохранить</button>
+    </div>
+  </aside>
+
+  <div class="toast" id="toast"></div>
+</main>
+
+<script>
+(() => {
+  const dayNames = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  const monthNames = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+  const categories = {
+    work: { label: 'Работа', cls: 'green' },
+    personal: { label: 'Личное', cls: 'blue' },
+    family: { label: 'Семья', cls: 'family' },
+  };
+  const tasks = [
+    { id:'t1', title:'Подготовить план встречи', category:'work', lane:'В работе', priority:'HIGH', planStart:'2026-11-02', planEnd:'2026-11-06', actualStart:'2026-11-02', actualEnd:'2026-11-05' },
+    { id:'t2', title:'Согласовать бюджет', category:'work', lane:'В работе', priority:'NORMAL', planStart:'2026-11-05', planEnd:'2026-11-12', actualStart:'2026-11-05', actualEnd:null },
+    { id:'t3', title:'Проверить договор', category:'personal', lane:'Проверка', priority:'NORMAL', planStart:'2026-10-28', planEnd:'2026-11-04', actualStart:'2026-10-29', actualEnd:null },
+    { id:'t4', title:'Собрать требования', category:'work', lane:'Новые', priority:'HIGH', planStart:'2026-11-09', planEnd:'2026-11-16', actualStart:null, actualEnd:null },
+    { id:'t5', title:'Купить подарок', category:'family', lane:'Готово', priority:'NORMAL', planStart:'2026-11-03', planEnd:'2026-11-05', actualStart:'2026-11-03', actualEnd:'2026-11-04' },
+    { id:'t6', title:'Проверить почту', category:'work', lane:'Готово', priority:'LOW', planStart:'2026-11-06', planEnd:'2026-11-06', actualStart:'2026-11-06', actualEnd:'2026-11-06' },
+    { id:'t7', title:'Забрать заказ', category:'family', lane:'Новые', priority:'NORMAL', planStart:'2026-11-17', planEnd:'2026-11-19', actualStart:null, actualEnd:null },
+    { id:'t8', title:'Обновить документацию', category:'work', lane:'Проверка', priority:'LOW', planStart:'2026-11-11', planEnd:'2026-11-20', actualStart:'2026-11-11', actualEnd:null },
+  ];
+
+  let anchor = new Date(2026, 10, 6);
+  let scale = 'week';
+  let filter = 'all';
+  let showActual = true;
+  let editingId = null;
+
+  const head = document.getElementById('ganttHead');
+  const rows = document.getElementById('ganttRows');
+  const empty = document.getElementById('emptyState');
+  const toast = document.getElementById('toast');
+
+  function notify(message) {
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(notify.timer);
+    notify.timer = setTimeout(() => toast.classList.remove('show'), 1900);
+  }
+  function iso(date) {
+    return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+  }
+  function parse(value) {
+    if (!value) return null;
+    const p = value.split('-').map(Number);
+    return new Date(p[0], p[1]-1, p[2]);
+  }
+  function addDays(date, days) {
+    const copy = new Date(date);
+    copy.setDate(copy.getDate() + days);
+    return copy;
+  }
+  function addMonths(date, months) {
+    return new Date(date.getFullYear(), date.getMonth() + months, 1);
+  }
+  function dayDiff(a, b) {
+    return Math.round((b - a) / 86400000);
+  }
+  function taskFits(task) {
+    if (filter === 'high') return task.priority === 'HIGH';
+    if (filter !== 'all') return task.category === filter;
+    return true;
+  }
+  function isOverdue(task) {
+    const end = parse(task.planEnd);
+    return end < new Date(2026, 10, 6) && !task.actualEnd;
+  }
+
+  function range() {
+    if (scale === 'day') {
+      const start = addDays(anchor, -7);
+      return { start, end: addDays(start, 21), cells: 21, cellDays: 1, label: (d) => `${d.getDate()} ${monthNames[d.getMonth()]}` };
+    }
+    if (scale === 'week') {
+      const mondayOffset = (anchor.getDay() + 6) % 7;
+      const start = addDays(addDays(anchor, -mondayOffset), -28);
+      return { start, end: addDays(start, 84), cells: 12, cellDays: 7, label: (d) => `${d.getDate()} ${monthNames[d.getMonth()]}` };
+    }
+    const start = new Date(anchor.getFullYear(), anchor.getMonth() - 6, 1);
+    return { start, end: addMonths(start, 12), cells: 12, cellDays: null, label: (d) => `${monthNames[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`, month: true };
+  }
+
+  function render() {
+    const r = range();
+    head.innerHTML = '<div class="label-cell">Задача</div><div class="timeline-head" style="--cols:' + r.cells + '"></div>';
+    const timelineHead = head.querySelector('.timeline-head');
+    for (let i = 0; i < r.cells; i += 1) {
+      const d = r.month ? addMonths(r.start, i) : addDays(r.start, i * r.cellDays);
+      const cell = document.createElement('div');
+      cell.className = 'time-cell';
+      if (scale === 'day' && iso(d) === '2026-11-06') cell.classList.add('today');
+      cell.textContent = r.label(d);
+      timelineHead.appendChild(cell);
+    }
+
+    const visible = tasks.filter(taskFits).filter(t => t.planStart || t.actualStart);
+    rows.innerHTML = '';
+    empty.hidden = visible.length > 0;
+    const timelineWidth = Math.max(750, r.cells * (scale === 'day' ? 52 : scale === 'week' ? 78 : 72));
+    const totalStart = r.start;
+    const totalEnd = r.end;
+    const totalDays = Math.max(1, dayDiff(totalStart, totalEnd));
+
+    visible.forEach(t => {
+      const row = document.createElement('div');
+      row.className = 'gantt-row';
+      const planStart = parse(t.planStart);
+      const planEnd = parse(t.planEnd || t.planStart);
+      const actualStart = parse(t.actualStart);
+      const actualEnd = parse(t.actualEnd) || (actualStart && !t.actualEnd ? new Date(2026,10,6) : null);
+      const overdue = isOverdue(t);
+      const category = categories[t.category];
+
+      row.innerHTML = `<div class="row-label"><b>${t.title}</b><small><span class="tag ${category.cls}">${category.label}</span><span class="tag">${t.lane}</span>${overdue ? '<span class="tag red">Просрочено</span>' : ''}</small></div>`;
+      const track = document.createElement('div');
+      track.className = 'track';
+      track.style.setProperty('--cols', r.cells);
+      track.style.width = timelineWidth + 'px';
+
+      if (planStart && planEnd) {
+        const left = Math.max(0, dayDiff(totalStart, planStart) / totalDays * 100);
+        const width = Math.max(1, (dayDiff(planStart, addDays(planEnd, 1)) / totalDays) * 100);
+        const bar = document.createElement('div');
+        bar.className = 'bar' + (overdue ? ' overdue' : '');
+        bar.style.left = left + '%';
+        bar.style.width = Math.min(100 - left, width) + '%';
+        bar.title = `План: ${t.planStart} — ${t.planEnd}`;
+        track.appendChild(bar);
+      }
+
+      if (showActual && actualStart && actualEnd) {
+        const left = Math.max(0, dayDiff(totalStart, actualStart) / totalDays * 100);
+        const width = Math.max(1, (dayDiff(actualStart, addDays(actualEnd, 1)) / totalDays) * 100);
+        const bar = document.createElement('div');
+        bar.className = 'bar actual';
+        bar.style.left = left + '%';
+        bar.style.width = Math.min(100 - left, width) + '%';
+        bar.title = `Факт: ${t.actualStart} — ${t.actualEnd || 'по сегодня'}`;
+        track.appendChild(bar);
+      }
+
+      if (iso(totalStart) <= '2026-11-06' && iso(totalEnd) >= '2026-11-06') {
+        const line = document.createElement('div');
+        line.className = 'today-line';
+        line.style.left = (dayDiff(totalStart, new Date(2026,10,6)) / totalDays * 100) + '%';
+        track.appendChild(line);
+      }
+
+      row.appendChild(track);
+      row.addEventListener('click', () => openTask(t.id));
+      rows.appendChild(row);
+    });
+  }
+
+  function openTask(id) {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    editingId = id;
+    document.getElementById('drawerTitle').textContent = task.title;
+    document.getElementById('drawerBody').innerHTML = `
+      <div class="field"><label>Название</label><input value="${task.title.replace(/"/g,'&quot;')}" disabled></div>
+      <div class="grid-2">
+        <div class="field"><label>План: начало</label><input type="date" value="${task.planStart || ''}" id="planStart"></div>
+        <div class="field"><label>План: завершение</label><input type="date" value="${task.planEnd || ''}" id="planEnd"></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>Факт: начало</label><input type="date" value="${task.actualStart || ''}" id="actualStart"></div>
+        <div class="field"><label>Факт: завершение</label><input type="date" value="${task.actualEnd || ''}" id="actualEnd"></div>
+      </div>
+      <div class="field"><label>Категория и дорожка</label><input value="${categories[task.category].label} · ${task.lane}" disabled></div>
+      <div class="note-box">Изменение дат выполняется через редактор задачи. Пустая фактическая дата завершения означает «ещё продолжается». Просрочка подсвечивается, если план завершён, а факт не закрыт.</div>
+    `;
+    document.getElementById('drawer').classList.add('show');
+    document.getElementById('drawerBackdrop').classList.add('show');
+  }
+
+  function closeDrawer() {
+    editingId = null;
+    document.getElementById('drawer').classList.remove('show');
+    document.getElementById('drawerBackdrop').classList.remove('show');
+  }
+
+  document.getElementById('saveTask').addEventListener('click', () => {
+    const task = tasks.find(t => t.id === editingId);
+    if (!task) return;
+    const planStart = document.getElementById('planStart').value;
+    const planEnd = document.getElementById('planEnd').value;
+    const actualStart = document.getElementById('actualStart').value;
+    const actualEnd = document.getElementById('actualEnd').value;
+    if (planStart && planEnd && planEnd < planStart) { notify('Плановое завершение раньше начала'); return; }
+    if (actualStart && actualEnd && actualEnd < actualStart) { notify('Фактическое завершение раньше начала'); return; }
+    task.planStart = planStart;
+    task.planEnd = planEnd;
+    task.actualStart = actualStart;
+    task.actualEnd = actualEnd;
+    closeDrawer();
+    render();
+    notify('Даты задачи сохранены');
+  });
+
+  document.getElementById('closeDrawer').addEventListener('click', closeDrawer);
+  document.getElementById('cancelDrawer').addEventListener('click', closeDrawer);
+  document.getElementById('drawerBackdrop').addEventListener('click', closeDrawer);
+
+  document.querySelectorAll('[data-filter]').forEach(button => {
+    button.addEventListener('click', () => {
+      filter = button.dataset.filter;
+      document.querySelectorAll('[data-filter]').forEach(item => item.classList.toggle('active', item === button));
+      render();
+    });
+  });
+
+  document.querySelectorAll('#scaleSeg button').forEach(button => {
+    button.addEventListener('click', () => {
+      scale = button.dataset.scale;
+      document.querySelectorAll('#scaleSeg button').forEach(item => item.classList.toggle('active', item === button));
+      render();
+    });
+  });
+
+  document.getElementById('actualToggle').addEventListener('click', (event) => {
+    showActual = !showActual;
+    event.currentTarget.classList.toggle('active', showActual);
+    render();
+  });
+
+  document.getElementById('prev').addEventListener('click', () => {
+    anchor = scale === 'month' ? addMonths(anchor, -3) : addDays(anchor, scale === 'day' ? -7 : -28);
+    render();
+  });
+  document.getElementById('next').addEventListener('click', () => {
+    anchor = scale === 'month' ? addMonths(anchor, 3) : addDays(anchor, scale === 'day' ? 7 : 28);
+    render();
+  });
+  document.getElementById('todayBtn').addEventListener('click', () => {
+    anchor = new Date(2026, 10, 6);
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

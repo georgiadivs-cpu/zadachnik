@@ -31,4 +31,5 @@ Windows-сборка выполняется на Windows-машине или в 
 - `lib/features/notes` — domain/data/application/presentation заметок;
 - `lib/features/tasks` — TODO-доска, задачи, дорожки и история;
 - `lib/features/calendar` — календарь, напоминания и уведомления;
-- `lib/features/gantt`, `settings` — каркас/настройки модулей.
+- `lib/features/gantt` — диаграмма Ганта;
+- `lib/features/settings` — настройки.
