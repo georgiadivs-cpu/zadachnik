@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../search/presentation/search_page.dart';
 import '../../sync/application/sync_controller.dart';
 import '../application/notes_providers.dart';
 import '../domain/note.dart';
@@ -35,14 +36,9 @@ class NotesPage extends ConsumerWidget {
                   ),
           ),
           IconButton(
+            key: const Key('notesSearchButton'),
             tooltip: 'Поиск',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Поиск появится в следующем шаге'),
-                ),
-              );
-            },
+            onPressed: () => openSearchPage(context),
             icon: const Icon(Icons.search),
           ),
         ],

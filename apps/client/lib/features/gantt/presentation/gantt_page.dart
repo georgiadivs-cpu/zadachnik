@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../calendar/application/calendar_providers.dart';
+import '../../search/presentation/search_page.dart';
 import '../../sync/application/sync_controller.dart';
 import '../../tasks/application/task_editor_service.dart';
 import '../../tasks/application/tasks_providers.dart';
@@ -68,7 +69,17 @@ class _GanttPageState extends ConsumerState<GanttPage> {
     final lanes = ref.watch(lanesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Гант')),
+      appBar: AppBar(
+        title: const Text('Гант'),
+        actions: [
+          IconButton(
+            key: const Key('ganttSearchButton'),
+            tooltip: 'Поиск',
+            onPressed: () => openSearchPage(context),
+            icon: const Icon(Icons.search),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: tasks.when(
           loading: () => const Center(child: CircularProgressIndicator()),

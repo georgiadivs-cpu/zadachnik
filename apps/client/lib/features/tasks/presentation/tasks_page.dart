@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../calendar/application/calendar_providers.dart';
+import '../../search/presentation/search_page.dart';
 import '../../sync/application/sync_controller.dart';
 import '../application/task_editor_service.dart';
 import '../application/tasks_providers.dart';
@@ -54,6 +55,12 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                         ? Icons.cloud_off
                         : Icons.cloud_done_outlined,
                   ),
+          ),
+          IconButton(
+            key: const Key('tasksSearchButton'),
+            tooltip: 'Поиск',
+            onPressed: () => openSearchPage(context),
+            icon: const Icon(Icons.search),
           ),
           IconButton(
             key: const Key('laneSettingsButton'),

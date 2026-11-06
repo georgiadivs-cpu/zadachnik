@@ -1,8 +1,8 @@
 # PROJECT_STATE — Ежедневник
 
 **Обновлено:** 2026-11-06
-**Текущий шаг:** диаграмма Ганта — завершён
-**Следующий шаг:** локальный поиск (этап 10)
+**Текущий шаг:** локальный поиск — завершён
+**Следующий шаг:** вложения (этап 11)
 
 ## 1. Статус
 
@@ -20,19 +20,19 @@
 | TODO-доска | ✅ |
 | Календарь и напоминания | ✅ |
 | Диаграмма Ганта | ✅ |
-| Локальный поиск | ⏳ этап 10 |
-| Вложения / AI / backup | ⏳ не начаты |
+| Локальный поиск | ✅ |
+| Вложения | ⏳ этап 11 |
+| AI Approval / backup | ⏳ не начаты |
 | Связи задач с заметками/чек-листами | ⏳ отложены |
 | UI разрешения конфликтов | ⏳ следующий уровень |
 
 ## 2. Проверки
 
 - Backend: `./gradlew cleanTest test` — **27 тестов** (без изменений).
-- Client: `flutter test` — **74 теста**, 1 e2e пропущен без backend.
+- Client: `flutter test` — **88 тестов**, 1 e2e пропущен без backend.
 - Client + реальный backend/PostgreSQL: e2e NOTE + LANE + TASK + REMINDER — пройден.
 - macOS: `integration_test/secure_storage_test.dart` — пройден.
 - Сборки: macOS debug, Android debug APK, iOS simulator.
-- Уведомления проверены сборкой; ручная проверка доставки на устройствах не выполнялась.
 - Windows: не проверялся.
 
 ## 3. Техническое состояние
@@ -46,22 +46,23 @@
 - локальная схема: v4;
 - API: `/api/v1/auth/*`, `/api/v1/devices`, `/api/v1/sync/*`;
 - синхронизация поддерживает `NOTE`, `TASK`, `LANE`, `REMINDER`;
-- macOS app sandbox отключён для локального debug;
-- Windows-сборка требует отдельной платформы/CI.
+- поиск локальный, без FTS и backend;
+- macOS app sandbox отключён для локального debug.
 
-## 4. Ключевые файлы Ганта
+## 4. Ключевые файлы поиска
 
-- `apps/client/lib/features/gantt/domain/gantt_timeline.dart` — диапазоны, позиции полос, просрочка;
-- `apps/client/lib/features/gantt/presentation/gantt_page.dart` — экран Ганта;
-- `apps/client/test/features/gantt/gantt_timeline_test.dart` — unit-тесты;
-- `apps/client/test/features/gantt/gantt_page_test.dart` — widget-тесты;
-- `prototypes/gantt.html` — принятый прототип.
+- `apps/client/lib/features/search/data/search_repository.dart` — поиск по Drift;
+- `apps/client/lib/features/search/domain/search_result.dart` — модель результата;
+- `apps/client/lib/features/search/presentation/search_page.dart` — экран поиска;
+- `apps/client/lib/features/search/presentation/highlighted_text.dart` — подсветка;
+- `apps/client/test/features/search/` — 14 тестов поиска;
+- `prototypes/search.html` — принятый прототип.
 
 ## 5. Известные проблемы
 
-- нет зависимостей задач, критического пути и ресурсов;
-- даты меняются через редактор задачи, не drag;
-- задачи без дат и отменённые задачи не показываются;
+- поиск сканирует данные в памяти и не использует FTS;
+- нет поиска по вложениям и AI-поиска;
+- дорожки/напоминания отображаются как метаданные задач;
 - нет UI разрешения конфликтов;
 - внешние календари и повторяющиеся события не реализованы;
 - уведомления не проверены вручную на всех устройствах;

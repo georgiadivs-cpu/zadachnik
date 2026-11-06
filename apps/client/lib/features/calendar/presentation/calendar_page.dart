@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../search/presentation/search_page.dart';
 import '../../sync/application/sync_controller.dart';
 import '../application/calendar_providers.dart';
 import '../domain/task_reminder.dart';
@@ -65,7 +66,17 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     final lanes = ref.watch(lanesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Календарь')),
+      appBar: AppBar(
+        title: const Text('Календарь'),
+        actions: [
+          IconButton(
+            key: const Key('calendarSearchButton'),
+            tooltip: 'Поиск',
+            onPressed: () => openSearchPage(context),
+            icon: const Icon(Icons.search),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: tasks.when(
           loading: () => const Center(child: CircularProgressIndicator()),
