@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:zadachnik_client/core/database/app_database.dart';
 
 void main() {
-  test('миграция v1 → v4 сохраняет заметку и ставит её в outbox', () async {
+  test('миграция v1 → v5 сохраняет заметку и ставит её в outbox', () async {
     final database = AppDatabase.forTesting(
       NativeDatabase.memory(
         setup: (raw) async {
@@ -76,7 +76,8 @@ void main() {
       expect(await database.select(database.lanes).get(), hasLength(4));
       expect(await database.select(database.tasks).get(), isEmpty);
       expect(await database.select(database.taskReminders).get(), isEmpty);
-      expect(database.schemaVersion, 4);
+      expect(await database.select(database.attachments).get(), isEmpty);
+      expect(database.schemaVersion, 5);
     } finally {
       await database.close();
     }

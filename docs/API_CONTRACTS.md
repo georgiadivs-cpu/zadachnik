@@ -377,9 +377,40 @@ HTTP-статус всего пакета.
 
 ## 8. Вложения
 
-Передача файлов не входит в текущий контракт. Метаданные будут
-синхронизироваться как `ATTACHMENT`, но upload/download появятся после
-утверждения файлового хранилища (P-005).
+Файлы хранятся на сервере в `ATTACHMENTS_DIR`, метаданные — в PostgreSQL.
+Лимит — 25 МБ; разрешены изображения, PDF, текст/Markdown и MP3/M4A.
+Сервер проверяет расширение, MIME, сигнатуру и SHA-256.
+
+### 8.1. Загрузка
+
+```http
+POST /api/v1/attachments/{attachmentId}
+Authorization: Bearer <access>
+Content-Type: multipart/form-data
+```
+
+Поля формы: `ownerType` (`NOTE`/`TASK`), `ownerId`, `file`.
+Повторная загрузка с тем же ID и хешем идемпотентна. Другой хеш —
+`409 ATTACHMENT_EXISTS`.
+
+### 8.2. Скачивание
+
+```http
+GET /api/v1/attachments/{attachmentId}
+Authorization: Bearer <access>
+```
+
+Возвращает содержимое файла с исходным MIME-типом и именем.
+Метаданные распространяются через change log при pull.
+
+### 8.3. Удаление
+
+```http
+DELETE /api/v1/attachments/{attachmentId}
+Authorization: Bearer <access>
+```
+
+Создаёт tombstone и удаляет файл. Повторное удаление безопасно.
 
 ## 9. Безопасность
 

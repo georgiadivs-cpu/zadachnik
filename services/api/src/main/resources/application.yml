@@ -14,6 +14,10 @@ spring:
   jackson:
     default-property-inclusion: non_null
     time-zone: UTC
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 26MB
 
 server:
   port: ${SERVER_PORT:8080}
@@ -31,6 +35,9 @@ management:
       show-details: never
 
 app:
+  attachments:
+    dir: ${ATTACHMENTS_DIR:./data/attachments}
+    max-bytes: ${ATTACHMENTS_MAX_BYTES:26214400}
   security:
     setup-token: ${SETUP_TOKEN:}
     jwt:

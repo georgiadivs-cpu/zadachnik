@@ -19,6 +19,7 @@ part 'app_database.g.dart';
   Tasks,
   TaskStatusHistory,
   TaskReminders,
+  Attachments,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
@@ -26,7 +27,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -49,6 +50,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 4) {
         await migrator.createTable(taskReminders);
+      }
+      if (from < 5) {
+        await migrator.createTable(attachments);
       }
     },
     beforeOpen: (details) async {

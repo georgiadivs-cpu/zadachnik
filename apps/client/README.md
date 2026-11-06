@@ -33,4 +33,5 @@ Windows-сборка выполняется на Windows-машине или в 
 - `lib/features/calendar` — календарь, напоминания и уведомления;
 - `lib/features/gantt` — диаграмма Ганта;
 - `lib/features/search` — локальный поиск;
+- `lib/features/attachments` — вложения и файлы;
 - `lib/features/settings` — настройки.

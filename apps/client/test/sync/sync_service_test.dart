@@ -4,6 +4,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zadachnik_client/core/auth/session.dart';
 import 'package:zadachnik_client/core/database/app_database.dart';
+import 'package:zadachnik_client/features/attachments/data/attachments_repository.dart';
 import 'package:zadachnik_client/features/calendar/data/reminders_repository.dart';
 import 'package:zadachnik_client/features/notes/data/notes_repository.dart';
 import 'package:zadachnik_client/features/sync/application/sync_service.dart';
@@ -20,6 +21,7 @@ void main() {
   late TasksRepository tasks;
   late LanesRepository lanes;
   late RemindersRepository reminders;
+  late AttachmentsRepository attachments;
   late SyncRepository syncRepository;
   late FakeSyncApi api;
   late Session session;
@@ -30,6 +32,7 @@ void main() {
     tasks = TasksRepository(database);
     lanes = LanesRepository(database);
     reminders = RemindersRepository(database);
+    attachments = AttachmentsRepository(database);
     syncRepository = SyncRepository(database);
     api = FakeSyncApi();
     session = Session(
@@ -53,6 +56,7 @@ void main() {
     tasks: tasks,
     lanes: lanes,
     reminders: reminders,
+    attachments: attachments,
     syncRepository: syncRepository,
     api: api,
     sessionResolver: resolver ?? ({bool force = false}) async => session,
@@ -654,6 +658,28 @@ void main() {
     expect(types, ['LANE', 'TASK', 'REMINDER']);
   });
 
+  test('pull применяет ATTACHMENT metadata', () async {
+    api.pullHandler = (cursor, limit) async => PullPage(
+      changes: [
+        _entityChange(
+          seq: 1,
+          entityType: 'ATTACHMENT',
+          payload: _attachmentPayload(id: 'attachment-remote-1'),
+        ),
+      ],
+      nextCursor: '1',
+      hasMore: false,
+    );
+
+    final summary = await service().sync();
+
+    expect(summary.pulled, 1);
+    final saved = await attachments.findById('attachment-remote-1');
+    expect(saved?.uploadStatus, 'REMOTE');
+    expect(saved?.localPath, isNull);
+    expect(saved?.serverRevision, 1);
+  });
+
   test('при 401 обновляет сессию и повторяет цикл один раз', () async {
     final id = await notes.create(
       title: 'Заметка',
@@ -782,6 +808,23 @@ Map<String, dynamic> _taskPayload({
     'actualStartAt': null,
     'actualEndAt': null,
     'revision': revision,
+    'createdAt': now.toIso8601String(),
+    'updatedAt': now.toIso8601String(),
+    'deletedAt': null,
+  };
+}
+
+Map<String, dynamic> _attachmentPayload({required String id}) {
+  final now = DateTime.utc(2026, 11, 6, 12);
+  return {
+    'id': id,
+    'ownerType': 'NOTE',
+    'ownerId': 'note-1',
+    'fileName': 'photo.png',
+    'mimeType': 'image/png',
+    'sizeBytes': 4,
+    'sha256': 'a' * 64,
+    'revision': 1,
     'createdAt': now.toIso8601String(),
     'updatedAt': now.toIso8601String(),
     'deletedAt': null,

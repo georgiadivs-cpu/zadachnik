@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../attachments/domain/attachment.dart';
+import '../../attachments/presentation/attachment_panel.dart';
 import '../../calendar/application/calendar_providers.dart';
 import '../../search/presentation/search_page.dart';
 import '../../sync/application/sync_controller.dart';
@@ -156,6 +158,7 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                           onMoveTask: (task, laneId) => _moveTask(task, laneId),
                           onCancelTask: (task) => _setCancelled(task, true),
                           onRestoreTask: (task) => _setCancelled(task, false),
+                          onAttachments: (task) => _openTaskAttachments(task),
                           onAddTask: () =>
                               _openTaskEditor(null, lanes, laneId: lane.id),
                           onLaneSettings: () =>
@@ -166,6 +169,7 @@ class _TasksPageState extends ConsumerState<TasksPage> {
                           tasks: cancelled,
                           onOpenTask: (task) => _openTaskEditor(task, lanes),
                           onRestoreTask: (task) => _setCancelled(task, false),
+                          onAttachments: (task) => _openTaskAttachments(task),
                         ),
                     ],
                   ),
@@ -277,6 +281,15 @@ class _TasksPageState extends ConsumerState<TasksPage> {
     }
   }
 
+  Future<void> _openTaskAttachments(Task task) async {
+    await showAttachmentSheet(
+      context,
+      ref,
+      ownerType: AttachmentOwnerType.task,
+      ownerId: task.id,
+    );
+  }
+
   Future<void> _openLaneSettings(
     List<Lane> lanes, {
     Map<String, int>? taskCounts,
@@ -338,6 +351,7 @@ class _LaneColumn extends StatelessWidget {
     required this.onMoveTask,
     required this.onCancelTask,
     required this.onRestoreTask,
+    required this.onAttachments,
     required this.onAddTask,
     required this.onLaneSettings,
   });
@@ -351,6 +365,7 @@ class _LaneColumn extends StatelessWidget {
   final void Function(Task task, String laneId) onMoveTask;
   final ValueChanged<Task> onCancelTask;
   final ValueChanged<Task> onRestoreTask;
+  final ValueChanged<Task> onAttachments;
   final VoidCallback onAddTask;
   final VoidCallback onLaneSettings;
 
@@ -426,6 +441,7 @@ class _LaneColumn extends StatelessWidget {
                             onMove: (laneId) => onMoveTask(task, laneId),
                             onCancel: () => onCancelTask(task),
                             onRestore: () => onRestoreTask(task),
+                            onAttachments: () => onAttachments(task),
                           );
                         },
                       ),
@@ -449,11 +465,13 @@ class _CancelledColumn extends StatelessWidget {
     required this.tasks,
     required this.onOpenTask,
     required this.onRestoreTask,
+    required this.onAttachments,
   });
 
   final List<Task> tasks;
   final ValueChanged<Task> onOpenTask;
   final ValueChanged<Task> onRestoreTask;
+  final ValueChanged<Task> onAttachments;
 
   @override
   Widget build(BuildContext context) {
@@ -510,6 +528,7 @@ class _CancelledColumn extends StatelessWidget {
                         onMove: (_) {},
                         onCancel: null,
                         onRestore: () => onRestoreTask(task),
+                        onAttachments: () => onAttachments(task),
                       );
                     },
                   ),
@@ -529,6 +548,7 @@ class _DraggableTaskCard extends StatelessWidget {
     required this.onMove,
     required this.onCancel,
     required this.onRestore,
+    required this.onAttachments,
   });
 
   final Task task;
@@ -538,6 +558,7 @@ class _DraggableTaskCard extends StatelessWidget {
   final ValueChanged<String> onMove;
   final VoidCallback onCancel;
   final VoidCallback onRestore;
+  final VoidCallback onAttachments;
 
   @override
   Widget build(BuildContext context) {
@@ -549,6 +570,7 @@ class _DraggableTaskCard extends StatelessWidget {
       onMove: onMove,
       onCancel: onCancel,
       onRestore: onRestore,
+      onAttachments: onAttachments,
     );
     if (task.isCancelled) {
       return card;
@@ -574,6 +596,7 @@ class _TaskCard extends StatelessWidget {
     required this.onMove,
     required this.onCancel,
     required this.onRestore,
+    required this.onAttachments,
   });
 
   final Task task;
@@ -583,6 +606,7 @@ class _TaskCard extends StatelessWidget {
   final ValueChanged<String> onMove;
   final VoidCallback? onCancel;
   final VoidCallback? onRestore;
+  final VoidCallback onAttachments;
 
   @override
   Widget build(BuildContext context) {
@@ -627,6 +651,8 @@ class _TaskCard extends StatelessWidget {
                     onSelected: (value) {
                       if (value == 'edit') {
                         onOpen();
+                      } else if (value == 'attachments') {
+                        onAttachments();
                       } else if (value == 'cancel') {
                         onCancel?.call();
                       } else if (value == 'restore') {
@@ -639,6 +665,10 @@ class _TaskCard extends StatelessWidget {
                       const PopupMenuItem(
                         value: 'edit',
                         child: Text('Открыть'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'attachments',
+                        child: Text('Вложения'),
                       ),
                       if (!task.isCancelled)
                         for (final lane in allLanes)

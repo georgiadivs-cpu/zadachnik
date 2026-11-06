@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ежедневник — вложения</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1c2a20;
+    background:
+      radial-gradient(1000px 600px at 8% 0%, #eef8ef 0%, transparent 60%),
+      radial-gradient(900px 700px at 100% 100%, #d7ebde 0%, transparent 65%),
+      linear-gradient(140deg, #e3f1e6, #f8fbf8);
+    min-height: 100vh;
+    padding: 22px clamp(14px, 3vw, 40px) 34px;
+  }
+  .page-head { max-width: 900px; margin: 0 auto 14px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark { width: 42px; height: 42px; border-radius: 12px; background: #2e7d5b; color: #fff; display: grid; place-items: center; font-size: 21px; box-shadow: 0 10px 22px rgba(46,125,91,.25); }
+  .eyebrow { margin: 0 0 2px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #5f7161; font-weight: 800; }
+  h1.page-title { margin: 0; font-size: clamp(18px, 2.2vw, 25px); letter-spacing: -.02em; }
+  h1.page-title span { color: #2e7d5b; font-weight: 600; }
+  .legend { font-size: 11px; color: #5f7161; background: rgba(255,255,255,.65); border: 1px solid rgba(46,61,47,.12); padding: 8px 11px; border-radius: 999px; }
+
+  .window {
+    --bg: #f5faf6; --panel: #fff; --panel-2: #edf6ef; --line: #dfece2;
+    --text: #1c2a20; --muted: #637367; --primary: #2e7d5b; --primary-soft: #e0f1e5;
+    --blue: #4a6d8c; --blue-soft: #e5eef6; --amber: #c98a2e; --amber-soft: #fdf3df;
+    --red: #b8433c; --red-soft: #fbe9e7; --family: #c9656e;
+    width: min(900px, 100%); height: min(800px, calc(100vh - 120px)); min-height: 620px;
+    margin: 0 auto; border-radius: 18px; overflow: hidden; border: 1px solid #cbd8ce;
+    background: var(--bg); color: var(--text);
+    box-shadow: 0 30px 70px rgba(24,52,34,.18), 0 8px 20px rgba(24,52,34,.12);
+    display: flex; flex-direction: column; position: relative;
+  }
+  .titlebar { height: 42px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 16px; background: var(--panel-2); border-bottom: 1px solid var(--line); }
+  .traffic { display: flex; gap: 6px; }
+  .traffic i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+  .traffic i:nth-child(1) { background: #ff5f57; }
+  .traffic i:nth-child(2) { background: #febc2e; }
+  .traffic i:nth-child(3) { background: #28c840; }
+  .window-title { font-size: 12px; font-weight: 650; color: var(--muted); margin-left: 6px; }
+  .titlebar .spacer { flex: 1; }
+  .sync-pill { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--muted); background: var(--panel); border: 1px solid var(--line); padding: 5px 9px; border-radius: 999px; }
+  .sync-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: #35a36b; }
+
+  .context { padding: 17px 22px 10px; border-bottom: 1px solid var(--line); background: var(--bg); }
+  .context h2 { margin: 0 0 4px; font-size: 18px; letter-spacing: -.01em; }
+  .context p { margin: 0; color: var(--muted); font-size: 10.5px; }
+  .context .crumbs { margin-top: 7px; display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .content { flex: 1; overflow-y: auto; padding: 18px 22px 26px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 15px; }
+  .panel-head { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+  .panel-head h3 { margin: 0; font-size: 14px; }
+  .panel-head .count { font-size: 9.5px; color: var(--muted); }
+  .panel-head .spacer { flex: 1; }
+  .primary-btn { border: 0; background: var(--primary); color: #fff; border-radius: 9px; height: 33px; padding: 0 13px; font: inherit; font-size: 11.5px; font-weight: 650; cursor: pointer; }
+  .ghost-btn { border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 8px; height: 31px; padding: 0 10px; font: inherit; font-size: 10.5px; cursor: pointer; }
+  .ghost-btn:hover { background: var(--panel-2); }
+
+  .dropzone { margin-top: 12px; border: 1.5px dashed var(--line); border-radius: 12px; padding: 22px 16px; text-align: center; background: var(--panel-2); cursor: pointer; }
+  .dropzone:hover { border-color: var(--primary); background: var(--primary-soft); }
+  .dropzone .icon { font-size: 26px; margin-bottom: 7px; }
+  .dropzone b { display: block; font-size: 12px; margin-bottom: 4px; }
+  .dropzone small { font-size: 10px; color: var(--muted); }
+  .dropzone .formats { margin-top: 7px; font-size: 9.5px; color: var(--muted); }
+
+  .status-note { display: flex; gap: 8px; align-items: flex-start; background: var(--amber-soft); border: 1px solid #edd8ab; border-radius: 9px; padding: 9px 11px; margin-top: 10px; font-size: 10px; line-height: 1.5; color: #6f572e; }
+
+  .file-list { display: grid; gap: 8px; margin-top: 13px; }
+  .file-row { display: flex; align-items: center; gap: 11px; border: 1px solid var(--line); border-radius: 11px; padding: 10px 11px; background: var(--panel); }
+  .file-thumb { width: 42px; height: 42px; border-radius: 9px; flex: none; display: grid; place-items: center; background: var(--panel-2); font-size: 20px; color: var(--muted); overflow: hidden; }
+  .file-thumb.image { background: linear-gradient(135deg, #dbece1, #b9d8c4); color: var(--primary); }
+  .file-thumb.pdf { background: var(--red-soft); color: var(--red); }
+  .file-thumb.audio { background: var(--blue-soft); color: var(--blue); }
+  .file-body { flex: 1; min-width: 0; }
+  .file-body b { display: block; font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-meta { margin-top: 4px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; font-size: 9.5px; color: var(--muted); }
+  .file-actions { display: flex; gap: 4px; align-items: center; }
+  .icon-action { border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 15px; width: 29px; height: 29px; border-radius: 7px; }
+  .icon-action:hover { background: var(--panel-2); color: var(--text); }
+  .icon-action.danger:hover { background: var(--red-soft); color: var(--red); }
+  .tag { display: inline-flex; align-items: center; font-size: 9.5px; padding: 3px 7px; border-radius: 999px; background: var(--panel-2); color: var(--muted); white-space: nowrap; }
+  .tag.green { background: var(--primary-soft); color: var(--primary); }
+  .tag.amber { background: var(--amber-soft); color: var(--amber); }
+  .tag.red { background: var(--red-soft); color: var(--red); }
+  .tag.blue { background: var(--blue-soft); color: var(--blue); }
+  .progress { width: 100%; height: 5px; background: var(--panel-2); border-radius: 999px; margin-top: 7px; overflow: hidden; }
+  .progress i { display: block; height: 100%; width: 64%; background: var(--amber); border-radius: 999px; }
+  .file-row.error { border-color: #e4c2bf; background: #fdf7f6; }
+  .file-row.uploading { border-color: #edd8ab; }
+
+  .footer-note { margin-top: 14px; display: flex; gap: 7px; align-items: center; color: var(--muted); font-size: 9.5px; }
+  .storage-card { margin-top: 14px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .storage-card .icon { width: 34px; height: 34px; border-radius: 9px; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; font-size: 17px; }
+  .storage-card .body { flex: 1; min-width: 180px; }
+  .storage-card b { display: block; font-size: 11.5px; }
+  .storage-card small { display: block; margin-top: 3px; color: var(--muted); font-size: 9.5px; line-height: 1.45; }
+
+  .toast { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%) translateY(12px); background: #1c2a20; color: #fff; font-size: 11px; padding: 8px 13px; border-radius: 9px; opacity: 0; pointer-events: none; transition: .18s ease; z-index: 20; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 680px) {
+    body { padding: 10px 8px 18px; }
+    .legend { display: none; }
+    .window { height: calc(100vh - 70px); min-height: 560px; border-radius: 14px; }
+    .context { padding: 14px 14px 8px; }
+    .content { padding: 14px 14px 22px; }
+    .file-thumb { width: 36px; height: 36px; }
+  }
+</style>
+</head>
+<body>
+<header class="page-head">
+  <div class="brand">
+    <div class="brand-mark">⎘</div>
+    <div>
+      <p class="eyebrow">Ежедневник · этап 11</p>
+      <h1 class="page-title">Вложения <span>и файлы</span></h1>
+    </div>
+  </div>
+  <div class="legend">Прототип · выбор · проверка · статусы · удаление</div>
+</header>
+
+<main class="window">
+  <div class="titlebar">
+    <div class="traffic"><i></i><i></i><i></i></div>
+    <div class="window-title">Заметка — Ежедневник</div>
+    <div class="spacer"></div>
+    <div class="sync-pill"><span class="dot"></span> Метаданные синхронизированы</div>
+  </div>
+
+  <section class="context">
+    <h2>Планы на неделю</h2>
+    <p>Заметка · Работа · обновлено сегодня, 12:40</p>
+    <div class="crumbs">
+      <span class="tag green">Работа</span>
+      <span class="tag">Markdown</span>
+      <span class="tag blue">4 вложения</span>
+    </div>
+  </section>
+
+  <section class="content">
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Вложения</h3>
+        <span class="count">4 файла · 3,1 МБ из лимита 25 МБ на файл</span>
+        <span class="spacer"></span>
+        <button class="primary-btn" id="addFile">+ Выбрать файл</button>
+      </div>
+
+      <div class="dropzone" id="dropzone">
+        <div class="icon">⇧</div>
+        <b>Перетащите файлы сюда</b>
+        <small>или нажмите, чтобы выбрать на устройстве</small>
+        <div class="formats">Изображения, PDF, текст/Markdown, аудио · до 25 МБ</div>
+      </div>
+
+      <div class="status-note">
+        <span>⏳</span>
+        <span>Файл со статусом «загружается» или «ошибка» не считается готовым и не должен открываться как доступный. При ошибке можно повторить загрузку.</span>
+      </div>
+
+      <div class="file-list">
+        <div class="file-row">
+          <div class="file-thumb image">▧</div>
+          <div class="file-body">
+            <b>photo.png</b>
+            <div class="file-meta"><span>PNG</span><span>2,4 МБ</span><span class="tag green">готово</span><span>локально</span></div>
+          </div>
+          <div class="file-actions"><button class="icon-action" data-toast="Открыть изображение">↗</button><button class="icon-action danger" data-remove="photo.png">🗑</button></div>
+        </div>
+
+        <div class="file-row">
+          <div class="file-thumb pdf">PDF</div>
+          <div class="file-body">
+            <b>contract.pdf</b>
+            <div class="file-meta"><span>PDF</span><span>420 КБ</span><span class="tag green">готово</span><span>синхронизировано</span></div>
+          </div>
+          <div class="file-actions"><button class="icon-action" data-toast="Открыть PDF">↗</button><button class="icon-action danger" data-remove="contract.pdf">🗑</button></div>
+        </div>
+
+        <div class="file-row">
+          <div class="file-thumb audio">♫</div>
+          <div class="file-body">
+            <b>audio.m4a</b>
+            <div class="file-meta"><span>Аудио</span><span>280 КБ</span><span class="tag green">готово</span><span>локально</span></div>
+          </div>
+          <div class="file-actions"><button class="icon-action" data-toast="Воспроизвести">▶</button><button class="icon-action danger" data-remove="audio.m4a">🗑</button></div>
+        </div>
+
+        <div class="file-row uploading">
+          <div class="file-thumb">▤</div>
+          <div class="file-body">
+            <b>presentation.pdf</b>
+            <div class="file-meta"><span>PDF</span><span>4,8 МБ</span><span class="tag amber">загружается · 64%</span></div>
+            <div class="progress"><i></i></div>
+          </div>
+          <div class="file-actions"><button class="icon-action" data-toast="Отменить загрузку">✕</button></div>
+        </div>
+
+        <div class="file-row error">
+          <div class="file-thumb">▤</div>
+          <div class="file-body">
+            <b>archive.zip</b>
+            <div class="file-meta"><span>ZIP</span><span>12 МБ</span><span class="tag red">тип не разрешён</span></div>
+          </div>
+          <div class="file-actions"><button class="icon-action" data-toast="Удалить неподдерживаемый файл">🗑</button></div>
+        </div>
+      </div>
+
+      <div class="footer-note"><span>ℹ</span><span>Имя файла очищается от пути; MIME и размер проверяются на клиенте и сервере; хеш проверяется после передачи.</span></div>
+    </div>
+
+    <div class="storage-card">
+      <div class="icon">☁</div>
+      <div class="body">
+        <b>Файлы и метаданные</b>
+        <small>Метаданные участвуют в синхронизации. Сам файл передаётся отдельно от sync push. Хранилище: собственный сервер вне облачных сервисов.</small>
+      </div>
+      <span class="tag green">решение требуется</span>
+    </div>
+  </section>
+
+  <div class="toast" id="toast"></div>
+</main>
+
+<script>
+(() => {
+  const toast = document.getElementById('toast');
+  function notify(message) {
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(notify.timer);
+    notify.timer = setTimeout(() => toast.classList.remove('show'), 1800);
+  }
+  document.getElementById('addFile').addEventListener('click', () => notify('Откроется системный выбор файла'));
+  document.getElementById('dropzone').addEventListener('click', () => notify('Откроется системный выбор файла'));
+  document.querySelectorAll('[data-toast]').forEach(button => {
+    button.addEventListener('click', () => notify(button.dataset.toast));
+  });
+  document.querySelectorAll('[data-remove]').forEach(button => {
+    button.addEventListener('click', () => {
+      button.closest('.file-row').style.opacity = '.45';
+      notify('Файл удалён из вложений (демо)');
+    });
+  });
+})();
+</script>
+</body>
+</html>

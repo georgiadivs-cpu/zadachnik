@@ -122,3 +122,14 @@
 - **Ошибки:** в тесте поиска не подменялся `lanesProvider`, из-за чего задача не открывалась — исправлено.
 - **Ограничения:** без FTS, вложений и AI-поиска.
 - **Следующий шаг:** вложения.
+
+## 2026-11-06 — Вложения
+
+- **Цель:** файлы у заметок и задач, проверки, локальное хранение, upload/download и sync metadata.
+- **Изменённые файлы:** `features/attachments/*`, `core/database/*`, `features/sync/*`, `features/notes/*`, `features/tasks/*`, `services/api` (V7, attachment API/storage), тесты, `prototypes/attachments.html`, документация.
+- **Результат:** серверный диск `ATTACHMENTS_DIR`; лимит 25 МБ; allowlist типов; SHA-256; идемпотентная загрузка; локальная схема v5; статусы; панель вложений; metadata через change log; скачивание на других устройствах.
+- **Команды:** `flutter analyze`; `flutter test`; `./gradlew cleanTest test`; e2e с временным PostgreSQL/backend и реальным upload/download; сборки macOS/Android/iOS.
+- **Проверки:** 99 client-тестов, 31 backend-тест, e2e с ATTACHMENT пройден.
+- **Ошибки:** загрузка ошибочного ответа парсилась как AttachmentResponse — тест переведён на raw response; `file_selector` в тестах требует путь у XFile; панель переполнялась на узком экране — заголовок переведён на Wrap.
+- **Ограничения:** папку вложений нужно включить в backup; нет открытия всех типов файлов; Windows не проверен.
+- **Следующий шаг:** AI Approval.

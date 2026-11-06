@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zadachnik_client/core/database/app_database.dart';
+import 'package:zadachnik_client/core/auth/session.dart';
 import 'package:zadachnik_client/core/database/default_lanes.dart';
+import 'package:zadachnik_client/features/attachments/application/attachment_coordinator.dart';
+import 'package:zadachnik_client/features/attachments/application/attachments_providers.dart';
+import 'package:zadachnik_client/features/attachments/data/attachments_repository.dart';
 import 'package:zadachnik_client/features/calendar/application/calendar_providers.dart';
 import 'package:zadachnik_client/features/calendar/application/reminder_coordinator.dart';
 import 'package:zadachnik_client/features/calendar/data/reminders_repository.dart';
@@ -18,6 +22,7 @@ import 'package:zadachnik_client/features/tasks/domain/task.dart';
 import 'package:zadachnik_client/features/tasks/presentation/tasks_page.dart';
 
 import '../../auth/fakes.dart';
+import '../../attachments/fakes.dart';
 import '../../calendar/fakes.dart';
 
 void main() {
@@ -27,6 +32,10 @@ void main() {
   late RemindersRepository reminders;
   late FakeReminderScheduler scheduler;
   late ReminderCoordinator coordinator;
+  late AttachmentsRepository attachments;
+  late FakeAttachmentFileStore attachmentFiles;
+  late FakeAttachmentApi attachmentApi;
+  late AttachmentCoordinator attachmentCoordinator;
 
   setUp(() {
     database = AppDatabase.forTesting(NativeDatabase.memory());
@@ -39,10 +48,29 @@ void main() {
       tasks: tasks,
       scheduler: scheduler,
     );
+    attachments = AttachmentsRepository(database);
+    attachmentFiles = FakeAttachmentFileStore();
+    attachmentApi = FakeAttachmentApi();
+    final session = Session(
+      email: 'owner@example.com',
+      userId: 'user-1',
+      deviceId: 'device-1',
+      accessToken: 'access',
+      refreshToken: 'refresh',
+      accessExpiresAt: DateTime.now().toUtc().add(const Duration(minutes: 15)),
+      refreshExpiresAt: DateTime.now().toUtc().add(const Duration(days: 30)),
+    );
+    attachmentCoordinator = AttachmentCoordinator(
+      repository: attachments,
+      fileStore: attachmentFiles,
+      api: attachmentApi,
+      sessionResolver: ({bool force = false}) async => session,
+    );
   });
 
   tearDown(() async {
     await database.close();
+    await attachmentFiles.dispose();
   });
 
   Future<List<Lane>> loadLanes() async {
@@ -90,6 +118,13 @@ void main() {
         remindersRepositoryProvider.overrideWithValue(reminders),
         reminderSchedulerProvider.overrideWithValue(scheduler),
         reminderCoordinatorProvider.overrideWithValue(coordinator),
+        attachmentsRepositoryProvider.overrideWithValue(attachments),
+        attachmentFileStoreProvider.overrideWithValue(attachmentFiles),
+        attachmentApiProvider.overrideWithValue(attachmentApi),
+        attachmentCoordinatorProvider.overrideWithValue(attachmentCoordinator),
+        attachmentsProvider.overrideWith(
+          (ref, owner) => Stream.value(const []),
+        ),
         lanesProvider.overrideWith((ref) => Stream.value(lanesData)),
         tasksProvider.overrideWith((ref) => Stream.value(tasksData)),
         remindersProvider.overrideWith((ref) => Stream.value(remindersData)),
@@ -248,6 +283,22 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Напоминание'), findsOneWidget);
+  });
+
+  testWidgets('открывает панель вложений из карточки', (tester) async {
+    final lanesData = await loadLanes();
+    final id = await tasks.create(draft(DefaultLanes.newLaneId));
+    final task = (await tasks.findById(id))!;
+
+    await tester.pumpWidget(app(lanesData: lanesData, tasksData: [task]));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Вложения'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Пока нет вложений'), findsOneWidget);
   });
 
   testWidgets('доска помещается на узком экране', (tester) async {

@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../attachments/domain/attachment.dart';
+import '../../attachments/presentation/attachment_panel.dart';
 import '../application/notes_providers.dart';
 import '../domain/note.dart';
 
@@ -269,6 +271,22 @@ class _NoteEditorPageState extends ConsumerState<NoteEditorPage>
     }
   }
 
+  Future<void> _openAttachments() async {
+    final note = _note;
+    if (note == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Сначала сохраните заметку')),
+      );
+      return;
+    }
+    await showAttachmentSheet(
+      context,
+      ref,
+      ownerType: AttachmentOwnerType.note,
+      ownerId: note.id,
+    );
+  }
+
   void _close() {
     if (mounted) {
       Navigator.of(context).pop(_savedAny);
@@ -310,6 +328,12 @@ class _NoteEditorPageState extends ConsumerState<NoteEditorPage>
             ),
             title: Text(_isNew ? 'Новая заметка' : 'Заметка'),
             actions: [
+              IconButton(
+                key: const Key('noteAttachmentsButton'),
+                tooltip: 'Вложения',
+                onPressed: _openAttachments,
+                icon: const Icon(Icons.attach_file),
+              ),
               IconButton(
                 key: const Key('noteSaveButton'),
                 tooltip: 'Сохранить',

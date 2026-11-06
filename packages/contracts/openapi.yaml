@@ -3,9 +3,10 @@ info:
   title: Zadachnik Sync API
   version: 0.1.0
   description: |
-    API персонального «Ежедневника». Единственный путь записи
-    пользовательских данных — POST /sync/push. Чтение изменений —
-    GET /sync/pull по курсору.
+    API персонального «Ежедневника». Заметки, задачи, дорожки и
+    напоминания записываются через POST /sync/push; чтение изменений —
+    GET /sync/pull по курсору. Вложения используют отдельный
+    /attachments API, metadata попадает в change log.
 
 servers:
   - url: http://localhost:8080/api/v1
@@ -21,6 +22,8 @@ tags:
     description: Устройства владельца
   - name: sync
     description: Push и pull синхронизации
+  - name: attachments
+    description: Файлы вложений и их метаданные
 
 paths:
   /auth/setup:
@@ -227,6 +230,89 @@ paths:
         '429':
           $ref: '#/components/responses/RateLimited'
 
+  /attachments/{attachmentId}:
+    post:
+      tags: [attachments]
+      summary: Загрузить файл и создать metadata
+      parameters:
+        - name: attachmentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [ownerType, ownerId, file]
+              properties:
+                ownerType:
+                  type: string
+                  enum: [NOTE, TASK]
+                ownerId:
+                  type: string
+                  format: uuid
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Файл сохранён или уже был загружен с тем же хешем
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttachmentMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+    get:
+      tags: [attachments]
+      summary: Скачать файл вложения
+      parameters:
+        - name: attachmentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Содержимое файла
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [attachments]
+      summary: Удалить вложение
+      parameters:
+        - name: attachmentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Вложение удалено или уже удалено
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -382,6 +468,39 @@ components:
           type: string
           format: date-time
           nullable: true
+
+    AttachmentMetadata:
+      type: object
+      required:
+        [id, ownerType, ownerId, fileName, mimeType, sizeBytes, sha256, revision, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        ownerType:
+          type: string
+          enum: [NOTE, TASK]
+        ownerId:
+          type: string
+          format: uuid
+        fileName:
+          type: string
+        mimeType:
+          type: string
+        sizeBytes:
+          type: integer
+          format: int64
+        sha256:
+          type: string
+        revision:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
 
     SyncState:
       type: object

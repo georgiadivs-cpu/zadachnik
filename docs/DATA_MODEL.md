@@ -48,7 +48,7 @@ notes:
 - note_tags
 - tags
 - note_links
-- note_attachments
+- note_attachments (в реализации — общая `attachments` с owner_type)
 - note_revisions
 - note_task_links
 
@@ -138,9 +138,14 @@ system_state предварительно может содержать:
 - task_completion_periods
 - task_dependencies
 - task_note_links
-- task_attachments
+- task_attachments (в реализации — общая `attachments` с owner_type)
 - task_time_entries
 - task_reminders
+
+В реализации этапа 11 `attachments` содержит `id`, `user_id`,
+`owner_type` (`NOTE`/`TASK`), `owner_id`, `file_name`, `mime_type`,
+`size_bytes`, `sha256`, `storage_key`, `revision`, timestamps и
+`deleted_at`. Файл лежит в `ATTACHMENTS_DIR`, метаданные — в БД.
 
 В реализации этапа 8 `task_reminders` содержит `id`, `task_id`,
 `remind_at` (UTC), `revision`, `created_at`, `updated_at`, `deleted_at`.

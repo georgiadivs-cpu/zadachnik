@@ -128,6 +128,29 @@ class TaskReminders extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+/// Метаданные вложения. Сам файл лежит в папке приложения или на сервере.
+@DataClassName('AttachmentRow')
+class Attachments extends Table {
+  TextColumn get id => text()();
+  TextColumn get ownerType => text()();
+  TextColumn get ownerId => text()();
+  TextColumn get fileName => text()();
+  TextColumn get mimeType => text()();
+  IntColumn get sizeBytes => integer()();
+  TextColumn get sha256 => text()();
+  TextColumn get localPath => text().nullable()();
+  IntColumn get serverRevision => integer().withDefault(const Constant(0))();
+  TextColumn get uploadStatus =>
+      text().withDefault(const Constant('PENDING'))();
+  TextColumn get errorMessage => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 /// Серверная версия сущности при конфликте.
 class Conflicts extends Table {
   TextColumn get id => text()();

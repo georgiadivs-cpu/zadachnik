@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.multipart.MaxUploadSizeExceededException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
@@ -25,6 +26,14 @@ class GlobalExceptionHandler {
         }
         return response(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Проверьте заполнение полей", details)
     }
+
+    @ExceptionHandler(MaxUploadSizeExceededException::class)
+    fun handleUploadTooLarge(exception: MaxUploadSizeExceededException): ResponseEntity<ApiErrorResponse> =
+        response(
+            HttpStatus.PAYLOAD_TOO_LARGE,
+            "PAYLOAD_TOO_LARGE",
+            "Файл больше допустимого размера",
+        )
 
     @ExceptionHandler(HttpMessageNotReadableException::class)
     fun handleUnreadable(exception: HttpMessageNotReadableException): ResponseEntity<ApiErrorResponse> =

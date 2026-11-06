@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../../../core/auth/session.dart';
 import '../../../core/database/app_database.dart';
+import '../../attachments/data/attachments_repository.dart';
 import '../../calendar/data/reminders_repository.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../tasks/data/lanes_repository.dart';
@@ -48,6 +49,7 @@ class SyncService {
     required this.tasks,
     required this.lanes,
     required this.reminders,
+    required this.attachments,
     required this.syncRepository,
     required this.api,
     required this.sessionResolver,
@@ -58,6 +60,7 @@ class SyncService {
   final TasksRepository tasks;
   final LanesRepository lanes;
   final RemindersRepository reminders;
+  final AttachmentsRepository attachments;
   final SyncRepository syncRepository;
   final SyncApi api;
   final SessionResolver sessionResolver;
@@ -320,6 +323,8 @@ class SyncService {
               await lanes.applyRemote(change.payload);
             case 'REMINDER':
               await reminders.applyRemote(change.payload);
+            case 'ATTACHMENT':
+              await attachments.applyRemote(change.payload);
           }
           pulled += 1;
         }
@@ -399,5 +404,11 @@ class SyncService {
   static const int _pullLimit = 200;
   static const int _maxPushBatches = 10;
   static const int _maxPullPages = 50;
-  static const _supportedEntities = {'NOTE', 'TASK', 'LANE', 'REMINDER'};
+  static const _supportedEntities = {
+    'NOTE',
+    'TASK',
+    'LANE',
+    'REMINDER',
+    'ATTACHMENT',
+  };
 }
