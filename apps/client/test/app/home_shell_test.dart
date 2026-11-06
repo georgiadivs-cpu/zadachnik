@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zadachnik_client/app/home_shell.dart';
+import 'package:zadachnik_client/features/ai/application/ai_providers.dart';
+import 'package:zadachnik_client/features/ai/domain/ai_models.dart';
 import 'package:zadachnik_client/features/calendar/application/calendar_providers.dart';
 import 'package:zadachnik_client/features/calendar/domain/task_reminder.dart';
 import 'package:zadachnik_client/features/notes/application/notes_providers.dart';
@@ -30,6 +32,9 @@ void main() {
           remindersProvider.overrideWith(
             (ref) => Stream<List<TaskReminder>>.value(const []),
           ),
+          aiJournalProvider.overrideWith(
+            (ref) => Stream<List<AiJournalEntry>>.value(const []),
+          ),
           syncControllerProvider.overrideWith(NoopSyncController.new),
         ],
         child: const MaterialApp(home: HomeShell()),
@@ -41,10 +46,17 @@ void main() {
     expect(find.text('Задачи'), findsOneWidget);
     expect(find.text('Календарь'), findsOneWidget);
     expect(find.text('Гант'), findsOneWidget);
+    expect(find.text('AI'), findsOneWidget);
 
     await tester.tap(find.text('Задачи'));
     await tester.pumpAndSettle();
 
     expect(find.text('Высокий приоритет'), findsOneWidget);
+
+    await tester.tap(find.text('AI'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('AI-ассистент'), findsOneWidget);
+    expect(find.textContaining('Approval mode'), findsOneWidget);
   });
 }

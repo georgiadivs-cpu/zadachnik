@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/calendar/application/calendar_providers.dart';
+import '../features/ai/presentation/ai_page.dart';
 import '../features/calendar/presentation/calendar_page.dart';
 import '../features/gantt/presentation/gantt_page.dart';
 import '../features/notes/presentation/notes_page.dart';
@@ -37,6 +38,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     TasksPage(),
     CalendarPage(),
     GanttPage(),
+    AiPage(),
     SettingsPage(),
   ];
 
@@ -67,6 +69,11 @@ class _HomeShellState extends ConsumerState<HomeShell> {
             icon: Icon(Icons.timeline_outlined),
             selectedIcon: Icon(Icons.timeline),
             label: 'Гант',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.auto_awesome_outlined),
+            selectedIcon: Icon(Icons.auto_awesome),
+            label: 'AI',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),

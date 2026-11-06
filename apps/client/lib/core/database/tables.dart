@@ -151,6 +151,23 @@ class Attachments extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+/// Локальный журнал предложений и решений AI.
+@DataClassName('AiActionRow')
+class AiActions extends Table {
+  TextColumn get id => text()();
+  TextColumn get prompt => text()();
+  TextColumn get proposal => text()();
+  TextColumn get status => text()();
+  TextColumn get message => text().nullable()();
+  TextColumn get error => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get decidedAt => dateTime().nullable()();
+  DateTimeColumn get executedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 /// Серверная версия сущности при конфликте.
 class Conflicts extends Table {
   TextColumn get id => text()();

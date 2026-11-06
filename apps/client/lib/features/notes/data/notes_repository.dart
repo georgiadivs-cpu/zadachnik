@@ -33,6 +33,23 @@ class NotesRepository {
     );
   }
 
+  Future<List<Note>> listAll() async {
+    final rows =
+        await (_database.select(_database.notes)
+              ..where((table) => table.deletedAt.isNull())
+              ..orderBy([(table) => OrderingTerm.desc(table.updatedAt)]))
+            .get();
+    final result = <Note>[];
+    for (final row in rows) {
+      final category =
+          await (_database.select(_database.categories)
+                ..where((table) => table.id.equals(row.categoryId ?? '')))
+              .getSingleOrNull();
+      result.add(_domain(row, category?.name));
+    }
+    return result;
+  }
+
   Future<Note?> findById(String id) async {
     final query = _database.select(_database.notes)
       ..where((table) => table.id.equals(id));

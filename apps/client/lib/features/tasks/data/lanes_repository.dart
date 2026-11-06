@@ -20,6 +20,15 @@ class LanesRepository {
     return query.watch().map((rows) => rows.map(_domain).toList());
   }
 
+  Future<List<Lane>> listAll() async {
+    final rows =
+        await (_database.select(_database.lanes)
+              ..where((table) => table.deletedAt.isNull())
+              ..orderBy([(table) => OrderingTerm.asc(table.sortOrder)]))
+            .get();
+    return rows.map(_domain).toList();
+  }
+
   Future<Lane?> findById(String id) async {
     final row = await (_database.select(
       _database.lanes,

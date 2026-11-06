@@ -5534,6 +5534,566 @@ class AttachmentsCompanion extends UpdateCompanion<AttachmentRow> {
   }
 }
 
+class $AiActionsTable extends AiActions
+    with TableInfo<$AiActionsTable, AiActionRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AiActionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _promptMeta = const VerificationMeta('prompt');
+  @override
+  late final GeneratedColumn<String> prompt = GeneratedColumn<String>(
+    'prompt',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _proposalMeta = const VerificationMeta(
+    'proposal',
+  );
+  @override
+  late final GeneratedColumn<String> proposal = GeneratedColumn<String>(
+    'proposal',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _messageMeta = const VerificationMeta(
+    'message',
+  );
+  @override
+  late final GeneratedColumn<String> message = GeneratedColumn<String>(
+    'message',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _errorMeta = const VerificationMeta('error');
+  @override
+  late final GeneratedColumn<String> error = GeneratedColumn<String>(
+    'error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _decidedAtMeta = const VerificationMeta(
+    'decidedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> decidedAt = GeneratedColumn<DateTime>(
+    'decided_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _executedAtMeta = const VerificationMeta(
+    'executedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> executedAt = GeneratedColumn<DateTime>(
+    'executed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    prompt,
+    proposal,
+    status,
+    message,
+    error,
+    createdAt,
+    decidedAt,
+    executedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ai_actions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AiActionRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('prompt')) {
+      context.handle(
+        _promptMeta,
+        prompt.isAcceptableOrUnknown(data['prompt']!, _promptMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_promptMeta);
+    }
+    if (data.containsKey('proposal')) {
+      context.handle(
+        _proposalMeta,
+        proposal.isAcceptableOrUnknown(data['proposal']!, _proposalMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_proposalMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('message')) {
+      context.handle(
+        _messageMeta,
+        message.isAcceptableOrUnknown(data['message']!, _messageMeta),
+      );
+    }
+    if (data.containsKey('error')) {
+      context.handle(
+        _errorMeta,
+        error.isAcceptableOrUnknown(data['error']!, _errorMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('decided_at')) {
+      context.handle(
+        _decidedAtMeta,
+        decidedAt.isAcceptableOrUnknown(data['decided_at']!, _decidedAtMeta),
+      );
+    }
+    if (data.containsKey('executed_at')) {
+      context.handle(
+        _executedAtMeta,
+        executedAt.isAcceptableOrUnknown(data['executed_at']!, _executedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AiActionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AiActionRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      prompt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}prompt'],
+      )!,
+      proposal: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}proposal'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      message: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}message'],
+      ),
+      error: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}error'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      decidedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}decided_at'],
+      ),
+      executedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}executed_at'],
+      ),
+    );
+  }
+
+  @override
+  $AiActionsTable createAlias(String alias) {
+    return $AiActionsTable(attachedDatabase, alias);
+  }
+}
+
+class AiActionRow extends DataClass implements Insertable<AiActionRow> {
+  final String id;
+  final String prompt;
+  final String proposal;
+  final String status;
+  final String? message;
+  final String? error;
+  final DateTime createdAt;
+  final DateTime? decidedAt;
+  final DateTime? executedAt;
+  const AiActionRow({
+    required this.id,
+    required this.prompt,
+    required this.proposal,
+    required this.status,
+    this.message,
+    this.error,
+    required this.createdAt,
+    this.decidedAt,
+    this.executedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['prompt'] = Variable<String>(prompt);
+    map['proposal'] = Variable<String>(proposal);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || message != null) {
+      map['message'] = Variable<String>(message);
+    }
+    if (!nullToAbsent || error != null) {
+      map['error'] = Variable<String>(error);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || decidedAt != null) {
+      map['decided_at'] = Variable<DateTime>(decidedAt);
+    }
+    if (!nullToAbsent || executedAt != null) {
+      map['executed_at'] = Variable<DateTime>(executedAt);
+    }
+    return map;
+  }
+
+  AiActionsCompanion toCompanion(bool nullToAbsent) {
+    return AiActionsCompanion(
+      id: Value(id),
+      prompt: Value(prompt),
+      proposal: Value(proposal),
+      status: Value(status),
+      message: message == null && nullToAbsent
+          ? const Value.absent()
+          : Value(message),
+      error: error == null && nullToAbsent
+          ? const Value.absent()
+          : Value(error),
+      createdAt: Value(createdAt),
+      decidedAt: decidedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(decidedAt),
+      executedAt: executedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(executedAt),
+    );
+  }
+
+  factory AiActionRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AiActionRow(
+      id: serializer.fromJson<String>(json['id']),
+      prompt: serializer.fromJson<String>(json['prompt']),
+      proposal: serializer.fromJson<String>(json['proposal']),
+      status: serializer.fromJson<String>(json['status']),
+      message: serializer.fromJson<String?>(json['message']),
+      error: serializer.fromJson<String?>(json['error']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      decidedAt: serializer.fromJson<DateTime?>(json['decidedAt']),
+      executedAt: serializer.fromJson<DateTime?>(json['executedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'prompt': serializer.toJson<String>(prompt),
+      'proposal': serializer.toJson<String>(proposal),
+      'status': serializer.toJson<String>(status),
+      'message': serializer.toJson<String?>(message),
+      'error': serializer.toJson<String?>(error),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'decidedAt': serializer.toJson<DateTime?>(decidedAt),
+      'executedAt': serializer.toJson<DateTime?>(executedAt),
+    };
+  }
+
+  AiActionRow copyWith({
+    String? id,
+    String? prompt,
+    String? proposal,
+    String? status,
+    Value<String?> message = const Value.absent(),
+    Value<String?> error = const Value.absent(),
+    DateTime? createdAt,
+    Value<DateTime?> decidedAt = const Value.absent(),
+    Value<DateTime?> executedAt = const Value.absent(),
+  }) => AiActionRow(
+    id: id ?? this.id,
+    prompt: prompt ?? this.prompt,
+    proposal: proposal ?? this.proposal,
+    status: status ?? this.status,
+    message: message.present ? message.value : this.message,
+    error: error.present ? error.value : this.error,
+    createdAt: createdAt ?? this.createdAt,
+    decidedAt: decidedAt.present ? decidedAt.value : this.decidedAt,
+    executedAt: executedAt.present ? executedAt.value : this.executedAt,
+  );
+  AiActionRow copyWithCompanion(AiActionsCompanion data) {
+    return AiActionRow(
+      id: data.id.present ? data.id.value : this.id,
+      prompt: data.prompt.present ? data.prompt.value : this.prompt,
+      proposal: data.proposal.present ? data.proposal.value : this.proposal,
+      status: data.status.present ? data.status.value : this.status,
+      message: data.message.present ? data.message.value : this.message,
+      error: data.error.present ? data.error.value : this.error,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      decidedAt: data.decidedAt.present ? data.decidedAt.value : this.decidedAt,
+      executedAt: data.executedAt.present
+          ? data.executedAt.value
+          : this.executedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AiActionRow(')
+          ..write('id: $id, ')
+          ..write('prompt: $prompt, ')
+          ..write('proposal: $proposal, ')
+          ..write('status: $status, ')
+          ..write('message: $message, ')
+          ..write('error: $error, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('decidedAt: $decidedAt, ')
+          ..write('executedAt: $executedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    prompt,
+    proposal,
+    status,
+    message,
+    error,
+    createdAt,
+    decidedAt,
+    executedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AiActionRow &&
+          other.id == this.id &&
+          other.prompt == this.prompt &&
+          other.proposal == this.proposal &&
+          other.status == this.status &&
+          other.message == this.message &&
+          other.error == this.error &&
+          other.createdAt == this.createdAt &&
+          other.decidedAt == this.decidedAt &&
+          other.executedAt == this.executedAt);
+}
+
+class AiActionsCompanion extends UpdateCompanion<AiActionRow> {
+  final Value<String> id;
+  final Value<String> prompt;
+  final Value<String> proposal;
+  final Value<String> status;
+  final Value<String?> message;
+  final Value<String?> error;
+  final Value<DateTime> createdAt;
+  final Value<DateTime?> decidedAt;
+  final Value<DateTime?> executedAt;
+  final Value<int> rowid;
+  const AiActionsCompanion({
+    this.id = const Value.absent(),
+    this.prompt = const Value.absent(),
+    this.proposal = const Value.absent(),
+    this.status = const Value.absent(),
+    this.message = const Value.absent(),
+    this.error = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.decidedAt = const Value.absent(),
+    this.executedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AiActionsCompanion.insert({
+    required String id,
+    required String prompt,
+    required String proposal,
+    required String status,
+    this.message = const Value.absent(),
+    this.error = const Value.absent(),
+    required DateTime createdAt,
+    this.decidedAt = const Value.absent(),
+    this.executedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       prompt = Value(prompt),
+       proposal = Value(proposal),
+       status = Value(status),
+       createdAt = Value(createdAt);
+  static Insertable<AiActionRow> custom({
+    Expression<String>? id,
+    Expression<String>? prompt,
+    Expression<String>? proposal,
+    Expression<String>? status,
+    Expression<String>? message,
+    Expression<String>? error,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? decidedAt,
+    Expression<DateTime>? executedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (prompt != null) 'prompt': prompt,
+      if (proposal != null) 'proposal': proposal,
+      if (status != null) 'status': status,
+      if (message != null) 'message': message,
+      if (error != null) 'error': error,
+      if (createdAt != null) 'created_at': createdAt,
+      if (decidedAt != null) 'decided_at': decidedAt,
+      if (executedAt != null) 'executed_at': executedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AiActionsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? prompt,
+    Value<String>? proposal,
+    Value<String>? status,
+    Value<String?>? message,
+    Value<String?>? error,
+    Value<DateTime>? createdAt,
+    Value<DateTime?>? decidedAt,
+    Value<DateTime?>? executedAt,
+    Value<int>? rowid,
+  }) {
+    return AiActionsCompanion(
+      id: id ?? this.id,
+      prompt: prompt ?? this.prompt,
+      proposal: proposal ?? this.proposal,
+      status: status ?? this.status,
+      message: message ?? this.message,
+      error: error ?? this.error,
+      createdAt: createdAt ?? this.createdAt,
+      decidedAt: decidedAt ?? this.decidedAt,
+      executedAt: executedAt ?? this.executedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (prompt.present) {
+      map['prompt'] = Variable<String>(prompt.value);
+    }
+    if (proposal.present) {
+      map['proposal'] = Variable<String>(proposal.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (message.present) {
+      map['message'] = Variable<String>(message.value);
+    }
+    if (error.present) {
+      map['error'] = Variable<String>(error.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (decidedAt.present) {
+      map['decided_at'] = Variable<DateTime>(decidedAt.value);
+    }
+    if (executedAt.present) {
+      map['executed_at'] = Variable<DateTime>(executedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AiActionsCompanion(')
+          ..write('id: $id, ')
+          ..write('prompt: $prompt, ')
+          ..write('proposal: $proposal, ')
+          ..write('status: $status, ')
+          ..write('message: $message, ')
+          ..write('error: $error, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('decidedAt: $decidedAt, ')
+          ..write('executedAt: $executedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5548,6 +6108,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $TaskStatusHistoryTable(this);
   late final $TaskRemindersTable taskReminders = $TaskRemindersTable(this);
   late final $AttachmentsTable attachments = $AttachmentsTable(this);
+  late final $AiActionsTable aiActions = $AiActionsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5563,6 +6124,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     taskStatusHistory,
     taskReminders,
     attachments,
+    aiActions,
   ];
 }
 
@@ -9161,6 +9723,291 @@ typedef $$AttachmentsTableProcessedTableManager =
       AttachmentRow,
       PrefetchHooks Function()
     >;
+typedef $$AiActionsTableCreateCompanionBuilder = AiActionsCompanion Function({
+  required String id,
+  required String prompt,
+  required String proposal,
+  required String status,
+  Value<String?> message,
+  Value<String?> error,
+  required DateTime createdAt,
+  Value<DateTime?> decidedAt,
+  Value<DateTime?> executedAt,
+  Value<int> rowid,
+});
+typedef $$AiActionsTableUpdateCompanionBuilder = AiActionsCompanion Function({
+  Value<String> id,
+  Value<String> prompt,
+  Value<String> proposal,
+  Value<String> status,
+  Value<String?> message,
+  Value<String?> error,
+  Value<DateTime> createdAt,
+  Value<DateTime?> decidedAt,
+  Value<DateTime?> executedAt,
+  Value<int> rowid,
+});
+
+class $$AiActionsTableFilterComposer
+    extends Composer<_$AppDatabase, $AiActionsTable> {
+  $$AiActionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get prompt => $composableBuilder(
+    column: $table.prompt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get proposal => $composableBuilder(
+    column: $table.proposal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get message => $composableBuilder(
+    column: $table.message,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get error => $composableBuilder(
+    column: $table.error,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get decidedAt => $composableBuilder(
+    column: $table.decidedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get executedAt => $composableBuilder(
+    column: $table.executedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AiActionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $AiActionsTable> {
+  $$AiActionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get prompt => $composableBuilder(
+    column: $table.prompt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get proposal => $composableBuilder(
+    column: $table.proposal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get message => $composableBuilder(
+    column: $table.message,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get error => $composableBuilder(
+    column: $table.error,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get decidedAt => $composableBuilder(
+    column: $table.decidedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get executedAt => $composableBuilder(
+    column: $table.executedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AiActionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AiActionsTable> {
+  $$AiActionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get prompt =>
+      $composableBuilder(column: $table.prompt, builder: (column) => column);
+
+  GeneratedColumn<String> get proposal =>
+      $composableBuilder(column: $table.proposal, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get message =>
+      $composableBuilder(column: $table.message, builder: (column) => column);
+
+  GeneratedColumn<String> get error =>
+      $composableBuilder(column: $table.error, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get decidedAt =>
+      $composableBuilder(column: $table.decidedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get executedAt => $composableBuilder(
+    column: $table.executedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$AiActionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AiActionsTable,
+          AiActionRow,
+          $$AiActionsTableFilterComposer,
+          $$AiActionsTableOrderingComposer,
+          $$AiActionsTableAnnotationComposer,
+          $$AiActionsTableCreateCompanionBuilder,
+          $$AiActionsTableUpdateCompanionBuilder,
+          (
+            AiActionRow,
+            BaseReferences<_$AppDatabase, $AiActionsTable, AiActionRow>,
+          ),
+          AiActionRow,
+          PrefetchHooks Function()
+        > {
+  $$AiActionsTableTableManager(_$AppDatabase db, $AiActionsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AiActionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AiActionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AiActionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> prompt = const Value.absent(),
+                Value<String> proposal = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> message = const Value.absent(),
+                Value<String?> error = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> decidedAt = const Value.absent(),
+                Value<DateTime?> executedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AiActionsCompanion(
+                id: id,
+                prompt: prompt,
+                proposal: proposal,
+                status: status,
+                message: message,
+                error: error,
+                createdAt: createdAt,
+                decidedAt: decidedAt,
+                executedAt: executedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String prompt,
+                required String proposal,
+                required String status,
+                Value<String?> message = const Value.absent(),
+                Value<String?> error = const Value.absent(),
+                required DateTime createdAt,
+                Value<DateTime?> decidedAt = const Value.absent(),
+                Value<DateTime?> executedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AiActionsCompanion.insert(
+                id: id,
+                prompt: prompt,
+                proposal: proposal,
+                status: status,
+                message: message,
+                error: error,
+                createdAt: createdAt,
+                decidedAt: decidedAt,
+                executedAt: executedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$AiActionsTable, AiActionRow>(table),
+                  BaseReferences<_$AppDatabase, $AiActionsTable, AiActionRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AiActionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AiActionsTable,
+      AiActionRow,
+      $$AiActionsTableFilterComposer,
+      $$AiActionsTableOrderingComposer,
+      $$AiActionsTableAnnotationComposer,
+      $$AiActionsTableCreateCompanionBuilder,
+      $$AiActionsTableUpdateCompanionBuilder,
+      (
+        AiActionRow,
+        BaseReferences<_$AppDatabase, $AiActionsTable, AiActionRow>,
+      ),
+      AiActionRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -9185,4 +10032,6 @@ class $AppDatabaseManager {
       $$TaskRemindersTableTableManager(_db, _db.taskReminders);
   $$AttachmentsTableTableManager get attachments =>
       $$AttachmentsTableTableManager(_db, _db.attachments);
+  $$AiActionsTableTableManager get aiActions =>
+      $$AiActionsTableTableManager(_db, _db.aiActions);
 }

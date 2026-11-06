@@ -298,6 +298,25 @@ operation_type, base_revision, payload, created_at, attempts, last_error.
 Файлы не следует хранить как большие бинарные поля
 в основной таблице без отдельного обоснования.
 
+## 9.1. Локальный журнал AI
+
+Таблица `ai_actions` существует только в клиентской SQLite
+и не синхронизируется:
+
+- id;
+- prompt;
+- proposal (JSON с изменениями);
+- status: `PROPOSED`, `APPLIED`, `REJECTED`, `STALE`, `FAILED`;
+- message;
+- error;
+- created_at;
+- decided_at;
+- executed_at.
+
+Журнал не содержит файлов и не заменяет историю изменений сущностей.
+Предложение хранит ожидаемые `revision`/`updatedAt`, чтобы применение
+устаревшего изменения было отклонено.
+
 ## 10. Проекты
 
 Проекты не входят в MVP.
